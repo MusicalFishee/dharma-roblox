@@ -14,6 +14,8 @@ Combat.Config = {
 
 	-- Each hit in the Flow chain adds this fraction to damage.
 	ComboDamageStep = 0.08,
+	-- Seconds after a connecting hit before the Flow chain resets.
+	ComboResetWindow = 1.5,
 
 	-- Defensive resolution.
 	ParryWindowSeconds = 0.30,
@@ -27,6 +29,14 @@ Combat.Config = {
 	-- Astra cost.
 	AgniAstraCost = 35,
 	AgniAstraDamage = 30,
+
+	-- Enemy tuning (distances in Roblox studs).
+	EnemyMaxHealth = 100,
+	EnemyAttackDamage = 8,
+	EnemyAttackInterval = 1.6,
+	EnemyAggroRange = 90,
+	EnemyAttackRange = 9,
+	EnemyWalkSpeed = 11,
 }
 
 export type AttackKind = "Light" | "Heavy"
