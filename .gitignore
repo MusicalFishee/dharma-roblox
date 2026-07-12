@@ -1,0 +1,9 @@
+# Rojo build artifacts (regenerate with `rojo build`)
+*.rbxl
+*.rbxlx
+*.rbxm
+*.rbxmx
+
+# Editor noise
+.DS_Store
+*.swp
