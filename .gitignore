@@ -4,6 +4,15 @@
 *.rbxm
 *.rbxmx
 
+# Secrets — never commit the Open Cloud API key
+.env
+*.key
+secrets/
+
+# Generated / downloaded tooling artifacts (recreate via check.sh)
+sourcemap.json
+globalTypes.d.luau
+
 # Editor noise
 .DS_Store
 *.swp
