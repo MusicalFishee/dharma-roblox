@@ -9,6 +9,7 @@ local Debris = game:GetService("Debris")
 
 local Net = require(ReplicatedStorage.Shared.Net)
 local Combat = require(ReplicatedStorage.Shared.Combat)
+local Progression = require(ReplicatedStorage.Shared.Progression)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 
 local ENEMY_TAG = "DharmaEnemy"
@@ -88,6 +89,7 @@ local function castAgniAstra(player: Player)
 		end
 		spent = true
 		conn:Disconnect()
+		model:SetAttribute("LastAttacker", player.UserId) -- credit the kill for XP
 		humanoid:TakeDamage(Combat.Config.AgniAstraDamage)
 		Net.CombatFeedback:FireClient(player, { outcome = "Astra", ability = "Z", tejas = state.tejas })
 		bolt:Destroy()
@@ -98,10 +100,19 @@ end
 
 Net.AbilityRequest.OnServerEvent:Connect(function(player: Player, slotArg: any)
 	local slot = tostring(slotArg)
+	local level = Progression.resolve(PlayerRegistry.get(player).totalXp).level
+
+	-- Gate abilities behind level unlocks.
+	if not Progression.isAbilityUnlocked(slot, level) then
+		local req = Progression.AbilityUnlockLevel[slot]
+		Net.CombatFeedback:FireClient(player, { outcome = "AbilityLocked", ability = slot, unlockLevel = req })
+		return
+	end
+
 	if slot == "Z" then
 		castAgniAstra(player)
 	else
-		-- X / C / V: reserved for future Astras.
+		-- X / C / V: unlocked by level, but the ability itself is still to be built.
 		Net.CombatFeedback:FireClient(player, { outcome = "Locked", ability = slot })
 	end
 end)

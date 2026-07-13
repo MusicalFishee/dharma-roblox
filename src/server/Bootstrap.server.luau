@@ -1,10 +1,11 @@
 --!strict
--- Server entry point. Wires up players and proves the shared Combat module loads.
+-- Server entry point. Wires players into the progression system on spawn.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
 local Combat = require(ReplicatedStorage.Shared.Combat)
+local ProgressionService = require(script.Parent.ProgressionService)
 
 print(string.format(
 	"[Dharma] Server up. Combat loaded — light=%d heavy=%d Astra cost=%d",
@@ -13,6 +14,18 @@ print(string.format(
 	Combat.Config.AgniAstraCost
 ))
 
-Players.PlayerAdded:Connect(function(player: Player)
+local function onPlayer(player: Player)
 	print(string.format("[Dharma] %s entered the world.", player.Name))
-end)
+	player.CharacterAdded:Connect(function()
+		task.wait(0.2)
+		ProgressionService.onCharacterSpawn(player)
+	end)
+	if player.Character then
+		ProgressionService.onCharacterSpawn(player)
+	end
+end
+
+Players.PlayerAdded:Connect(onPlayer)
+for _, p in Players:GetPlayers() do
+	onPlayer(p)
+end

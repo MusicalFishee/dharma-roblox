@@ -6,6 +6,7 @@ local CollectionService = game:GetService("CollectionService")
 
 local Net = require(ReplicatedStorage.Shared.Net)
 local Combat = require(ReplicatedStorage.Shared.Combat)
+local Progression = require(ReplicatedStorage.Shared.Progression)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 
 local MELEE_REACH = 13 -- studs
@@ -77,9 +78,16 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 	end
 
 	local comboCount = state.combo:registerHit(os.clock())
-	local damage = Combat.computeAttackDamage(kind, comboCount - 1)
+	local level = Progression.resolve(state.totalXp).level
+	local damage = Combat.computeAttackDamage(kind, comboCount - 1) * Progression.damageMultiplierForLevel(level)
 
 	for _, humanoid in targets do
+		-- Tag the enemy with who hit it so it can grant XP on death.
+		local enemyModel = humanoid.Parent
+		if enemyModel and enemyModel:IsA("Model") then
+			enemyModel:SetAttribute("LastAttacker", player.UserId)
+		end
+
 		humanoid:TakeDamage(damage)
 		state.tejas = Combat.clampTejas(state.tejas + Combat.Config.TejasPerHitLanded)
 

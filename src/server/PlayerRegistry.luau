@@ -14,6 +14,7 @@ export type PlayerState = {
 	-- LMB attack chain (light x3 -> heavy finisher -> lockout).
 	chain: ComboChain.ComboChain,
 	tejas: number,
+	totalXp: number,
 	isBlocking: boolean,
 	blockStartedAt: number,
 	-- Wall-clock time (os.clock) until which dodge i-frames are active.
@@ -39,6 +40,7 @@ function PlayerRegistry.get(player: Player): PlayerState
 			resetWindow = Combat.Config.ComboResetWindow,
 		}),
 		tejas = 0,
+		totalXp = 0,
 		isBlocking = false,
 		blockStartedAt = 0,
 		dodgeUntil = 0,

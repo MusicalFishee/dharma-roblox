@@ -47,6 +47,29 @@ tejasLabel.TextSize = 16
 tejasLabel.Text = "Tejas 0 / " .. Combat.Config.TejasMax
 tejasLabel.Parent = tejasBg
 
+-- Level + XP bar (just above the Tejas bar).
+local xpBg = Instance.new("Frame")
+xpBg.Size = UDim2.fromOffset(320, 18)
+xpBg.Position = UDim2.new(0, 28, 1, -80)
+xpBg.BackgroundColor3 = Color3.fromRGB(20, 18, 24)
+xpBg.BorderSizePixel = 0
+xpBg.Parent = screenGui
+
+local xpFill = Instance.new("Frame")
+xpFill.Size = UDim2.new(0, 0, 1, 0)
+xpFill.BackgroundColor3 = Color3.fromRGB(120, 210, 255)
+xpFill.BorderSizePixel = 0
+xpFill.Parent = xpBg
+
+local levelLabel = Instance.new("TextLabel")
+levelLabel.Size = UDim2.fromScale(1, 1)
+levelLabel.BackgroundTransparency = 1
+levelLabel.Font = Enum.Font.GothamBold
+levelLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+levelLabel.TextSize = 13
+levelLabel.Text = "Lv 1"
+levelLabel.Parent = xpBg
+
 -- Combo counter (top-centre).
 local comboLabel = Instance.new("TextLabel")
 comboLabel.Size = UDim2.fromOffset(400, 70)
@@ -94,6 +117,16 @@ local function updateTejas(tejas: number)
 	tejasLabel.Text = string.format("Tejas %d / %d", math.floor(tejas + 0.5), Combat.Config.TejasMax)
 end
 
+local function updateProgress(level: number, xpInto: number, xpForNext: number, isMax: boolean)
+	local pct = if isMax then 1 elseif xpForNext > 0 then math.clamp(xpInto / xpForNext, 0, 1) else 0
+	TweenService:Create(xpFill, TweenInfo.new(0.25), { Size = UDim2.new(pct, 0, 1, 0) }):Play()
+	if isMax then
+		levelLabel.Text = string.format("Lv %d  (MAX)", level)
+	else
+		levelLabel.Text = string.format("Lv %d    %d / %d XP", level, math.floor(xpInto), math.floor(xpForNext))
+	end
+end
+
 Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 	if typeof(data) ~= "table" then
 		return
@@ -101,6 +134,20 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 
 	if data.tejas ~= nil then
 		updateTejas(data.tejas)
+	end
+
+	-- Progression updates.
+	if data.progress then
+		updateProgress(data.level, data.xpIntoLevel, data.xpForNext, data.isMax == true)
+		return
+	end
+	if data.levelUp then
+		showToast(string.format("LEVEL UP!   Lv %d", data.level), YELLOW)
+		return
+	end
+	if data.outcome == "AbilityLocked" then
+		showToast(string.format("%s unlocks at Lv %s", tostring(data.ability), tostring(data.unlockLevel)), Color3.fromRGB(170, 170, 170))
+		return
 	end
 
 	if data.incoming then
