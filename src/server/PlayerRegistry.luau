@@ -6,9 +6,13 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Combat = require(ReplicatedStorage.Shared.Combat)
 local ComboTracker = require(ReplicatedStorage.Shared.ComboTracker)
+local ComboChain = require(ReplicatedStorage.Shared.ComboChain)
 
 export type PlayerState = {
+	-- Flow damage combo (consecutive connecting hits).
 	combo: ComboTracker.ComboTracker,
+	-- LMB attack chain (light x3 -> heavy finisher -> lockout).
+	chain: ComboChain.ComboChain,
 	tejas: number,
 	isBlocking: boolean,
 	blockStartedAt: number,
@@ -28,6 +32,12 @@ function PlayerRegistry.get(player: Player): PlayerState
 
 	local state: PlayerState = {
 		combo = ComboTracker.new(Combat.Config.ComboResetWindow),
+		chain = ComboChain.new({
+			length = Combat.Config.ComboChainLength,
+			hitInterval = Combat.Config.ComboHitInterval,
+			finisherLockout = Combat.Config.ComboFinisherLockout,
+			resetWindow = Combat.Config.ComboResetWindow,
+		}),
 		tejas = 0,
 		isBlocking = false,
 		blockStartedAt = 0,

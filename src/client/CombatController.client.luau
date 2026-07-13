@@ -1,22 +1,19 @@
 --!strict
 -- Captures player combat input and forwards intent to the server.
+-- LMB drives the auto-combo (the server's chain decides light vs heavy).
+-- Z / X / C / V are the ability slots. Shift blocks, Q dodges.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 
 local Net = require(ReplicatedStorage.Shared.Net)
 
-local function sendAttack(kind: string)
-	Net.AttackRequest:FireServer(kind)
-end
-
-local function setBlocking(isBlocking: boolean)
-	Net.DefenseState:FireServer({ isBlocking = isBlocking })
-end
-
-local function sendDodge()
-	Net.DefenseState:FireServer({ dodge = true })
-end
+local abilityKeys: { [Enum.KeyCode]: string } = {
+	[Enum.KeyCode.Z] = "Z",
+	[Enum.KeyCode.X] = "X",
+	[Enum.KeyCode.C] = "C",
+	[Enum.KeyCode.V] = "V",
+}
 
 UserInputService.InputBegan:Connect(function(input: InputObject, gameProcessed: boolean)
 	if gameProcessed then
@@ -24,42 +21,27 @@ UserInputService.InputBegan:Connect(function(input: InputObject, gameProcessed: 
 	end
 
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		sendAttack("Light")
-	elseif input.KeyCode == Enum.KeyCode.R then
-		sendAttack("Heavy")
-	elseif input.KeyCode == Enum.KeyCode.LeftShift then
-		setBlocking(true)
+		Net.AttackRequest:FireServer() -- server chain decides light/heavy + cadence
+		return
+	end
+
+	local ability = abilityKeys[input.KeyCode]
+	if ability then
+		Net.AbilityRequest:FireServer(ability)
+		return
+	end
+
+	if input.KeyCode == Enum.KeyCode.LeftShift then
+		Net.DefenseState:FireServer({ isBlocking = true })
 	elseif input.KeyCode == Enum.KeyCode.Q then
-		sendDodge()
+		Net.DefenseState:FireServer({ dodge = true })
 	end
 end)
 
 UserInputService.InputEnded:Connect(function(input: InputObject)
 	if input.KeyCode == Enum.KeyCode.LeftShift then
-		setBlocking(false)
+		Net.DefenseState:FireServer({ isBlocking = false })
 	end
 end)
 
--- Gamepad support.
-UserInputService.InputBegan:Connect(function(input: InputObject, gameProcessed: boolean)
-	if gameProcessed then
-		return
-	end
-	if input.KeyCode == Enum.KeyCode.ButtonR2 then
-		sendAttack("Light")
-	elseif input.KeyCode == Enum.KeyCode.ButtonR1 then
-		sendAttack("Heavy")
-	elseif input.KeyCode == Enum.KeyCode.ButtonL2 then
-		setBlocking(true)
-	elseif input.KeyCode == Enum.KeyCode.ButtonB then
-		sendDodge()
-	end
-end)
-
-UserInputService.InputEnded:Connect(function(input: InputObject)
-	if input.KeyCode == Enum.KeyCode.ButtonL2 then
-		setBlocking(false)
-	end
-end)
-
-print("[Dharma] Combat input ready — LMB light, R heavy, Shift block, Q dodge.")
+print("[Dharma] Input ready — LMB combo, Z/X/C/V abilities, Shift block, Q dodge.")

@@ -17,6 +17,14 @@ Combat.Config = {
 	-- Seconds after a connecting hit before the Flow chain resets.
 	ComboResetWindow = 1.5,
 
+	-- ---- LMB auto-combo (Blox-Fruits-style M1 chain) ----
+	-- Every Nth swing is the heavy finisher.
+	ComboChainLength = 4,
+	-- Minimum seconds between swings (attack cadence; blocks click-spam).
+	ComboHitInterval = 0.28,
+	-- Recovery lockout after the heavy finisher lands.
+	ComboFinisherLockout = 0.7,
+
 	-- Defensive resolution.
 	ParryWindowSeconds = 0.30,
 	BlockDamageMultiplier = 0.25,

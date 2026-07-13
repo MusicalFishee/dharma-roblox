@@ -51,12 +51,7 @@ local function findTargets(fromRoot: BasePart): { Humanoid }
 	return hits
 end
 
-Net.AttackRequest.OnServerEvent:Connect(function(player: Player, kindArg: any)
-	local kind: Combat.AttackKind = "Light"
-	if kindArg == "Heavy" then
-		kind = "Heavy"
-	end
-
+Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 	local character = player.Character
 	if not character then
 		return
@@ -66,29 +61,44 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player, kindArg: any)
 		return
 	end
 
+	local state = PlayerRegistry.get(player)
+
+	-- The chain decides light vs heavy and gates cadence / finisher recovery.
+	local swing = state.chain:tryAdvance(os.clock())
+	if not swing.accepted then
+		return -- swinging too fast, or recovering after a finisher
+	end
+	local kind: Combat.AttackKind = if swing.kind == "Heavy" then "Heavy" else "Light"
+
 	local targets = findTargets(root)
 	if #targets == 0 then
-		-- A whiff still costs the swing but breaks nothing.
-		Net.CombatFeedback:FireClient(player, {
-			outcome = "Whiff",
-			combo = 0,
-		})
+		Net.CombatFeedback:FireClient(player, { outcome = "Whiff", chain = swing.index })
 		return
 	end
 
-	local state = PlayerRegistry.get(player)
 	local comboCount = state.combo:registerHit(os.clock())
 	local damage = Combat.computeAttackDamage(kind, comboCount - 1)
 
 	for _, humanoid in targets do
 		humanoid:TakeDamage(damage)
 		state.tejas = Combat.clampTejas(state.tejas + Combat.Config.TejasPerHitLanded)
+
+		-- The heavy finisher knocks enemies back.
+		local hrp = humanoid.RootPart
+		if swing.isFinisher and hrp then
+			local dir = hrp.Position - root.Position
+			dir = Vector3.new(dir.X, 0, dir.Z)
+			dir = if dir.Magnitude > 0.01 then dir.Unit else root.CFrame.LookVector
+			hrp.AssemblyLinearVelocity = dir * 60 + Vector3.new(0, 30, 0)
+		end
 	end
 
 	Net.CombatFeedback:FireClient(player, {
 		outcome = "Hit",
 		kind = kind,
 		combo = comboCount,
+		chain = swing.index,
+		isFinisher = swing.isFinisher,
 		damage = damage,
 		tejas = state.tejas,
 	})

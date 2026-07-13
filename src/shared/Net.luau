@@ -20,8 +20,10 @@ local function ensureRemote(name: string): RemoteEvent
 end
 
 local Net = {
-	-- client -> server: "the player swung" ("Light" | "Heavy")
+	-- client -> server: "the player swung" (LMB; server decides light/heavy via the chain)
 	AttackRequest = ensureRemote("AttackRequest"),
+	-- client -> server: an ability was used ("Z" | "X" | "C" | "V")
+	AbilityRequest = ensureRemote("AbilityRequest"),
 	-- client -> server: current guard state (blocking / dodging)
 	DefenseState = ensureRemote("DefenseState"),
 	-- server -> client: HUD feedback (combo count, tejas, outcome text)
