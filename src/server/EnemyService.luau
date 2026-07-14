@@ -11,6 +11,7 @@ local Net = require(ReplicatedStorage.Shared.Net)
 local Combat = require(ReplicatedStorage.Shared.Combat)
 local EnemyAI = require(ReplicatedStorage.Shared.EnemyAI)
 local EnemyTypes = require(ReplicatedStorage.Shared.EnemyTypes)
+local BossSpecials = require(ReplicatedStorage.Shared.BossSpecials)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local ProgressionService = require(script.Parent.ProgressionService)
 
@@ -25,6 +26,7 @@ type EnemyState = {
 	archetype: EnemyTypes.EnemyArchetype,
 	nextAttackAt: number,
 	staggeredUntil: number,
+	castingUntil: number,
 	onDeath: ((Player?) -> ())?,
 }
 
@@ -114,8 +116,8 @@ end
 
 local function stepEnemy(enemy: EnemyState)
 	local now = os.clock()
-	if now < enemy.staggeredUntil then
-		return
+	if now < enemy.staggeredUntil or now < enemy.castingUntil then
+		return -- staggered by a parry, or winding up a special
 	end
 
 	local player, playerRoot, playerHum, dist = nearestPlayer(enemy.root.Position)
@@ -194,6 +196,7 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 		archetype = archetype,
 		nextAttackAt = 0,
 		staggeredUntil = 0,
+		castingUntil = 0,
 		onDeath = onDeath,
 	}
 	alive += 1
@@ -210,6 +213,63 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 		})
 		humanoid.HealthChanged:Connect(function(health: number)
 			broadcastAll({ bossState = "health", bossHealth = math.max(0, health), bossMaxHealth = maxHp })
+		end)
+
+		-- Telegraphed slam on a cooldown: wind up (boss halts), then AoE the danger zone.
+		local special = BossSpecials.forBoss(archetype.id)
+		task.spawn(function()
+			while enemies[model] and humanoid.Health > 0 do
+				task.wait(special.cooldown)
+				local st = enemies[model]
+				if not st or humanoid.Health <= 0 then
+					break
+				end
+
+				local _p, _r, _h, dist = nearestPlayer(st.root.Position)
+				if dist > special.radius + 45 then
+					continue -- nobody close enough to bother slamming
+				end
+
+				local now = os.clock()
+				st.castingUntil = now + special.telegraph
+				local cx, cy, cz = st.root.Position.X, st.root.Position.Y - 2.5, st.root.Position.Z
+				broadcastAll({
+					bossSpecial = "telegraph",
+					name = special.name,
+					x = cx,
+					y = cy,
+					z = cz,
+					radius = special.radius,
+					duration = special.telegraph,
+				})
+
+				task.wait(special.telegraph)
+				if humanoid.Health <= 0 then
+					break
+				end
+
+				-- Impact: everyone still standing in the zone takes the hit.
+				local targets: { BossSpecials.Target } = {}
+				for _, plr in Players:GetPlayers() do
+					local char = plr.Character
+					if not char then
+						continue
+					end
+					local hrp = char:FindFirstChild("HumanoidRootPart")
+					if hrp and hrp:IsA("BasePart") then
+						table.insert(targets, { key = plr, x = hrp.Position.X, z = hrp.Position.Z })
+					end
+				end
+				for _, key in BossSpecials.hitTargets({ x = cx, z = cz }, targets, special.radius) do
+					local victim = key :: Player
+					local char = victim.Character
+					local hum = char and char:FindFirstChildOfClass("Humanoid")
+					if hum then
+						hum:TakeDamage(special.damage)
+					end
+				end
+				broadcastAll({ bossSpecial = "impact", x = cx, y = cy, z = cz, radius = special.radius })
+			end
 		end)
 	end
 
