@@ -59,6 +59,15 @@ check("valid bestWave preserved", PlayerData.validate({ bestWave = 23 }).bestWav
 check("junk bestWave rejected", PlayerData.validate({ bestWave = -4 }).bestWave == 0 and PlayerData.validate({ bestWave = "deep" }).bestWave == 0)
 check("serialize without bestWave defaults 0", PlayerData.serialize(1, 1).bestWave == 0)
 
+-- Quests (added with the quest system).
+check("default quests empty", #PlayerData.default().quests == 0)
+local qv = PlayerData.validate({ quests = { { id = "slay_asura", progress = 4 }, { id = "gold_hoard", progress = "junk" } } })
+check("valid quest slots preserved", #qv.quests == 2 and qv.quests[1].id == "slay_asura" and qv.quests[1].progress == 4)
+check("junk quest progress -> 0", qv.quests[2].progress == 0)
+check("non-table quests rejected", #PlayerData.validate({ quests = "all" }).quests == 0)
+local qrt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, { { id = "parry_master", progress = 2 } }))
+check("quests round-trip through serialize", #qrt.quests == 1 and qrt.quests[1].id == "parry_master" and qrt.quests[1].progress == 2)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

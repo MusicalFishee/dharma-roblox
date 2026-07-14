@@ -44,6 +44,7 @@ SoundDefs.Sfx = {
 	amritPickup = sfx("rbxasset://sounds/impact_water.mp3", 0.7, 1.2, 1.4),
 	levelUp = sfx("rbxasset://sounds/electronicpingshort.wav", 0.9, 0.95, 1.05),
 	shopBuy = sfx("rbxasset://sounds/button.wav", 0.7, 0.9, 1.0),
+	questDone = sfx("rbxasset://sounds/electronicpingshort.wav", 0.85, 1.25, 1.35),
 
 	-- Waves / bosses
 	waveStart = sfx("rbxasset://sounds/bass.wav", 0.8, 0.55, 0.65),

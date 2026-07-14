@@ -15,6 +15,7 @@ local BossSpecials = require(ReplicatedStorage.Shared.BossSpecials)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local ProgressionService = require(script.Parent.ProgressionService)
 local LootService = require(script.Parent.LootService)
+local QuestService = require(script.Parent.QuestService)
 
 local ENEMY_TAG = "DharmaEnemy"
 
@@ -113,6 +114,9 @@ local function enemyStrikes(enemy: EnemyState, player: Player, playerRoot: BaseP
 	if resolution.attackerStaggered then
 		enemy.staggeredUntil = now + 1.0
 		enemy.humanoid:MoveTo(enemy.root.Position)
+	end
+	if resolution.outcome == "Parry" then
+		QuestService.onParry(player)
 	end
 
 	Net.CombatFeedback:FireClient(player, {
@@ -297,6 +301,7 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 			killer = Players:GetPlayerByUserId(killerId)
 			if killer then
 				ProgressionService.awardXp(killer, archetype.xpReward)
+				QuestService.onKill(killer, archetype.id, archetype.isBoss == true)
 			end
 		end
 

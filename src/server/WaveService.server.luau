@@ -11,6 +11,7 @@ local Bosses = require(ReplicatedStorage.Shared.Bosses)
 local EnemyService = require(script.Parent.EnemyService)
 local ProgressionService = require(script.Parent.ProgressionService)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
+local QuestService = require(script.Parent.QuestService)
 
 local ARENA_RADIUS = 45
 
@@ -33,6 +34,7 @@ local function onWaveClear(wave: number)
 		-- Everyone standing when the wave falls records the depth.
 		local state = PlayerRegistry.get(p)
 		state.bestWave = math.max(state.bestWave, wave)
+		QuestService.onWaveClear(p)
 	end
 	announce({ waveState = "clear", wave = wave, bonusXp = bonus, intermission = Waves.Intermission })
 	task.delay(Waves.Intermission, function()

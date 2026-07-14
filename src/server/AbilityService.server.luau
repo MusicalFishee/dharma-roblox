@@ -16,6 +16,7 @@ local Net = require(ReplicatedStorage.Shared.Net)
 local Abilities = require(ReplicatedStorage.Shared.Abilities)
 local Progression = require(ReplicatedStorage.Shared.Progression)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
+local QuestService = require(script.Parent.QuestService)
 
 local ENEMY_TAG = "DharmaEnemy"
 local ASTRA_SPEED = 90
@@ -252,6 +253,7 @@ Net.AbilityRequest.OnServerEvent:Connect(function(player: Player, slotArg: any)
 	-- Commit the cast.
 	state.tejas = gate.tejasAfter
 	casts[slot] = now
+	QuestService.onAbility(player)
 
 	local extra: { [string]: any } = {}
 	local animBySlot = { Z = "throw", X = "dash", C = "heal", V = "ult" }

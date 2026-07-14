@@ -136,6 +136,10 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play("shopBuy")
 		return
 	end
+	if data.questComplete then
+		play("questDone")
+		return
+	end
 
 	-- Waves.
 	if data.waveState == "start" then

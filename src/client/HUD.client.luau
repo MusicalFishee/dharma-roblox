@@ -206,6 +206,13 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("Amrit!  +%d HP", data.heal), Color3.fromRGB(90, 255, 140))
 		return
 	end
+	if data.questComplete then
+		local reward = if data.rewardGold and data.rewardGold > 0
+			then string.format("+%d gold", data.rewardGold)
+			else string.format("+%d XP", data.rewardXp or 0)
+		showToast(string.format("QUEST COMPLETE:  %s  (%s)", tostring(data.title), reward), GREEN)
+		return
+	end
 	if data.shopBought then
 		showToast(string.format("%s  →  Tier %d", tostring(data.itemName), data.tier), Color3.fromRGB(255, 200, 40))
 		return

@@ -12,6 +12,7 @@ local PlayerData = require(ReplicatedStorage.Shared.PlayerData)
 local Net = require(ReplicatedStorage.Shared.Net)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local ProgressionService = require(script.Parent.ProgressionService)
+local QuestService = require(script.Parent.QuestService)
 
 local store = DataStoreService:GetDataStore("DharmaPlayerData_v1")
 local AUTOSAVE_INTERVAL = 90
@@ -46,15 +47,18 @@ local function loadPlayer(player: Player)
 	state.gold = data.gold
 	state.upgrades = { damage = data.upgrades.damage, health = data.upgrades.health }
 	state.bestWave = data.bestWave
+	state.quests = data.quests
 	state.dataLoaded = ok
 
 	if not ok then
 		warn("[Dharma] Load failed for " .. player.Name .. " — will NOT save (protecting progress).")
 	end
 
-	-- Reflect the loaded level immediately (stats + HUD), and show the saved gold.
+	-- Reflect the loaded level immediately (stats + HUD), show the saved gold,
+	-- and stand up the quest board (fills empty slots + syncs the panel).
 	ProgressionService.onCharacterSpawn(player)
 	Net.CombatFeedback:FireClient(player, { goldUpdate = true, gained = 0, gold = state.gold })
+	QuestService.ensureFilled(player)
 end
 
 local function savePlayer(player: Player)
@@ -66,10 +70,11 @@ local function savePlayer(player: Player)
 	local gold = state.gold
 	local upgrades = { damage = state.upgrades.damage, health = state.upgrades.health }
 	local bestWave = state.bestWave
+	local quests = state.quests
 
 	retry(function()
 		return store:UpdateAsync(keyFor(player), function(old: any)
-			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave)
+			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave, quests)
 			-- Never roll back XP or bestWave: keep whichever is higher.
 			-- (Gold is NOT anti-rollbacked — the shop legitimately spends it.)
 			if type(old) == "table" then

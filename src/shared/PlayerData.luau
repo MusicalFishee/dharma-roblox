@@ -22,12 +22,18 @@ export type Upgrades = {
 	health: number,
 }
 
+export type QuestSlot = {
+	id: string,
+	progress: number,
+}
+
 export type Data = {
 	version: number,
 	totalXp: number,
 	gold: number,
 	upgrades: Upgrades,
 	bestWave: number,
+	quests: { QuestSlot },
 }
 
 function PlayerData.default(): Data
@@ -37,6 +43,7 @@ function PlayerData.default(): Data
 		gold = 0,
 		upgrades = { damage = 0, health = 0 },
 		bestWave = 0,
+		quests = {},
 	}
 end
 
@@ -58,12 +65,32 @@ function PlayerData.validate(raw: any): Data
 		if type(raw.bestWave) == "number" and raw.bestWave >= 0 and raw.bestWave == raw.bestWave then
 			d.bestWave = math.floor(raw.bestWave)
 		end
+		if type(raw.quests) == "table" then
+			for _, slot in raw.quests do
+				if type(slot) == "table" and type(slot.id) == "string" and #d.quests < 8 then
+					local progress = 0
+					if type(slot.progress) == "number" and slot.progress >= 0 and slot.progress == slot.progress then
+						progress = math.floor(slot.progress)
+					end
+					table.insert(d.quests, { id = slot.id, progress = progress })
+				end
+			end
+		end
 	end
 	return d
 end
 
 -- Snapshot of the runtime state to persist.
-function PlayerData.serialize(totalXp: number, gold: number, upgrades: Upgrades?, bestWave: number?): Data
+function PlayerData.serialize(totalXp: number, gold: number, upgrades: Upgrades?, bestWave: number?, quests: { QuestSlot }?): Data
+	local questsCopy: { QuestSlot } = {}
+	if quests then
+		for _, slot in quests do
+			table.insert(questsCopy, {
+				id = slot.id,
+				progress = math.max(0, math.floor(slot.progress)),
+			})
+		end
+	end
 	return {
 		version = PlayerData.Version,
 		totalXp = math.max(0, math.floor(totalXp)),
@@ -73,6 +100,7 @@ function PlayerData.serialize(totalXp: number, gold: number, upgrades: Upgrades?
 			health = clampTier(if upgrades then upgrades.health else 0),
 		},
 		bestWave = math.max(0, math.floor(bestWave or 0)),
+		quests = questsCopy,
 	}
 end
 

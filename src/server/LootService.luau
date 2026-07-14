@@ -11,6 +11,7 @@ local Net = require(ReplicatedStorage.Shared.Net)
 local Loot = require(ReplicatedStorage.Shared.Loot)
 local EnemyTypes = require(ReplicatedStorage.Shared.EnemyTypes)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
+local QuestService = require(script.Parent.QuestService)
 
 local ORB_LIFETIME = 25
 
@@ -69,6 +70,7 @@ function LootService.dropAt(position: Vector3, archetype: EnemyTypes.EnemyArchet
 		local state = PlayerRegistry.get(player)
 		state.gold = Loot.clampGold(state.gold + gold)
 		Net.CombatFeedback:FireClient(player, { goldUpdate = true, gained = gold, gold = state.gold })
+		QuestService.onGold(player, gold)
 	end)
 
 	-- Occasional Amrit orb: heals on pickup.
