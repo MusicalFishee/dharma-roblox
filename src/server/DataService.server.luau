@@ -9,6 +9,7 @@ local Players = game:GetService("Players")
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local PlayerData = require(ReplicatedStorage.Shared.PlayerData)
+local Net = require(ReplicatedStorage.Shared.Net)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local ProgressionService = require(script.Parent.ProgressionService)
 
@@ -42,14 +43,16 @@ local function loadPlayer(player: Player)
 	local data = PlayerData.validate(if ok then raw else nil)
 	local state = PlayerRegistry.get(player)
 	state.totalXp = data.totalXp
+	state.gold = data.gold
 	state.dataLoaded = ok
 
 	if not ok then
 		warn("[Dharma] Load failed for " .. player.Name .. " — will NOT save (protecting progress).")
 	end
 
-	-- Reflect the loaded level immediately (stats + HUD).
+	-- Reflect the loaded level immediately (stats + HUD), and show the saved gold.
 	ProgressionService.onCharacterSpawn(player)
+	Net.CombatFeedback:FireClient(player, { goldUpdate = true, gained = 0, gold = state.gold })
 end
 
 local function savePlayer(player: Player)
@@ -58,11 +61,13 @@ local function savePlayer(player: Player)
 		return -- never write when we didn't successfully load
 	end
 	local xp = state.totalXp
+	local gold = state.gold
 
 	retry(function()
 		return store:UpdateAsync(keyFor(player), function(old: any)
-			local payload = PlayerData.serialize(xp)
-			-- Never roll back: if stored progress is somehow higher, keep it.
+			local payload = PlayerData.serialize(xp, gold)
+			-- Never roll back XP: if stored progress is somehow higher, keep it.
+			-- (Gold is NOT anti-rollbacked — a future shop legitimately spends it.)
 			if type(old) == "table" and type(old.totalXp) == "number" and old.totalXp > payload.totalXp then
 				payload.totalXp = old.totalXp
 			end

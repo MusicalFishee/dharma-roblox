@@ -70,6 +70,19 @@ levelLabel.TextSize = 13
 levelLabel.Text = "Lv 1"
 levelLabel.Parent = xpBg
 
+-- Gold counter (above the XP bar).
+local goldLabel = Instance.new("TextLabel")
+goldLabel.Size = UDim2.fromOffset(320, 20)
+goldLabel.Position = UDim2.new(0, 28, 1, -104)
+goldLabel.BackgroundTransparency = 1
+goldLabel.Font = Enum.Font.GothamBold
+goldLabel.TextXAlignment = Enum.TextXAlignment.Left
+goldLabel.TextSize = 16
+goldLabel.TextColor3 = Color3.fromRGB(255, 200, 40)
+goldLabel.TextStrokeTransparency = 0.6
+goldLabel.Text = "◈ 0 gold"
+goldLabel.Parent = screenGui
+
 -- Wave banner (top-centre).
 local waveLabel = Instance.new("TextLabel")
 waveLabel.Size = UDim2.fromOffset(360, 28)
@@ -179,6 +192,19 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 
 	if data.tejas ~= nil then
 		updateTejas(data.tejas)
+	end
+
+	-- Loot pickups.
+	if data.goldUpdate then
+		goldLabel.Text = string.format("◈ %d gold", data.gold)
+		if data.gained and data.gained > 0 then
+			showToast(string.format("+%d gold", data.gained), Color3.fromRGB(255, 200, 40))
+		end
+		return
+	end
+	if data.amrit then
+		showToast(string.format("Amrit!  +%d HP", data.heal), Color3.fromRGB(90, 255, 140))
+		return
 	end
 
 	-- Progression updates.

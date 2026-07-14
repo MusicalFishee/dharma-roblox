@@ -14,6 +14,7 @@ local EnemyTypes = require(ReplicatedStorage.Shared.EnemyTypes)
 local BossSpecials = require(ReplicatedStorage.Shared.BossSpecials)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local ProgressionService = require(script.Parent.ProgressionService)
+local LootService = require(script.Parent.LootService)
 
 local ENEMY_TAG = "DharmaEnemy"
 
@@ -295,6 +296,9 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 		if archetype.isBoss then
 			broadcastAll({ bossState = "defeated", bossName = archetype.displayName })
 		end
+
+		-- Burst into loot where it fell.
+		LootService.dropAt(root.Position, archetype)
 
 		if onDeath then
 			onDeath(killer)

@@ -15,6 +15,7 @@ export type PlayerState = {
 	chain: ComboChain.ComboChain,
 	tejas: number,
 	totalXp: number,
+	gold: number,
 	-- True once persistent data has loaded; guards against saving over real progress.
 	dataLoaded: boolean,
 	isBlocking: boolean,
@@ -43,6 +44,7 @@ function PlayerRegistry.get(player: Player): PlayerState
 		}),
 		tejas = 0,
 		totalXp = 0,
+		gold = 0,
 		dataLoaded = false,
 		isBlocking = false,
 		blockStartedAt = 0,
