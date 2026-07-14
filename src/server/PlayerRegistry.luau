@@ -15,6 +15,8 @@ export type PlayerState = {
 	chain: ComboChain.ComboChain,
 	tejas: number,
 	totalXp: number,
+	-- True once persistent data has loaded; guards against saving over real progress.
+	dataLoaded: boolean,
 	isBlocking: boolean,
 	blockStartedAt: number,
 	-- Wall-clock time (os.clock) until which dodge i-frames are active.
@@ -41,12 +43,18 @@ function PlayerRegistry.get(player: Player): PlayerState
 		}),
 		tejas = 0,
 		totalXp = 0,
+		dataLoaded = false,
 		isBlocking = false,
 		blockStartedAt = 0,
 		dodgeUntil = 0,
 	}
 	states[player] = state
 	return state
+end
+
+-- Returns the state only if it already exists (never creates one).
+function PlayerRegistry.tryGet(player: Player): PlayerState?
+	return states[player]
 end
 
 function PlayerRegistry.remove(player: Player)

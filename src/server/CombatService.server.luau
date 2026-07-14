@@ -126,6 +126,6 @@ Net.DefenseState.OnServerEvent:Connect(function(player: Player, data: any)
 	end
 end)
 
-game:GetService("Players").PlayerRemoving:Connect(PlayerRegistry.remove)
+-- Player-leave state cleanup is owned by DataService (it saves *before* removing).
 
 print("[Dharma] CombatService ready.")
