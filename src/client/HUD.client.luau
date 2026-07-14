@@ -271,12 +271,16 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		if data.combo ~= nil then
 			updateCombo(data.combo)
 		end
-		if data.outcome == "Locked" then
-			showToast(tostring(data.ability) .. " — not yet learned", Color3.fromRGB(170, 170, 170))
-		elseif data.outcome == "NoTejas" then
+		if data.outcome == "NoTejas" then
 			showToast("Not enough Tejas", MAGENTA)
-		elseif data.outcome == "AstraCast" then
-			showToast("AGNI ASTRA!", SAFFRON)
+		elseif data.outcome == "AbilityCooldown" then
+			showToast(tostring(data.abilityName) .. " — recharging", Color3.fromRGB(170, 170, 170))
+		elseif data.outcome == "AbilityCast" then
+			if data.ability == "V" then
+				showToast(string.format("INDRA'S WRATH!   %d struck", data.struck or 0), Color3.fromRGB(180, 220, 255))
+			else
+				showToast(string.upper(tostring(data.abilityName)) .. "!", SAFFRON)
+			end
 		elseif data.outcome == "Hit" and data.isFinisher then
 			showToast("FINISHER!", MAGENTA)
 		elseif data.outcome == "Hit" and data.combo and data.combo >= 5 then
