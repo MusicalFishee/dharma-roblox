@@ -88,6 +88,9 @@ local function enemyStrikes(enemy: EnemyState, player: Player, playerRoot: BaseP
 	local pstate = PlayerRegistry.get(player)
 	local now = os.clock()
 
+	-- Everyone sees the wind-up haymaker.
+	Net.AnimEvent:FireAllClients(enemy.model, "enemySwing")
+
 	local state = {
 		isDodging = now < pstate.dodgeUntil,
 		isBlocking = pstate.isBlocking,
@@ -99,6 +102,10 @@ local function enemyStrikes(enemy: EnemyState, player: Player, playerRoot: BaseP
 
 	if resolution.damage > 0 then
 		playerHum:TakeDamage(resolution.damage)
+		local char = player.Character
+		if char and resolution.outcome == "Hit" then
+			Net.AnimEvent:FireAllClients(char, "flinch")
+		end
 	end
 	if resolution.defenderTejasGain > 0 then
 		pstate.tejas = Combat.clampTejas(pstate.tejas + resolution.defenderTejasGain)

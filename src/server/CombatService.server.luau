@@ -72,6 +72,9 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 	end
 	local kind: Combat.AttackKind = if swing.kind == "Heavy" then "Heavy" else "Light"
 
+	-- Everyone sees the swing (combo1..combo4).
+	Net.AnimEvent:FireAllClients(character, "combo" .. math.clamp(swing.index, 1, 4))
+
 	local targets = findTargets(root)
 	if #targets == 0 then
 		Net.CombatFeedback:FireClient(player, { outcome = "Whiff", chain = swing.index })
@@ -89,6 +92,7 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 		local enemyModel = humanoid.Parent
 		if enemyModel and enemyModel:IsA("Model") then
 			enemyModel:SetAttribute("LastAttacker", player.UserId)
+			Net.AnimEvent:FireAllClients(enemyModel, "flinch")
 		end
 
 		humanoid:TakeDamage(damage)
@@ -120,12 +124,23 @@ Net.DefenseState.OnServerEvent:Connect(function(player: Player, data: any)
 		return
 	end
 	local state = PlayerRegistry.get(player)
-	state.isBlocking = data.isBlocking == true
-	if state.isBlocking then
-		state.blockStartedAt = os.clock()
+	local char = player.Character
+
+	if data.isBlocking ~= nil then
+		state.isBlocking = data.isBlocking == true
+		if state.isBlocking then
+			state.blockStartedAt = os.clock()
+		end
+		if char then
+			Net.AnimEvent:FireAllClients(char, if state.isBlocking then "blockstart" else "blockend")
+		end
 	end
+
 	if data.dodge == true then
 		state.dodgeUntil = os.clock() + Combat.Config.ParryWindowSeconds -- brief i-frames
+		if char then
+			Net.AnimEvent:FireAllClients(char, "dash")
+		end
 	end
 end)
 

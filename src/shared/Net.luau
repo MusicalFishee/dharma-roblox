@@ -30,6 +30,8 @@ local Net = {
 	DefenseState = ensureRemote("DefenseState"),
 	-- server -> client: HUD feedback (combo count, tejas, outcome text)
 	CombatFeedback = ensureRemote("CombatFeedback"),
+	-- server -> all clients: play a procedural animation on a character (model, trackName)
+	AnimEvent = ensureRemote("AnimEvent"),
 }
 
 return Net

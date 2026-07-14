@@ -254,6 +254,9 @@ Net.AbilityRequest.OnServerEvent:Connect(function(player: Player, slotArg: any)
 	casts[slot] = now
 
 	local extra: { [string]: any } = {}
+	local animBySlot = { Z = "throw", X = "dash", C = "heal", V = "ult" }
+	Net.AnimEvent:FireAllClients(character, animBySlot[slot])
+
 	if slot == "Z" then
 		castAgniAstra(player, character, root)
 	elseif slot == "X" then
