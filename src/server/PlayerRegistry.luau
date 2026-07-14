@@ -17,6 +17,7 @@ export type PlayerState = {
 	totalXp: number,
 	gold: number,
 	upgrades: { damage: number, health: number },
+	bestWave: number,
 	-- True once persistent data has loaded; guards against saving over real progress.
 	dataLoaded: boolean,
 	isBlocking: boolean,
@@ -47,6 +48,7 @@ function PlayerRegistry.get(player: Player): PlayerState
 		totalXp = 0,
 		gold = 0,
 		upgrades = { damage = 0, health = 0 },
+		bestWave = 0,
 		dataLoaded = false,
 		isBlocking = false,
 		blockStartedAt = 0,

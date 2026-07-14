@@ -45,6 +45,7 @@ local function loadPlayer(player: Player)
 	state.totalXp = data.totalXp
 	state.gold = data.gold
 	state.upgrades = { damage = data.upgrades.damage, health = data.upgrades.health }
+	state.bestWave = data.bestWave
 	state.dataLoaded = ok
 
 	if not ok then
@@ -64,14 +65,20 @@ local function savePlayer(player: Player)
 	local xp = state.totalXp
 	local gold = state.gold
 	local upgrades = { damage = state.upgrades.damage, health = state.upgrades.health }
+	local bestWave = state.bestWave
 
 	retry(function()
 		return store:UpdateAsync(keyFor(player), function(old: any)
-			local payload = PlayerData.serialize(xp, gold, upgrades)
-			-- Never roll back XP: if stored progress is somehow higher, keep it.
-			-- (Gold is NOT anti-rollbacked — a future shop legitimately spends it.)
-			if type(old) == "table" and type(old.totalXp) == "number" and old.totalXp > payload.totalXp then
-				payload.totalXp = old.totalXp
+			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave)
+			-- Never roll back XP or bestWave: keep whichever is higher.
+			-- (Gold is NOT anti-rollbacked — the shop legitimately spends it.)
+			if type(old) == "table" then
+				if type(old.totalXp) == "number" and old.totalXp > payload.totalXp then
+					payload.totalXp = old.totalXp
+				end
+				if type(old.bestWave) == "number" and old.bestWave > payload.bestWave then
+					payload.bestWave = old.bestWave
+				end
 			end
 			return payload
 		end)

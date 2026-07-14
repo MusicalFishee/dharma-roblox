@@ -27,6 +27,7 @@ export type Data = {
 	totalXp: number,
 	gold: number,
 	upgrades: Upgrades,
+	bestWave: number,
 }
 
 function PlayerData.default(): Data
@@ -35,6 +36,7 @@ function PlayerData.default(): Data
 		totalXp = 0,
 		gold = 0,
 		upgrades = { damage = 0, health = 0 },
+		bestWave = 0,
 	}
 end
 
@@ -53,12 +55,15 @@ function PlayerData.validate(raw: any): Data
 			d.upgrades.damage = clampTier(raw.upgrades.damage)
 			d.upgrades.health = clampTier(raw.upgrades.health)
 		end
+		if type(raw.bestWave) == "number" and raw.bestWave >= 0 and raw.bestWave == raw.bestWave then
+			d.bestWave = math.floor(raw.bestWave)
+		end
 	end
 	return d
 end
 
 -- Snapshot of the runtime state to persist.
-function PlayerData.serialize(totalXp: number, gold: number, upgrades: Upgrades?): Data
+function PlayerData.serialize(totalXp: number, gold: number, upgrades: Upgrades?, bestWave: number?): Data
 	return {
 		version = PlayerData.Version,
 		totalXp = math.max(0, math.floor(totalXp)),
@@ -67,6 +72,7 @@ function PlayerData.serialize(totalXp: number, gold: number, upgrades: Upgrades?
 			damage = clampTier(if upgrades then upgrades.damage else 0),
 			health = clampTier(if upgrades then upgrades.health else 0),
 		},
+		bestWave = math.max(0, math.floor(bestWave or 0)),
 	}
 end
 

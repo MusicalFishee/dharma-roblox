@@ -49,9 +49,15 @@ check("missing upgrades table -> defaults", PlayerData.validate({ totalXp = 5 })
 -- Serialize snapshots cleanly.
 check("serialize floors + clamps", PlayerData.serialize(-3, 0).totalXp == 0 and PlayerData.serialize(42.7, 0).totalXp == 42)
 check("serialize gold floors + clamps", PlayerData.serialize(0, -9).gold == 0 and PlayerData.serialize(0, 12.9).gold == 12)
-local rt = PlayerData.validate(PlayerData.serialize(777, 321, { damage = 2, health = 7 }))
-check("serialize round-trips through validate", rt.totalXp == 777 and rt.gold == 321 and rt.upgrades.health == 7)
+local rt = PlayerData.validate(PlayerData.serialize(777, 321, { damage = 2, health = 7 }, 14))
+check("serialize round-trips through validate", rt.totalXp == 777 and rt.gold == 321 and rt.upgrades.health == 7 and rt.bestWave == 14)
 check("serialize without upgrades defaults them", PlayerData.serialize(1, 1).upgrades.damage == 0)
+
+-- Best wave (added with leaderboards).
+check("default bestWave is 0", PlayerData.default().bestWave == 0)
+check("valid bestWave preserved", PlayerData.validate({ bestWave = 23 }).bestWave == 23)
+check("junk bestWave rejected", PlayerData.validate({ bestWave = -4 }).bestWave == 0 and PlayerData.validate({ bestWave = "deep" }).bestWave == 0)
+check("serialize without bestWave defaults 0", PlayerData.serialize(1, 1).bestWave == 0)
 
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
