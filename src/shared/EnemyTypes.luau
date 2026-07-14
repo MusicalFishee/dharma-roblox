@@ -17,6 +17,7 @@ export type EnemyArchetype = {
 	weight: number, -- spawn rarity (higher = more common)
 	isBoss: boolean?, -- bosses get a health bar + announcements
 	title: string?, -- boss epithet, e.g. "the Buffalo Demon"
+	isElite: boolean?, -- empowered variants get a golden glow
 }
 
 local EnemyTypes = {}

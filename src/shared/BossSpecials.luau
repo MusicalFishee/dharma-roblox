@@ -21,6 +21,8 @@ local CONFIGS: { [string]: Special } = {
 	Mahishasura = { name = "Gore Slam", telegraph = 1.4, radius = 20, damage = 35, cooldown = 8.0, targetPlayer = false },
 	Tarakasura = { name = "Hunting Comet", telegraph = 1.2, radius = 14, damage = 45, cooldown = 7.0, targetPlayer = true },
 	Kumbhakarna = { name = "Earthshatter", telegraph = 2.0, radius = 30, damage = 60, cooldown = 11.0, targetPlayer = false },
+	Hiranyakashipu = { name = "Tyrant's Decree", telegraph = 1.2, radius = 15, damage = 50, cooldown = 6.5, targetPlayer = true },
+	Bakasura = { name = "Hungering Maw", telegraph = 1.8, radius = 26, damage = 55, cooldown = 10.0, targetPlayer = false },
 }
 
 local DEFAULT: Special = { name = "Ground Slam", telegraph = 1.4, radius = 20, damage = 35, cooldown = 8.0, targetPlayer = false }

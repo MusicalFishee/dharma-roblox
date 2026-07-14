@@ -8,7 +8,9 @@ local Net = require(ReplicatedStorage.Shared.Net)
 local Waves = require(ReplicatedStorage.Shared.Waves)
 local EnemyTypes = require(ReplicatedStorage.Shared.EnemyTypes)
 local Bosses = require(ReplicatedStorage.Shared.Bosses)
+local Elites = require(ReplicatedStorage.Shared.Elites)
 local EnemyService = require(script.Parent.EnemyService)
+local ZoneService = require(script.Parent.ZoneService)
 local ProgressionService = require(script.Parent.ProgressionService)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local QuestService = require(script.Parent.QuestService)
@@ -23,6 +25,15 @@ local function announce(data: { [string]: any })
 	for _, p in Players:GetPlayers() do
 		Net.CombatFeedback:FireClient(p, data)
 	end
+end
+
+-- Fetch the archetype for an id, with an elite roll on top.
+local function resolveArchetype(id: string)
+	local archetype = EnemyTypes.get(id)
+	if Elites.roll() then
+		return Elites.makeElite(archetype)
+	end
+	return archetype
 end
 
 local startWave: (number) -> ()
@@ -62,7 +73,7 @@ local function spawnBossWave(wave: number)
 	end)
 	for i, id in adds do
 		task.spawn(function()
-			local a = EnemyTypes.get(id)
+			local a = resolveArchetype(id)
 			local angle = (2 * math.pi * i) / #adds
 			local pos = Vector3.new(math.cos(angle) * ARENA_RADIUS, 6, math.sin(angle) * ARENA_RADIUS)
 			EnemyService.spawn(a, pos, onOneDead)
@@ -72,6 +83,7 @@ end
 
 function startWave(wave: number)
 	currentWave = wave
+	ZoneService.applyForWave(wave)
 	if Waves.isBossWave(wave) then
 		spawnBossWave(wave)
 		return
@@ -83,7 +95,7 @@ function startWave(wave: number)
 	local total = #ids
 	for i, id in ids do
 		task.spawn(function()
-			local archetype = EnemyTypes.get(id)
+			local archetype = resolveArchetype(id)
 			local angle = (2 * math.pi * i) / total + math.random() * 0.4
 			local pos = Vector3.new(math.cos(angle) * ARENA_RADIUS, 6, math.sin(angle) * ARENA_RADIUS)
 			EnemyService.spawn(archetype, pos, function(_killer: Player?)

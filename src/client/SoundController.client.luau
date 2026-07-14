@@ -141,6 +141,12 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		return
 	end
 
+	-- Zone transitions get the deep boom.
+	if data.zoneChange then
+		play("bossSpawn")
+		return
+	end
+
 	-- Waves.
 	if data.waveState == "start" then
 		play("waveStart")

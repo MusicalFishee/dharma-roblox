@@ -240,6 +240,12 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		return
 	end
 
+	-- Zone transitions.
+	if data.zoneChange then
+		showToast(string.format("— %s —", tostring(data.name)), Color3.fromRGB(170, 255, 190))
+		return
+	end
+
 	-- Wave director updates.
 	if data.waveState then
 		local ORANGE = Color3.fromRGB(255, 180, 90)

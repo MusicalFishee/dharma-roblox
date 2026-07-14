@@ -201,6 +201,16 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 	model.Parent = workspace
 	CollectionService:AddTag(model, ENEMY_TAG)
 
+	-- Elites burn gold so you can spot the threat (and the payday) at a glance.
+	if archetype.isElite then
+		local glow = Instance.new("Highlight")
+		glow.FillColor = Color3.fromRGB(255, 200, 40)
+		glow.FillTransparency = 0.75
+		glow.OutlineColor = Color3.fromRGB(255, 220, 90)
+		glow.OutlineTransparency = 0.2
+		glow.Parent = model
+	end
+
 	enemies[model] = {
 		model = model,
 		humanoid = humanoid,
