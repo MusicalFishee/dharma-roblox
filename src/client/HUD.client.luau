@@ -83,6 +83,38 @@ waveLabel.TextStrokeTransparency = 0.5
 waveLabel.Text = ""
 waveLabel.Parent = screenGui
 
+-- Boss health bar (top-centre, hidden until a boss spawns).
+local bossFrame = Instance.new("Frame")
+bossFrame.Size = UDim2.fromOffset(520, 44)
+bossFrame.AnchorPoint = Vector2.new(0.5, 0)
+bossFrame.Position = UDim2.new(0.5, 0, 0, 46)
+bossFrame.BackgroundTransparency = 1
+bossFrame.Visible = false
+bossFrame.Parent = screenGui
+
+local bossName = Instance.new("TextLabel")
+bossName.Size = UDim2.fromOffset(520, 20)
+bossName.BackgroundTransparency = 1
+bossName.Font = Enum.Font.GothamBlack
+bossName.TextSize = 18
+bossName.TextColor3 = Color3.fromRGB(255, 90, 80)
+bossName.TextStrokeTransparency = 0.4
+bossName.Text = ""
+bossName.Parent = bossFrame
+
+local bossBarBg = Instance.new("Frame")
+bossBarBg.Size = UDim2.fromOffset(520, 16)
+bossBarBg.Position = UDim2.fromOffset(0, 24)
+bossBarBg.BackgroundColor3 = Color3.fromRGB(25, 10, 12)
+bossBarBg.BorderSizePixel = 0
+bossBarBg.Parent = bossFrame
+
+local bossBarFill = Instance.new("Frame")
+bossBarFill.Size = UDim2.fromScale(1, 1)
+bossBarFill.BackgroundColor3 = Color3.fromRGB(210, 40, 40)
+bossBarFill.BorderSizePixel = 0
+bossBarFill.Parent = bossBarBg
+
 -- Combo counter (top-centre).
 local comboLabel = Instance.new("TextLabel")
 comboLabel.Size = UDim2.fromOffset(400, 70)
@@ -174,6 +206,25 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		elseif data.waveState == "clear" then
 			waveLabel.Text = string.format("WAVE %d CLEARED", data.wave)
 			showToast(string.format("WAVE %d CLEARED!    +%d XP", data.wave, data.bonusXp), YELLOW)
+		elseif data.waveState == "boss" then
+			waveLabel.Text = string.format("WAVE %d   —   BOSS", data.wave)
+		end
+		return
+	end
+
+	-- Boss health bar.
+	if data.bossState then
+		if data.bossState == "spawn" then
+			bossFrame.Visible = true
+			bossName.Text = string.format("%s  —  %s", tostring(data.bossName), tostring(data.bossTitle))
+			bossBarFill.Size = UDim2.fromScale(1, 1)
+			showToast(string.format("BOSS:  %s", tostring(data.bossName)), Color3.fromRGB(255, 90, 80))
+		elseif data.bossState == "health" then
+			local pct = if data.bossMaxHealth > 0 then math.clamp(data.bossHealth / data.bossMaxHealth, 0, 1) else 0
+			TweenService:Create(bossBarFill, TweenInfo.new(0.15), { Size = UDim2.fromScale(pct, 1) }):Play()
+		elseif data.bossState == "defeated" then
+			bossFrame.Visible = false
+			showToast(string.format("%s  DEFEATED!", tostring(data.bossName)), YELLOW)
 		end
 		return
 	end

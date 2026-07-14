@@ -55,6 +55,12 @@ local a = Waves.compose(3, roster, fixedRng())
 local b = Waves.compose(3, roster, fixedRng())
 check("same rng -> identical wave", table.concat(a, ",") == table.concat(b, ","))
 
+-- Boss waves land every 5th wave.
+check("wave 5 is a boss wave", Waves.isBossWave(5))
+check("wave 10 is a boss wave", Waves.isBossWave(10))
+check("wave 4 is not a boss wave", not Waves.isBossWave(4))
+check("wave 0 is not a boss wave", not Waves.isBossWave(0))
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

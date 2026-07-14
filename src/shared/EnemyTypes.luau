@@ -15,6 +15,8 @@ export type EnemyArchetype = {
 	scale: number, -- body size multiplier
 	skin: { number }, -- {r,g,b} 0-255
 	weight: number, -- spawn rarity (higher = more common)
+	isBoss: boolean?, -- bosses get a health bar + announcements
+	title: string?, -- boss epithet, e.g. "the Buffalo Demon"
 }
 
 local EnemyTypes = {}

@@ -23,6 +23,13 @@ end
 -- Seconds of breather between waves.
 Waves.Intermission = 5
 
+-- A boss shows up every Nth wave.
+Waves.BossInterval = 5
+
+function Waves.isBossWave(wave: number): boolean
+	return wave > 0 and wave % Waves.BossInterval == 0
+end
+
 -- Picks the archetype ids for a wave. Tougher enemies get likelier the deeper you go.
 -- `rng` returns [0, 1) (defaults to math.random); injectable for deterministic tests.
 function Waves.compose(

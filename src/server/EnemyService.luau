@@ -31,6 +31,12 @@ type EnemyState = {
 local enemies: { [Model]: EnemyState } = {}
 local alive = 0
 
+local function broadcastAll(data: { [string]: any })
+	for _, p in Players:GetPlayers() do
+		Net.CombatFeedback:FireClient(p, data)
+	end
+end
+
 local function getRoot(model: Model): BasePart?
 	local root = model:FindFirstChild("HumanoidRootPart")
 	if root and root:IsA("BasePart") then
@@ -192,6 +198,21 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 	}
 	alive += 1
 
+	-- Bosses drive the on-screen health bar.
+	if archetype.isBoss then
+		local maxHp = archetype.maxHealth
+		broadcastAll({
+			bossState = "spawn",
+			bossName = archetype.displayName,
+			bossTitle = archetype.title,
+			bossHealth = maxHp,
+			bossMaxHealth = maxHp,
+		})
+		humanoid.HealthChanged:Connect(function(health: number)
+			broadcastAll({ bossState = "health", bossHealth = math.max(0, health), bossMaxHealth = maxHp })
+		end)
+	end
+
 	local handled = false
 	humanoid.Died:Connect(function()
 		if handled then
@@ -209,6 +230,10 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 			if killer then
 				ProgressionService.awardXp(killer, archetype.xpReward)
 			end
+		end
+
+		if archetype.isBoss then
+			broadcastAll({ bossState = "defeated", bossName = archetype.displayName })
 		end
 
 		if onDeath then
