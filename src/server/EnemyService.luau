@@ -227,7 +227,8 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 			broadcastAll({ bossState = "health", bossHealth = math.max(0, health), bossMaxHealth = maxHp })
 		end)
 
-		-- Telegraphed slam on a cooldown: wind up (boss halts), then AoE the danger zone.
+		-- Telegraphed special on a cooldown: wind up (boss halts), then AoE the danger zone.
+		-- Self-centered slam, or — for hunters — dropped on the nearest player's feet.
 		local special = BossSpecials.forBoss(archetype.id)
 		task.spawn(function()
 			while enemies[model] and humanoid.Health > 0 do
@@ -237,14 +238,20 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 					break
 				end
 
-				local _p, _r, _h, dist = nearestPlayer(st.root.Position)
-				if dist > special.radius + 45 then
-					continue -- nobody close enough to bother slamming
+				local nearP, nearRoot, _h, dist = nearestPlayer(st.root.Position)
+				if not nearP or dist > special.radius + 55 then
+					continue -- nobody close enough to bother
 				end
 
 				local now = os.clock()
 				st.castingUntil = now + special.telegraph
-				local cx, cy, cz = st.root.Position.X, st.root.Position.Y - 2.5, st.root.Position.Z
+
+				-- Blast centre: the hunter marks YOUR position; slammers use their own.
+				local centerPos = if special.targetPlayer and nearRoot then nearRoot.Position else st.root.Position
+				local cx, cy, cz = centerPos.X, st.root.Position.Y - 2.5, centerPos.Z
+
+				-- Windup: arms to the sky (also gives the warn sound via AnimSounds).
+				Net.AnimEvent:FireAllClients(model, "ult")
 				broadcastAll({
 					bossSpecial = "telegraph",
 					name = special.name,
@@ -260,7 +267,27 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 					break
 				end
 
-				-- Impact: everyone still standing in the zone takes the hit.
+				-- Impact: slam animation + boom, then resolve everyone in the zone.
+				Net.AnimEvent:FireAllClients(model, "combo4")
+				broadcastAll({ bossSpecial = "impact", x = cx, y = cy, z = cz, radius = special.radius })
+
+				local boom = Instance.new("Part")
+				boom.Anchored = true
+				boom.CanCollide = false
+				boom.CanQuery = false
+				boom.Transparency = 1
+				boom.Size = Vector3.new(1, 1, 1)
+				boom.Position = Vector3.new(cx, cy + 2, cz)
+				boom.Parent = workspace
+				local boomSound = Instance.new("Sound")
+				boomSound.SoundId = "rbxasset://sounds/bass.wav"
+				boomSound.Volume = 1
+				boomSound.PlaybackSpeed = 0.4
+				boomSound.RollOffMaxDistance = 200
+				boomSound.Parent = boom
+				boomSound:Play()
+				game:GetService("Debris"):AddItem(boom, 3)
+
 				local targets: { BossSpecials.Target } = {}
 				for _, plr in Players:GetPlayers() do
 					local char = plr.Character
@@ -276,11 +303,30 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 					local victim = key :: Player
 					local char = victim.Character
 					local hum = char and char:FindFirstChildOfClass("Humanoid")
-					if hum then
-						hum:TakeDamage(special.damage)
+					local hrp = char and char:FindFirstChild("HumanoidRootPart")
+					if not char or not hum or hum.Health <= 0 then
+						continue
 					end
+
+					-- Vayu-dash i-frames escape it; blocking soaks half; otherwise full hit.
+					local vstate = PlayerRegistry.get(victim)
+					local res = BossSpecials.resolveBlast(special.damage, os.clock() < vstate.dodgeUntil, vstate.isBlocking)
+
+					if res.damage > 0 then
+						hum:TakeDamage(res.damage)
+						Net.AnimEvent:FireAllClients(char, "flinch")
+						-- Shockwave knockback, away from the blast centre.
+						if hrp and hrp:IsA("BasePart") then
+							local away = Vector3.new(hrp.Position.X - cx, 0, hrp.Position.Z - cz)
+							away = if away.Magnitude > 0.01 then away.Unit else Vector3.new(0, 0, 1)
+							hrp.AssemblyLinearVelocity = away * 55 + Vector3.new(0, 35, 0)
+						end
+					end
+					Net.CombatFeedback:FireClient(victim, {
+						outcome = res.outcome,
+						incoming = true,
+					})
 				end
-				broadcastAll({ bossSpecial = "impact", x = cx, y = cy, z = cz, radius = special.radius })
 			end
 		end)
 	end

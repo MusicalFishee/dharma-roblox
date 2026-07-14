@@ -1,8 +1,9 @@
 --!strict
--- Headless tests for boss special configs + slam hit-detection.
+-- Headless tests for boss special attacks.
 
 local process = require("@lune/process")
 local BossSpecials = require("../src/shared/BossSpecials")
+local Bosses = require("../src/shared/Bosses")
 
 local passed, failed = 0, 0
 local failures: { string } = {}
@@ -22,8 +23,20 @@ print("BossSpecials")
 -- Configs.
 check("known boss has its special", BossSpecials.forBoss("Kumbhakarna").name == "Earthshatter")
 check("unknown boss falls back to default", BossSpecials.forBoss("???").name == "Ground Slam")
-check("specials do real damage", BossSpecials.forBoss("Mahishasura").damage > 0)
 check("bigger boss = bigger radius", BossSpecials.forBoss("Kumbhakarna").radius > BossSpecials.forBoss("Tarakasura").radius)
+check("the hunter targets players, slammers self-center", BossSpecials.forBoss("Tarakasura").targetPlayer and not BossSpecials.forBoss("Mahishasura").targetPlayer)
+check("telegraph gives a real escape window (>= 1s)", BossSpecials.forBoss("Mahishasura").telegraph >= 1 and BossSpecials.forBoss("Tarakasura").telegraph >= 1 and BossSpecials.forBoss("Kumbhakarna").telegraph >= 1)
+
+-- Every roster boss resolves to a sane special.
+local rosterOk = true
+for _, wave in { 5, 10, 15 } do
+	local boss = Bosses.forWave(wave, 5)
+	local sp = BossSpecials.forBoss(boss.id)
+	if sp.telegraph < 0.5 or sp.radius <= 0 or sp.damage <= 0 or sp.cooldown <= sp.telegraph then
+		rosterOk = false
+	end
+end
+check("all roster bosses have sane specials (cooldown > telegraph)", rosterOk)
 
 -- Hit detection: 2D radius around the slam centre.
 local center = { x = 0, z = 0 }
@@ -40,7 +53,16 @@ end
 check("target inside radius is hit", hitSet["inside"] == true)
 check("target on the boundary is hit", hitSet["edge"] == true)
 check("target outside radius is safe", hitSet["outside"] ~= true)
-check("dodging out of the zone avoids it", #BossSpecials.hitTargets(center, { { key = "moved", x = 25, z = 25 } }, 12) == 0)
+check("moving out of the zone avoids it", #BossSpecials.hitTargets(center, { { key = "moved", x = 25, z = 25 } }, 12) == 0)
+
+-- Blast resolution.
+local dodge = BossSpecials.resolveBlast(60, true, false)
+check("i-frames negate the blast", dodge.outcome == "Dodge" and dodge.damage == 0)
+local block = BossSpecials.resolveBlast(60, false, true)
+check("block soaks half", block.outcome == "Block" and block.damage == 30)
+local hitRes = BossSpecials.resolveBlast(60, false, false)
+check("unguarded takes full", hitRes.outcome == "Hit" and hitRes.damage == 60)
+check("dodge beats block when both", BossSpecials.resolveBlast(60, true, true).outcome == "Dodge")
 
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
