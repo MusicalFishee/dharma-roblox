@@ -1,6 +1,6 @@
 --!strict
--- Spawns varied rigged enemies (data-driven archetypes) and drives them with the
--- tested EnemyAI logic. Landing the kill grants that player XP.
+-- Enemy engine (module): the wave system asks it to spawn enemies; it runs their
+-- AI, applies their strikes, grants XP on death, and reports deaths back.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollectionService = game:GetService("CollectionService")
@@ -15,9 +15,8 @@ local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local ProgressionService = require(script.Parent.ProgressionService)
 
 local ENEMY_TAG = "DharmaEnemy"
-local NUM_ENEMIES = 5
-local SPAWN_RADIUS = 42
-local RESPAWN_DELAY = 5
+
+local EnemyService = {}
 
 type EnemyState = {
 	model: Model,
@@ -26,9 +25,11 @@ type EnemyState = {
 	archetype: EnemyTypes.EnemyArchetype,
 	nextAttackAt: number,
 	staggeredUntil: number,
+	onDeath: ((Player?) -> ())?,
 }
 
 local enemies: { [Model]: EnemyState } = {}
+local alive = 0
 
 local function getRoot(model: Model): BasePart?
 	local root = model:FindFirstChild("HumanoidRootPart")
@@ -130,8 +131,11 @@ local function stepEnemy(enemy: EnemyState)
 	end
 end
 
-local function spawnEnemy(index: number)
-	local archetype = EnemyTypes.pick()
+function EnemyService.aliveCount(): number
+	return alive
+end
+
+function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vector3, onDeath: ((Player?) -> ())?)
 	local skin = Color3.fromRGB(archetype.skin[1], archetype.skin[2], archetype.skin[3])
 
 	local ok, model = pcall(function()
@@ -147,6 +151,9 @@ local function spawnEnemy(index: number)
 
 	if not ok or typeof(model) ~= "Instance" or not model:IsA("Model") then
 		warn("[Dharma] Failed to create enemy rig: " .. tostring(model))
+		if onDeath then
+			onDeath(nil) -- don't stall the wave on a failed spawn
+		end
 		return
 	end
 
@@ -154,6 +161,9 @@ local function spawnEnemy(index: number)
 	local root = getRoot(model)
 	if not humanoid or not root then
 		model:Destroy()
+		if onDeath then
+			onDeath(nil)
+		end
 		return
 	end
 
@@ -166,12 +176,9 @@ local function spawnEnemy(index: number)
 		model:ScaleTo(archetype.scale)
 	end)
 
-	local angle = (2 * math.pi * index) / NUM_ENEMIES + math.random() * 0.6
-	local pos = Vector3.new(math.cos(angle) * SPAWN_RADIUS, 6, math.sin(angle) * SPAWN_RADIUS)
-	model:PivotTo(CFrame.new(pos))
+	model:PivotTo(CFrame.new(position))
 	model.Name = archetype.displayName
 	model.Parent = workspace
-
 	CollectionService:AddTag(model, ENEMY_TAG)
 
 	enemies[model] = {
@@ -181,32 +188,44 @@ local function spawnEnemy(index: number)
 		archetype = archetype,
 		nextAttackAt = 0,
 		staggeredUntil = 0,
+		onDeath = onDeath,
 	}
+	alive += 1
 
+	local handled = false
 	humanoid.Died:Connect(function()
+		if handled then
+			return
+		end
+		handled = true
 		enemies[model] = nil
+		alive = math.max(0, alive - 1)
 		CollectionService:RemoveTag(model, ENEMY_TAG)
 
-		-- Award XP to whoever landed the last hit.
 		local killerId = model:GetAttribute("LastAttacker")
+		local killer: Player? = nil
 		if typeof(killerId) == "number" then
-			local killer = Players:GetPlayerByUserId(killerId)
+			killer = Players:GetPlayerByUserId(killerId)
 			if killer then
 				ProgressionService.awardXp(killer, archetype.xpReward)
 			end
 		end
 
-		task.delay(4, function()
+		if onDeath then
+			onDeath(killer)
+		end
+		task.delay(3, function()
 			model:Destroy()
-		end)
-		task.delay(RESPAWN_DELAY, function()
-			spawnEnemy(index)
 		end)
 	end)
 end
 
-for i = 1, NUM_ENEMIES do
-	task.spawn(spawnEnemy, i)
+function EnemyService.clearAll()
+	for model in enemies do
+		model:Destroy()
+	end
+	table.clear(enemies)
+	alive = 0
 end
 
 RunService.Heartbeat:Connect(function()
@@ -215,4 +234,4 @@ RunService.Heartbeat:Connect(function()
 	end
 end)
 
-print("[Dharma] EnemyService ready — spawning " .. NUM_ENEMIES .. " varied enemies.")
+return EnemyService

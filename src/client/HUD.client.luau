@@ -70,6 +70,19 @@ levelLabel.TextSize = 13
 levelLabel.Text = "Lv 1"
 levelLabel.Parent = xpBg
 
+-- Wave banner (top-centre).
+local waveLabel = Instance.new("TextLabel")
+waveLabel.Size = UDim2.fromOffset(360, 28)
+waveLabel.AnchorPoint = Vector2.new(0.5, 0)
+waveLabel.Position = UDim2.new(0.5, 0, 0, 8)
+waveLabel.BackgroundTransparency = 1
+waveLabel.Font = Enum.Font.GothamBold
+waveLabel.TextSize = 20
+waveLabel.TextColor3 = Color3.fromRGB(255, 180, 90)
+waveLabel.TextStrokeTransparency = 0.5
+waveLabel.Text = ""
+waveLabel.Parent = screenGui
+
 -- Combo counter (top-centre).
 local comboLabel = Instance.new("TextLabel")
 comboLabel.Size = UDim2.fromOffset(400, 70)
@@ -147,6 +160,21 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 	end
 	if data.outcome == "AbilityLocked" then
 		showToast(string.format("%s unlocks at Lv %s", tostring(data.ability), tostring(data.unlockLevel)), Color3.fromRGB(170, 170, 170))
+		return
+	end
+
+	-- Wave director updates.
+	if data.waveState then
+		local ORANGE = Color3.fromRGB(255, 180, 90)
+		if data.waveState == "start" then
+			waveLabel.Text = string.format("WAVE %d    —    %d enemies", data.wave, data.enemiesLeft)
+			showToast(string.format("WAVE %d", data.wave), ORANGE)
+		elseif data.waveState == "progress" then
+			waveLabel.Text = string.format("WAVE %d    —    %d left", data.wave, data.enemiesLeft)
+		elseif data.waveState == "clear" then
+			waveLabel.Text = string.format("WAVE %d CLEARED", data.wave)
+			showToast(string.format("WAVE %d CLEARED!    +%d XP", data.wave, data.bonusXp), YELLOW)
+		end
 		return
 	end
 
