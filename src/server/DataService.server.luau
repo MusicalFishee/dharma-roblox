@@ -44,6 +44,7 @@ local function loadPlayer(player: Player)
 	local state = PlayerRegistry.get(player)
 	state.totalXp = data.totalXp
 	state.gold = data.gold
+	state.upgrades = { damage = data.upgrades.damage, health = data.upgrades.health }
 	state.dataLoaded = ok
 
 	if not ok then
@@ -62,10 +63,11 @@ local function savePlayer(player: Player)
 	end
 	local xp = state.totalXp
 	local gold = state.gold
+	local upgrades = { damage = state.upgrades.damage, health = state.upgrades.health }
 
 	retry(function()
 		return store:UpdateAsync(keyFor(player), function(old: any)
-			local payload = PlayerData.serialize(xp, gold)
+			local payload = PlayerData.serialize(xp, gold, upgrades)
 			-- Never roll back XP: if stored progress is somehow higher, keep it.
 			-- (Gold is NOT anti-rollbacked — a future shop legitimately spends it.)
 			if type(old) == "table" and type(old.totalXp) == "number" and old.totalXp > payload.totalXp then

@@ -206,6 +206,18 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("Amrit!  +%d HP", data.heal), Color3.fromRGB(90, 255, 140))
 		return
 	end
+	if data.shopBought then
+		showToast(string.format("%s  →  Tier %d", tostring(data.itemName), data.tier), Color3.fromRGB(255, 200, 40))
+		return
+	end
+	if data.shopDenied then
+		if data.reason == "gold" then
+			showToast("Not enough gold", Color3.fromRGB(200, 120, 120))
+		elseif data.reason == "max" then
+			showToast("Already at max tier", Color3.fromRGB(170, 170, 170))
+		end
+		return
+	end
 
 	-- Progression updates.
 	if data.progress then

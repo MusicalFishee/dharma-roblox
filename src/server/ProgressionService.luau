@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Net = require(ReplicatedStorage.Shared.Net)
 local Progression = require(ReplicatedStorage.Shared.Progression)
+local Shop = require(ReplicatedStorage.Shared.Shop)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 
 local ProgressionService = {}
@@ -18,7 +19,8 @@ local function applyLevelStats(player: Player, level: number, fullHeal: boolean)
 	if not humanoid then
 		return
 	end
-	humanoid.MaxHealth = Progression.maxHealthForLevel(level)
+	local state = PlayerRegistry.get(player)
+	humanoid.MaxHealth = Progression.maxHealthForLevel(level) + Shop.healthBonus(state.upgrades.health)
 	if fullHeal then
 		humanoid.Health = humanoid.MaxHealth
 	end
@@ -44,6 +46,11 @@ end
 function ProgressionService.onCharacterSpawn(player: Player)
 	applyLevelStats(player, ProgressionService.getLevel(player), true)
 	ProgressionService.sync(player)
+end
+
+-- Re-apply stats without a full heal (e.g. after buying a shop upgrade).
+function ProgressionService.refreshStats(player: Player)
+	applyLevelStats(player, ProgressionService.getLevel(player), false)
 end
 
 function ProgressionService.awardXp(player: Player, amount: number)
