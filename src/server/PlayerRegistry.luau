@@ -32,6 +32,9 @@ export type PlayerState = {
 	blockStartedAt: number,
 	-- Wall-clock time (os.clock) until which dodge i-frames are active.
 	dodgeUntil: number,
+	-- Status-effect expiries (os.clock): venom DoT active / healing cursed.
+	venomUntil: number,
+	curseUntil: number,
 }
 
 local PlayerRegistry = {}
@@ -66,6 +69,8 @@ function PlayerRegistry.get(player: Player): PlayerState
 		isBlocking = false,
 		blockStartedAt = 0,
 		dodgeUntil = 0,
+		venomUntil = 0,
+		curseUntil = 0,
 	}
 	states[player] = state
 	return state

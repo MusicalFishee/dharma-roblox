@@ -10,6 +10,7 @@ local TweenService = game:GetService("TweenService")
 local Net = require(ReplicatedStorage.Shared.Net)
 local Loot = require(ReplicatedStorage.Shared.Loot)
 local EnemyTypes = require(ReplicatedStorage.Shared.EnemyTypes)
+local StatusEffects = require(ReplicatedStorage.Shared.StatusEffects)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local QuestService = require(script.Parent.QuestService)
 
@@ -79,10 +80,13 @@ function LootService.dropAt(position: Vector3, archetype: EnemyTypes.EnemyArchet
 		onFirstTouch(amritOrb, function(player: Player)
 			local char = player.Character
 			local hum = char and char:FindFirstChildOfClass("Humanoid")
+			-- Curses thin even Amrit, the nectar of immortality.
+			local state = PlayerRegistry.get(player)
+			local heal = StatusEffects.effectiveHeal(Loot.AmritHeal, os.clock() < state.curseUntil)
 			if hum then
-				hum.Health = math.min(hum.MaxHealth, hum.Health + Loot.AmritHeal)
+				hum.Health = math.min(hum.MaxHealth, hum.Health + heal)
 			end
-			Net.CombatFeedback:FireClient(player, { amrit = true, heal = Loot.AmritHeal })
+			Net.CombatFeedback:FireClient(player, { amrit = true, heal = heal })
 		end)
 	end
 end

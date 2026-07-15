@@ -32,6 +32,8 @@ export type Archetype = {
 	ranged: boolean?,
 	projectileSpeed: number?,
 	retreatRange: number?,
+	inflicts: string?,
+	leavesPool: boolean?,
 }
 
 -- Does this spawn roll elite? `rng` returns [0,1) (injectable for tests).
@@ -59,10 +61,12 @@ function Elites.makeElite(base: Archetype): Archetype
 		weight = base.weight,
 		isBoss = false,
 		isElite = true,
-		-- An elite archer is still an archer.
+		-- An elite archer is still an archer; an elite ghoul still envenoms.
 		ranged = base.ranged,
 		projectileSpeed = base.projectileSpeed,
 		retreatRange = base.retreatRange,
+		inflicts = base.inflicts,
+		leavesPool = base.leavesPool,
 	}
 end
 

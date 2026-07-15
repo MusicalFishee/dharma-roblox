@@ -22,6 +22,10 @@ export type EnemyArchetype = {
 	ranged: boolean?,
 	projectileSpeed: number?, -- studs/second
 	retreatRange: number?, -- closer than this, they back off
+	-- Status effects: what landing a HIT inflicts on the player, and whether the
+	-- creature's corpse leaves a toxic pool behind.
+	inflicts: string?, -- "venom" | "curse"
+	leavesPool: boolean?,
 }
 
 local EnemyTypes = {}
@@ -56,6 +60,8 @@ EnemyTypes.List = {
 		scale = 0.82,
 		skin = { 150, 150, 128 },
 		weight = 4,
+		inflicts = "venom",
+		leavesPool = true,
 	},
 	-- Agile shadow assassin — high damage, thin health.
 	Vetala = {
@@ -71,6 +77,7 @@ EnemyTypes.List = {
 		scale = 1.0,
 		skin = { 40, 42, 58 },
 		weight = 2,
+		inflicts = "curse",
 	},
 	-- Golden demon-archer — kites away and rains dodgeable arrows from afar.
 	Maricha = {

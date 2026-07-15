@@ -16,6 +16,7 @@ local EnemyTypes = require(ReplicatedStorage.Shared.EnemyTypes)
 local BossSpecials = require(ReplicatedStorage.Shared.BossSpecials)
 local Enchants = require(ReplicatedStorage.Shared.Enchants)
 local Loot = require(ReplicatedStorage.Shared.Loot)
+local StatusEffects = require(ReplicatedStorage.Shared.StatusEffects)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local ProgressionService = require(script.Parent.ProgressionService)
 local LootService = require(script.Parent.LootService)
@@ -92,12 +93,54 @@ end
 -- Shared incoming-hit pipeline (melee blows and arrow impacts alike): reads the
 -- defender's dodge/block state, resolves, applies damage/tejas/mantra soaks, quests
 -- the parry, and toasts the outcome. Returns the resolution for attacker-side effects.
+-- Envenom a player: a short DoT with a sickly green flame. A fresh bite while
+-- already poisoned is wasted (no stacking).
+local function applyVenom(player: Player, playerHum: Humanoid)
+	local pstate = PlayerRegistry.get(player)
+	local now = os.clock()
+	if now < pstate.venomUntil then
+		return
+	end
+	pstate.venomUntil = now + StatusEffects.Venom.seconds
+
+	local char = player.Character
+	local root = char and getRoot(char)
+	if root then
+		local sick = Instance.new("Fire")
+		sick.Size = 3
+		sick.Heat = 2
+		sick.Color = Color3.fromRGB(110, 255, 110)
+		sick.SecondaryColor = Color3.fromRGB(30, 90, 30)
+		sick.Parent = root
+		Debris:AddItem(sick, StatusEffects.Venom.seconds)
+	end
+	Net.CombatFeedback:FireClient(player, { statusEffect = "venom", seconds = StatusEffects.Venom.seconds })
+
+	task.spawn(function()
+		for _ = 1, StatusEffects.Venom.seconds do
+			task.wait(1)
+			if playerHum.Health <= 0 or not playerHum.Parent then
+				break
+			end
+			playerHum:TakeDamage(StatusEffects.venomTick())
+		end
+	end)
+end
+
+-- Curse a player: healing halved while it lasts (heal paths read curseUntil).
+local function applyCurse(player: Player)
+	local pstate = PlayerRegistry.get(player)
+	pstate.curseUntil = os.clock() + StatusEffects.Curse.seconds
+	Net.CombatFeedback:FireClient(player, { statusEffect = "curse", seconds = StatusEffects.Curse.seconds })
+end
+
 local function resolveHitOnPlayer(
 	player: Player,
 	playerRoot: BasePart,
 	playerHum: Humanoid,
 	damage: number,
-	attackerPos: Vector3
+	attackerPos: Vector3,
+	inflicts: string?
 ): Combat.Resolution
 	local pstate = PlayerRegistry.get(player)
 	local now = os.clock()
@@ -127,6 +170,15 @@ local function resolveHitOnPlayer(
 		QuestService.onParry(player)
 	end
 
+	-- A clean HIT delivers the striker's affliction; any defense wards it off.
+	if resolution.outcome == "Hit" and inflicts then
+		if inflicts == "venom" then
+			applyVenom(player, playerHum)
+		elseif inflicts == "curse" then
+			applyCurse(player)
+		end
+	end
+
 	Net.CombatFeedback:FireClient(player, {
 		outcome = resolution.outcome,
 		incoming = true,
@@ -139,7 +191,8 @@ local function enemyStrikes(enemy: EnemyState, player: Player, playerRoot: BaseP
 	-- Everyone sees the wind-up haymaker.
 	Net.AnimEvent:FireAllClients(enemy.model, "enemySwing")
 
-	local resolution = resolveHitOnPlayer(player, playerRoot, playerHum, enemy.archetype.attackDamage, enemy.root.Position)
+	local resolution =
+		resolveHitOnPlayer(player, playerRoot, playerHum, enemy.archetype.attackDamage, enemy.root.Position, enemy.archetype.inflicts)
 	if resolution.attackerStaggered then
 		enemy.staggeredUntil = os.clock() + 1.0
 		enemy.humanoid:MoveTo(enemy.root.Position)
@@ -183,7 +236,7 @@ local function rangedStrikes(enemy: EnemyState, player: Player, playerRoot: Base
 		if (root.Position - targetPos).Magnitude > 6 then
 			return -- they moved; the arrow misses
 		end
-		resolveHitOnPlayer(player, root, hum, a.attackDamage, origin)
+		resolveHitOnPlayer(player, root, hum, a.attackDamage, origin, a.inflicts)
 	end)
 end
 
@@ -458,6 +511,46 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 
 		if archetype.isBoss then
 			broadcastAll({ bossState = "defeated", bossName = archetype.displayName })
+		end
+
+		-- Venomous corpses melt into a toxic pool — stand clear while it looses.
+		if archetype.leavesPool then
+			local center = root.Position
+			local pool = Instance.new("Part")
+			pool.Shape = Enum.PartType.Cylinder
+			pool.Size = Vector3.new(0.4, StatusEffects.Pool.radius * 2, StatusEffects.Pool.radius * 2)
+			pool.CFrame = CFrame.new(center.X, center.Y - 2.2, center.Z) * CFrame.Angles(0, 0, math.rad(90))
+			pool.Color = Color3.fromRGB(90, 200, 70)
+			pool.Material = Enum.Material.Neon
+			pool.Transparency = 0.55
+			pool.Anchored = true
+			pool.CanCollide = false
+			pool.CanQuery = false
+			pool.Parent = workspace
+			game:GetService("Debris"):AddItem(pool, StatusEffects.Pool.lifetime)
+
+			task.spawn(function()
+				local ticks = math.floor(StatusEffects.Pool.lifetime / StatusEffects.Pool.tick)
+				for _ = 1, ticks do
+					task.wait(StatusEffects.Pool.tick)
+					if not pool.Parent then
+						break
+					end
+					for _, plr in Players:GetPlayers() do
+						local char = plr.Character
+						local hrp = char and getRoot(char)
+						local hum = char and char:FindFirstChildOfClass("Humanoid")
+						if not hrp or not hum or hum.Health <= 0 then
+							continue
+						end
+						local flat = Vector3.new(hrp.Position.X - center.X, 0, hrp.Position.Z - center.Z)
+						local dmg = StatusEffects.poolTickDamage(flat.Magnitude)
+						if dmg > 0 then
+							hum:TakeDamage(dmg)
+						end
+					end
+				end
+			end)
 		end
 
 		-- Burst into loot where it fell.

@@ -10,6 +10,7 @@ local Progression = require(ReplicatedStorage.Shared.Progression)
 local Shop = require(ReplicatedStorage.Shared.Shop)
 local Weapons = require(ReplicatedStorage.Shared.Weapons)
 local Enchants = require(ReplicatedStorage.Shared.Enchants)
+local StatusEffects = require(ReplicatedStorage.Shared.StatusEffects)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 
 local Debris = game:GetService("Debris")
@@ -202,11 +203,12 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 		end
 	end
 
-	-- Rakta Thirst: drink back a share of everything dealt.
+	-- Rakta Thirst: drink back a share of everything dealt (curses thin the draught).
 	if healed > 0 then
 		local myHum = character:FindFirstChildOfClass("Humanoid")
 		if myHum and myHum.Health > 0 then
-			myHum.Health = math.min(myHum.MaxHealth, myHum.Health + healed)
+			local amount = StatusEffects.effectiveHeal(healed, os.clock() < state.curseUntil)
+			myHum.Health = math.min(myHum.MaxHealth, myHum.Health + amount)
 		end
 	end
 

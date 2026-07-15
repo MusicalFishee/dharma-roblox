@@ -15,6 +15,7 @@ local TweenService = game:GetService("TweenService")
 local Net = require(ReplicatedStorage.Shared.Net)
 local Abilities = require(ReplicatedStorage.Shared.Abilities)
 local Progression = require(ReplicatedStorage.Shared.Progression)
+local StatusEffects = require(ReplicatedStorage.Shared.StatusEffects)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local QuestService = require(script.Parent.QuestService)
 
@@ -137,7 +138,9 @@ end
 -- ---------------------------------------------------------------------------
 local function castVarunaHeal(player: Player, root: BasePart, hum: Humanoid)
 	local cfg = Abilities.Config.C
-	local heal = hum.MaxHealth * cfg.power
+	local state = PlayerRegistry.get(player)
+	-- A curse thins even Varuna's waters.
+	local heal = StatusEffects.effectiveHeal(hum.MaxHealth * cfg.power, os.clock() < state.curseUntil)
 	hum.Health = math.min(hum.MaxHealth, hum.Health + heal)
 
 	-- Rising water glow.

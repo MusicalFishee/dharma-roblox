@@ -358,6 +358,16 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		return
 	end
 
+	-- Afflictions the horde puts on you.
+	if data.statusEffect == "venom" then
+		showToast(string.format("VENOM!  poisoned for %ds", data.seconds or 0), Color3.fromRGB(110, 255, 110))
+		return
+	end
+	if data.statusEffect == "curse" then
+		showToast(string.format("CURSED — healing halved for %ds", data.seconds or 0), Color3.fromRGB(190, 110, 255))
+		return
+	end
+
 	-- Wave director updates.
 	if data.waveState then
 		local ORANGE = Color3.fromRGB(255, 180, 90)
