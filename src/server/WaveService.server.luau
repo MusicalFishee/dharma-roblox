@@ -6,6 +6,7 @@ local Players = game:GetService("Players")
 
 local Net = require(ReplicatedStorage.Shared.Net)
 local Waves = require(ReplicatedStorage.Shared.Waves)
+local Survival = require(ReplicatedStorage.Shared.Survival)
 local EnemyTypes = require(ReplicatedStorage.Shared.EnemyTypes)
 local Bosses = require(ReplicatedStorage.Shared.Bosses)
 local Elites = require(ReplicatedStorage.Shared.Elites)
@@ -20,6 +21,10 @@ local ARENA_RADIUS = 45
 local currentWave = 0
 local remaining = 0
 local started = false
+local checkpoint = 0 -- deepest boss wave banked; a wiped run reforms just past it
+local waveGen = 0 -- bumps on every (re)start; invalidates stale enemy-death callbacks
+local failing = false -- true from the moment the party wipes until the run reforms
+local alivePlayers: { [Player]: boolean } = {}
 
 local function announce(data: { [string]: any })
 	for _, p in Players:GetPlayers() do
@@ -37,8 +42,10 @@ local function resolveArchetype(id: string)
 end
 
 local startWave: (number) -> ()
+local failRun: () -> ()
 
 local function onWaveClear(wave: number)
+	checkpoint = Survival.checkpointFor(wave, checkpoint, Waves.BossInterval)
 	local bonus = Waves.bonusXp(wave)
 	for _, p in Players:GetPlayers() do
 		ProgressionService.awardXp(p, bonus)
@@ -54,13 +61,16 @@ local function onWaveClear(wave: number)
 end
 
 -- A boss wave: one scaled boss plus a handful of adds.
-local function spawnBossWave(wave: number)
+local function spawnBossWave(wave: number, gen: number)
 	local boss = Bosses.forWave(wave, Waves.BossInterval)
 	local adds = Waves.compose(math.max(1, math.floor(wave / 3)), EnemyTypes.List :: any)
 	remaining = 1 + #adds
 	announce({ waveState = "boss", wave = wave, bossName = boss.displayName, bossTitle = boss.title })
 
 	local function onOneDead(_killer: Player?)
+		if gen ~= waveGen then
+			return -- this wave was wiped/superseded; ignore the straggler
+		end
 		remaining -= 1
 		announce({ waveState = "progress", wave = currentWave, enemiesLeft = math.max(0, remaining) })
 		if remaining <= 0 then
@@ -82,10 +92,12 @@ local function spawnBossWave(wave: number)
 end
 
 function startWave(wave: number)
+	waveGen += 1
+	local gen = waveGen
 	currentWave = wave
 	ZoneService.applyForWave(wave)
 	if Waves.isBossWave(wave) then
-		spawnBossWave(wave)
+		spawnBossWave(wave, gen)
 		return
 	end
 	local ids = Waves.compose(wave, EnemyTypes.List :: any)
@@ -99,6 +111,9 @@ function startWave(wave: number)
 			local angle = (2 * math.pi * i) / total + math.random() * 0.4
 			local pos = Vector3.new(math.cos(angle) * ARENA_RADIUS, 6, math.sin(angle) * ARENA_RADIUS)
 			EnemyService.spawn(archetype, pos, function(_killer: Player?)
+				if gen ~= waveGen then
+					return -- this wave was wiped/superseded; ignore the straggler
+				end
 				remaining -= 1
 				announce({ waveState = "progress", wave = currentWave, enemiesLeft = math.max(0, remaining) })
 				if remaining <= 0 then
@@ -106,6 +121,74 @@ function startWave(wave: number)
 				end
 			end)
 		end)
+	end
+end
+
+-- Total party wipe: freeze the doomed wave, clear the board, reform at the checkpoint.
+function failRun()
+	if failing then
+		return
+	end
+	failing = true
+	waveGen += 1 -- every in-flight enemy-death callback from the doomed wave is now void
+	local failedWave = currentWave
+	EnemyService.clearAll()
+	local resume = Survival.restartWave(checkpoint, Waves.BossInterval)
+	announce({
+		waveState = "wipe",
+		failedWave = failedWave,
+		restartWave = resume,
+		delay = Survival.RestartDelay,
+	})
+	task.delay(Survival.RestartDelay, function()
+		failing = false
+		startWave(resume)
+	end)
+end
+
+local function countDowned(): (number, number)
+	local total, downed = 0, 0
+	for _, p in Players:GetPlayers() do
+		total += 1
+		-- Only players who spawned and then fell count as down; a player still
+		-- loading in (no entry yet) mustn't trigger a wipe when a teammate dies.
+		if alivePlayers[p] == false then
+			downed += 1
+		end
+	end
+	return total, downed
+end
+
+local function onPlayerDied(player: Player)
+	if alivePlayers[player] == false then
+		return -- this death already counted
+	end
+	alivePlayers[player] = false
+	Net.CombatFeedback:FireClient(player, { youFell = true, wave = currentWave })
+	if failing then
+		return
+	end
+	local total, downed = countDowned()
+	if Survival.isPartyWipe(total, downed) then
+		failRun()
+	end
+end
+
+local function hookPlayer(player: Player)
+	local function onChar(char: Model)
+		alivePlayers[player] = true
+		task.spawn(function()
+			local hum = char:WaitForChild("Humanoid", 10)
+			if hum and hum:IsA("Humanoid") then
+				hum.Died:Connect(function()
+					onPlayerDied(player)
+				end)
+			end
+		end)
+	end
+	player.CharacterAdded:Connect(onChar)
+	if player.Character then
+		onChar(player.Character)
 	end
 end
 
@@ -118,11 +201,19 @@ local function beginIfNeeded()
 	startWave(1)
 end
 
-Players.PlayerAdded:Connect(function()
+Players.PlayerAdded:Connect(function(player)
+	hookPlayer(player)
 	task.spawn(beginIfNeeded)
 end)
+for _, p in Players:GetPlayers() do
+	hookPlayer(p)
+end
 if #Players:GetPlayers() > 0 then
 	task.spawn(beginIfNeeded)
 end
+
+Players.PlayerRemoving:Connect(function(player)
+	alivePlayers[player] = nil
+end)
 
 print("[Dharma] WaveService ready.")

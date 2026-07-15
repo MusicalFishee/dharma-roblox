@@ -160,6 +160,77 @@ local function showToast(text: string, color: Color3)
 	TweenService:Create(toast, TweenInfo.new(0.9, Enum.EasingStyle.Quad), { TextTransparency = 1 }):Play()
 end
 
+-- Party-wipe overlay (full-screen, hidden until the line breaks).
+local wipeOverlay = Instance.new("Frame")
+wipeOverlay.Size = UDim2.fromScale(1, 1)
+wipeOverlay.BackgroundColor3 = Color3.fromRGB(30, 6, 8)
+wipeOverlay.BackgroundTransparency = 1
+wipeOverlay.Visible = false
+wipeOverlay.ZIndex = 50
+wipeOverlay.Parent = screenGui
+
+local wipeTitle = Instance.new("TextLabel")
+wipeTitle.Size = UDim2.fromOffset(700, 60)
+wipeTitle.AnchorPoint = Vector2.new(0.5, 1)
+wipeTitle.Position = UDim2.new(0.5, 0, 0.5, -6)
+wipeTitle.BackgroundTransparency = 1
+wipeTitle.Font = Enum.Font.GothamBlack
+wipeTitle.TextSize = 46
+wipeTitle.TextColor3 = Color3.fromRGB(240, 70, 60)
+wipeTitle.TextStrokeTransparency = 0.4
+wipeTitle.TextTransparency = 1
+wipeTitle.ZIndex = 51
+wipeTitle.Text = "THE LINE HAS BROKEN"
+wipeTitle.Parent = wipeOverlay
+
+local wipeSub = Instance.new("TextLabel")
+wipeSub.Size = UDim2.fromOffset(700, 40)
+wipeSub.AnchorPoint = Vector2.new(0.5, 0)
+wipeSub.Position = UDim2.new(0.5, 0, 0.5, 10)
+wipeSub.BackgroundTransparency = 1
+wipeSub.Font = Enum.Font.GothamMedium
+wipeSub.TextSize = 22
+wipeSub.TextColor3 = Color3.fromRGB(235, 200, 180)
+wipeSub.TextStrokeTransparency = 0.5
+wipeSub.TextTransparency = 1
+wipeSub.ZIndex = 51
+wipeSub.Text = ""
+wipeSub.Parent = wipeOverlay
+
+local wipeToken = 0
+local function showWipe(failedWave: number, restartWave: number, delay: number)
+	wipeToken += 1
+	local token = wipeToken
+	bossFrame.Visible = false
+	comboLabel.Text = ""
+	wipeOverlay.Visible = true
+	TweenService:Create(wipeOverlay, TweenInfo.new(0.5), { BackgroundTransparency = 0.25 }):Play()
+	TweenService:Create(wipeTitle, TweenInfo.new(0.5), { TextTransparency = 0 }):Play()
+	TweenService:Create(wipeSub, TweenInfo.new(0.5), { TextTransparency = 0 }):Play()
+	task.spawn(function()
+		for remaining = math.ceil(delay), 1, -1 do
+			if token ~= wipeToken then
+				return
+			end
+			wipeSub.Text = string.format(
+				"Wave %d lost.  Reforming at Wave %d  —  %ds",
+				failedWave, restartWave, remaining
+			)
+			task.wait(1)
+		end
+		if token ~= wipeToken then
+			return
+		end
+		TweenService:Create(wipeOverlay, TweenInfo.new(0.4), { BackgroundTransparency = 1 }):Play()
+		TweenService:Create(wipeTitle, TweenInfo.new(0.4), { TextTransparency = 1 }):Play()
+		TweenService:Create(wipeSub, TweenInfo.new(0.4), { TextTransparency = 1 }):Play()
+		task.wait(0.4)
+		if token == wipeToken then
+			wipeOverlay.Visible = false
+		end
+	end)
+end
+
 local function updateCombo(combo: number)
 	if combo >= 2 then
 		comboLabel.Text = string.format("FLOW  x%d", combo)
@@ -246,6 +317,12 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		return
 	end
 
+	-- You personally fell (in co-op, teammates may still stand).
+	if data.youFell then
+		showToast("You fell — regrouping…", RED)
+		return
+	end
+
 	-- Wave director updates.
 	if data.waveState then
 		local ORANGE = Color3.fromRGB(255, 180, 90)
@@ -259,6 +336,9 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 			showToast(string.format("WAVE %d CLEARED!    +%d XP", data.wave, data.bonusXp), YELLOW)
 		elseif data.waveState == "boss" then
 			waveLabel.Text = string.format("WAVE %d   —   BOSS", data.wave)
+		elseif data.waveState == "wipe" then
+			waveLabel.Text = string.format("WAVE %d LOST", data.failedWave)
+			showWipe(data.failedWave, data.restartWave, data.delay or 6)
 		end
 		return
 	end

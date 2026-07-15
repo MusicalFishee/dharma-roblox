@@ -147,6 +147,13 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		return
 	end
 
+	-- Party wipe: deep toll, and silence the drums.
+	if data.waveState == "wipe" then
+		play("playerDown")
+		setDrums(false)
+		return
+	end
+
 	-- Waves.
 	if data.waveState == "start" then
 		play("waveStart")
