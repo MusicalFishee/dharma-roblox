@@ -21,7 +21,7 @@ screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
 local panel = Instance.new("Frame")
-panel.Size = UDim2.fromOffset(380, 250)
+panel.Size = UDim2.fromOffset(400, 330)
 panel.AnchorPoint = Vector2.new(0.5, 0.5)
 panel.Position = UDim2.fromScale(0.5, 0.5)
 panel.BackgroundColor3 = PANEL_BG
@@ -114,14 +114,24 @@ local function makeRow(id: string, order: number): Row
 	return { frame = frame, label = label, button = button, id = id }
 end
 
-rows.damage = makeRow("damage", 1)
-rows.health = makeRow("health", 2)
+rows.weapon = makeRow("weapon", 1)
+rows.damage = makeRow("damage", 2)
+rows.health = makeRow("health", 3)
+
+local GREY = Color3.fromRGB(110, 110, 110)
 
 local function updatePanel(data: any)
 	goldText.Text = string.format("◈ %d gold", data.gold)
 	for id, row in rows do
 		local item = data.items and data.items[id]
 		if not item then
+			-- The weapon row has nothing to show until a weapon is chosen.
+			if id == "weapon" then
+				row.label.Text = "Your Weapon\n(choose a weapon to upgrade it)"
+				row.button.Text = "—"
+				row.button.BackgroundColor3 = GREY
+				row.button.Active = false
+			end
 			continue
 		end
 		row.label.Text = string.format("%s   (Tier %d/%d)\n%s", item.name, item.tier, item.maxTier, item.desc)

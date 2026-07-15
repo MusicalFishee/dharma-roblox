@@ -6,6 +6,7 @@ local Players = game:GetService("Players")
 
 local Combat = require(ReplicatedStorage.Shared.Combat)
 local ProgressionService = require(script.Parent.ProgressionService)
+require(script.Parent.WeaponService) -- activates the armory (weapon build/weld + choice remote)
 
 print(string.format(
 	"[Dharma] Server up. Combat loaded — light=%d heavy=%d Astra cost=%d",

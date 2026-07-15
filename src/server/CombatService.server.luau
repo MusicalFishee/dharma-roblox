@@ -8,6 +8,7 @@ local Net = require(ReplicatedStorage.Shared.Net)
 local Combat = require(ReplicatedStorage.Shared.Combat)
 local Progression = require(ReplicatedStorage.Shared.Progression)
 local Shop = require(ReplicatedStorage.Shared.Shop)
+local Weapons = require(ReplicatedStorage.Shared.Weapons)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 
 local MELEE_REACH = 13 -- studs
@@ -87,7 +88,8 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 	local damage = Combat.critDamage(
 		Combat.computeAttackDamage(kind, comboCount - 1)
 			* Progression.damageMultiplierForLevel(level)
-			* Shop.damageMult(state.upgrades.damage),
+			* Shop.damageMult(state.upgrades.damage)
+			* Weapons.damageMult(state.weapon.id, state.weapon.tier),
 		isCrit
 	)
 

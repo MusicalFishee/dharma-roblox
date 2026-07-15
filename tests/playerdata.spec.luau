@@ -4,6 +4,7 @@
 local process = require("@lune/process")
 local PlayerData = require("../src/shared/PlayerData")
 local Shop = require("../src/shared/Shop")
+local Weapons = require("../src/shared/Weapons")
 
 local passed, failed = 0, 0
 local failures: { string } = {}
@@ -67,6 +68,19 @@ check("junk quest progress -> 0", qv.quests[2].progress == 0)
 check("non-table quests rejected", #PlayerData.validate({ quests = "all" }).quests == 0)
 local qrt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, { { id = "parry_master", progress = 2 } }))
 check("quests round-trip through serialize", #qrt.quests == 1 and qrt.quests[1].id == "parry_master" and qrt.quests[1].progress == 2)
+
+-- Weapon (added with the weapon system).
+check("default weapon is unchosen at tier 1", PlayerData.default().weapon.id == "" and PlayerData.default().weapon.tier == 1)
+local wv = PlayerData.validate({ weapon = { id = "khanda", tier = 3 } })
+check("valid weapon preserved", wv.weapon.id == "khanda" and wv.weapon.tier == 3)
+check("non-table weapon -> unchosen", PlayerData.validate({ weapon = "sword" }).weapon.id == "")
+check("weapon without string id -> unchosen", PlayerData.validate({ weapon = { tier = 2 } }).weapon.id == "")
+check("weapon tier clamps to Weapons.MaxTier", PlayerData.validate({ weapon = { id = "gada", tier = 999 } }).weapon.tier == Weapons.MaxTier)
+check("weapon tier floors up to MinTier", PlayerData.validate({ weapon = { id = "gada", tier = 0 } }).weapon.tier == 1)
+check("junk weapon tier -> MinTier", PlayerData.validate({ weapon = { id = "gada", tier = "sharp" } }).weapon.tier == 1)
+local wrt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, { id = "chakram", tier = 4 }))
+check("weapon round-trips through serialize", wrt.weapon.id == "chakram" and wrt.weapon.tier == 4)
+check("serialize without weapon -> unchosen tier 1", PlayerData.serialize(1, 1).weapon.id == "" and PlayerData.serialize(1, 1).weapon.tier == 1)
 
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then

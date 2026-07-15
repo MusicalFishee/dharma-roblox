@@ -5,10 +5,14 @@
 
 local PlayerData = {}
 
-PlayerData.Version = 2
+PlayerData.Version = 3
 
 -- Mirrors Shop.MaxTier (kept dependency-free for Lune; a test guards against drift).
 local MAX_TIER = 10
+
+-- Mirrors Weapons.MaxTier / MinTier (dependency-free; a test guards against drift).
+local WEAPON_MAX_TIER = 5
+local WEAPON_MIN_TIER = 1
 
 local function clampTier(value: any): number
 	if type(value) ~= "number" or value ~= value or value < 0 then
@@ -17,9 +21,21 @@ local function clampTier(value: any): number
 	return math.min(math.floor(value), MAX_TIER)
 end
 
+local function clampWeaponTier(value: any): number
+	if type(value) ~= "number" or value ~= value then
+		return WEAPON_MIN_TIER
+	end
+	return math.clamp(math.floor(value), WEAPON_MIN_TIER, WEAPON_MAX_TIER)
+end
+
 export type Upgrades = {
 	damage: number,
 	health: number,
+}
+
+export type WeaponSave = {
+	id: string, -- "" until the player chooses at the start
+	tier: number,
 }
 
 export type QuestSlot = {
@@ -34,6 +50,7 @@ export type Data = {
 	upgrades: Upgrades,
 	bestWave: number,
 	quests: { QuestSlot },
+	weapon: WeaponSave,
 }
 
 function PlayerData.default(): Data
@@ -44,6 +61,7 @@ function PlayerData.default(): Data
 		upgrades = { damage = 0, health = 0 },
 		bestWave = 0,
 		quests = {},
+		weapon = { id = "", tier = WEAPON_MIN_TIER },
 	}
 end
 
@@ -76,12 +94,23 @@ function PlayerData.validate(raw: any): Data
 				end
 			end
 		end
+		if type(raw.weapon) == "table" and type(raw.weapon.id) == "string" then
+			d.weapon.id = raw.weapon.id
+			d.weapon.tier = clampWeaponTier(raw.weapon.tier)
+		end
 	end
 	return d
 end
 
 -- Snapshot of the runtime state to persist.
-function PlayerData.serialize(totalXp: number, gold: number, upgrades: Upgrades?, bestWave: number?, quests: { QuestSlot }?): Data
+function PlayerData.serialize(
+	totalXp: number,
+	gold: number,
+	upgrades: Upgrades?,
+	bestWave: number?,
+	quests: { QuestSlot }?,
+	weapon: WeaponSave?
+): Data
 	local questsCopy: { QuestSlot } = {}
 	if quests then
 		for _, slot in quests do
@@ -101,6 +130,10 @@ function PlayerData.serialize(totalXp: number, gold: number, upgrades: Upgrades?
 		},
 		bestWave = math.max(0, math.floor(bestWave or 0)),
 		quests = questsCopy,
+		weapon = {
+			id = if weapon and type(weapon.id) == "string" then weapon.id else "",
+			tier = clampWeaponTier(if weapon then weapon.tier else WEAPON_MIN_TIER),
+		},
 	}
 end
 

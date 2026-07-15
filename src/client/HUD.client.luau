@@ -295,6 +295,10 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		)
 		return
 	end
+	if data.weaponChosen then
+		showToast(string.format("You take up the %s — %s!", tostring(data.name), tostring(data.title)), YELLOW)
+		return
+	end
 	if data.shopDenied then
 		if data.reason == "gold" then
 			showToast("Not enough gold", Color3.fromRGB(200, 120, 120))

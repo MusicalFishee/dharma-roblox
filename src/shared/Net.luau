@@ -26,6 +26,8 @@ local Net = {
 	AbilityRequest = ensureRemote("AbilityRequest"),
 	-- client -> server: shop actions ({action="info"} or {action="buy", id=...})
 	ShopRequest = ensureRemote("ShopRequest"),
+	-- client -> server: weapon actions ({action="select", id=...})
+	WeaponRequest = ensureRemote("WeaponRequest"),
 	-- client -> server: current guard state (blocking / dodging)
 	DefenseState = ensureRemote("DefenseState"),
 	-- server -> client: HUD feedback (combo count, tejas, outcome text)

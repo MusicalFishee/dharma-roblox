@@ -46,9 +46,11 @@ local function loadPlayer(player: Player)
 	state.totalXp = data.totalXp
 	state.gold = data.gold
 	state.upgrades = { damage = data.upgrades.damage, health = data.upgrades.health }
+	state.weapon = { id = data.weapon.id, tier = data.weapon.tier }
 	state.bestWave = data.bestWave
 	state.quests = data.quests
 	state.dataLoaded = ok
+	state.dataReady = true -- load resolved (success or fail); the weapon hook may proceed
 
 	if not ok then
 		warn("[Dharma] Load failed for " .. player.Name .. " — will NOT save (protecting progress).")
@@ -71,10 +73,11 @@ local function savePlayer(player: Player)
 	local upgrades = { damage = state.upgrades.damage, health = state.upgrades.health }
 	local bestWave = state.bestWave
 	local quests = state.quests
+	local weapon = { id = state.weapon.id, tier = state.weapon.tier }
 
 	retry(function()
 		return store:UpdateAsync(keyFor(player), function(old: any)
-			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave, quests)
+			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave, quests, weapon)
 			-- Never roll back XP or bestWave: keep whichever is higher.
 			-- (Gold is NOT anti-rollbacked — the shop legitimately spends it.)
 			if type(old) == "table" then
@@ -83,6 +86,15 @@ local function savePlayer(player: Player)
 				end
 				if type(old.bestWave) == "number" and old.bestWave > payload.bestWave then
 					payload.bestWave = old.bestWave
+				end
+				-- Never lose a chosen weapon or a bought upgrade tier to a stale write.
+				if type(old.weapon) == "table" then
+					if payload.weapon.id == "" and type(old.weapon.id) == "string" and old.weapon.id ~= "" then
+						payload.weapon.id = old.weapon.id
+						payload.weapon.tier = math.max(payload.weapon.tier, tonumber(old.weapon.tier) or payload.weapon.tier)
+					elseif payload.weapon.id == old.weapon.id and type(old.weapon.tier) == "number" and old.weapon.tier > payload.weapon.tier then
+						payload.weapon.tier = old.weapon.tier
+					end
 				end
 			end
 			return payload

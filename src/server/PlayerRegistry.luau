@@ -17,10 +17,14 @@ export type PlayerState = {
 	totalXp: number,
 	gold: number,
 	upgrades: { damage: number, health: number },
+	weapon: { id: string, tier: number },
 	bestWave: number,
 	quests: { { id: string, progress: number } },
 	-- True once persistent data has loaded; guards against saving over real progress.
 	dataLoaded: boolean,
+	-- True once a load has been ATTEMPTED (success or fail) — the weapon hook waits
+	-- on this so it never prompts a returning player to re-choose before their save arrives.
+	dataReady: boolean,
 	isBlocking: boolean,
 	blockStartedAt: number,
 	-- Wall-clock time (os.clock) until which dodge i-frames are active.
@@ -49,9 +53,11 @@ function PlayerRegistry.get(player: Player): PlayerState
 		totalXp = 0,
 		gold = 0,
 		upgrades = { damage = 0, health = 0 },
+		weapon = { id = "", tier = 1 },
 		bestWave = 0,
 		quests = {},
 		dataLoaded = false,
+		dataReady = false,
 		isBlocking = false,
 		blockStartedAt = 0,
 		dodgeUntil = 0,

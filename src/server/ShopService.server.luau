@@ -6,8 +6,10 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Net = require(ReplicatedStorage.Shared.Net)
 local Shop = require(ReplicatedStorage.Shared.Shop)
+local Weapons = require(ReplicatedStorage.Shared.Weapons)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local ProgressionService = require(script.Parent.ProgressionService)
+local WeaponService = require(script.Parent.WeaponService)
 
 local function shopSnapshot(player: Player): { [string]: any }
 	local state = PlayerRegistry.get(player)
@@ -20,6 +22,17 @@ local function shopSnapshot(player: Player): { [string]: any }
 			tier = tier,
 			maxTier = Shop.MaxTier,
 			price = if tier >= Shop.MaxTier then 0 else Shop.price(id, tier),
+		}
+	end
+	-- The weapon-upgrade row (only once a weapon has been chosen).
+	if Weapons.isValidId(state.weapon.id) then
+		local tier = state.weapon.tier
+		items.weapon = {
+			name = Weapons.tierName(state.weapon.id, tier),
+			desc = string.format("+%d%% damage per tier — sharper AND cooler", math.floor(Weapons.TierStep * 100)),
+			tier = tier,
+			maxTier = Weapons.MaxTier,
+			price = if tier >= Weapons.MaxTier then 0 else Weapons.price(tier),
 		}
 	end
 	return { shop = true, gold = state.gold, items = items }
@@ -38,6 +51,32 @@ Net.ShopRequest.OnServerEvent:Connect(function(player: Player, data: any)
 	if data.action == "buy" then
 		local id = tostring(data.id)
 		local state = PlayerRegistry.get(player)
+
+		-- Weapon upgrades run on their own tier + pricing and rebuild the look.
+		if id == "weapon" then
+			if not Weapons.isValidId(state.weapon.id) then
+				Net.CombatFeedback:FireClient(player, { shopDenied = true, reason = "noweapon" })
+				Net.CombatFeedback:FireClient(player, shopSnapshot(player))
+				return
+			end
+			local result = Weapons.tryUpgrade(state.gold, state.weapon.tier)
+			if result.ok then
+				state.gold = result.goldAfter
+				state.weapon.tier += 1
+				WeaponService.refresh(player, false)
+				Net.CombatFeedback:FireClient(player, { goldUpdate = true, gained = 0, gold = state.gold })
+				Net.CombatFeedback:FireClient(player, {
+					shopBought = true,
+					itemName = Weapons.tierName(state.weapon.id, state.weapon.tier),
+					tier = state.weapon.tier,
+				})
+			else
+				Net.CombatFeedback:FireClient(player, { shopDenied = true, reason = result.reason })
+			end
+			Net.CombatFeedback:FireClient(player, shopSnapshot(player))
+			return
+		end
+
 		local currentTier = (state.upgrades :: any)[id]
 		if type(currentTier) ~= "number" then
 			return
