@@ -18,6 +18,10 @@ export type EnemyArchetype = {
 	isBoss: boolean?, -- bosses get a health bar + announcements
 	title: string?, -- boss epithet, e.g. "the Buffalo Demon"
 	isElite: boolean?, -- empowered variants get a golden glow
+	-- Ranged archetypes fire dodgeable projectiles and kite away from melee.
+	ranged: boolean?,
+	projectileSpeed: number?, -- studs/second
+	retreatRange: number?, -- closer than this, they back off
 }
 
 local EnemyTypes = {}
@@ -67,6 +71,24 @@ EnemyTypes.List = {
 		scale = 1.0,
 		skin = { 40, 42, 58 },
 		weight = 2,
+	},
+	-- Golden demon-archer — kites away and rains dodgeable arrows from afar.
+	Maricha = {
+		id = "Maricha",
+		displayName = "Maricha",
+		maxHealth = 70,
+		walkSpeed = 13,
+		attackDamage = 13,
+		attackInterval = 2.6,
+		aggroRange = 130,
+		attackRange = 55,
+		xpReward = 35,
+		scale = 0.95,
+		skin = { 196, 120, 60 },
+		weight = 2,
+		ranged = true,
+		projectileSpeed = 75,
+		retreatRange = 20,
 	},
 	-- Towering brute — slow, tanky, hits like a truck. Rare.
 	Rakshasa = {

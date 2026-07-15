@@ -5,7 +5,9 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollectionService = game:GetService("CollectionService")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
+local Debris = game:GetService("Debris")
 
 local Net = require(ReplicatedStorage.Shared.Net)
 local Combat = require(ReplicatedStorage.Shared.Combat)
@@ -87,21 +89,27 @@ local function facingDot(fromRoot: BasePart, targetPos: Vector3): number
 	return fromRoot.CFrame.LookVector:Dot(offset.Unit)
 end
 
-local function enemyStrikes(enemy: EnemyState, player: Player, playerRoot: BasePart, playerHum: Humanoid)
+-- Shared incoming-hit pipeline (melee blows and arrow impacts alike): reads the
+-- defender's dodge/block state, resolves, applies damage/tejas/mantra soaks, quests
+-- the parry, and toasts the outcome. Returns the resolution for attacker-side effects.
+local function resolveHitOnPlayer(
+	player: Player,
+	playerRoot: BasePart,
+	playerHum: Humanoid,
+	damage: number,
+	attackerPos: Vector3
+): Combat.Resolution
 	local pstate = PlayerRegistry.get(player)
 	local now = os.clock()
-
-	-- Everyone sees the wind-up haymaker.
-	Net.AnimEvent:FireAllClients(enemy.model, "enemySwing")
 
 	local state = {
 		isDodging = now < pstate.dodgeUntil,
 		isBlocking = pstate.isBlocking,
 		blockAgeSeconds = now - pstate.blockStartedAt,
-		facingAttacker = facingDot(playerRoot, enemy.root.Position) > 0.1,
+		facingAttacker = facingDot(playerRoot, attackerPos) > 0.1,
 	}
 
-	local resolution = Combat.resolveIncomingAttack(enemy.archetype.attackDamage, state)
+	local resolution = Combat.resolveIncomingAttack(damage, state)
 	local ench = Enchants.effects(pstate.enchant)
 
 	if resolution.damage > 0 then
@@ -115,10 +123,6 @@ local function enemyStrikes(enemy: EnemyState, player: Player, playerRoot: BaseP
 	if resolution.defenderTejasGain > 0 then
 		pstate.tejas = Combat.clampTejas(pstate.tejas + resolution.defenderTejasGain * (ench.tejasMult or 1))
 	end
-	if resolution.attackerStaggered then
-		enemy.staggeredUntil = now + 1.0
-		enemy.humanoid:MoveTo(enemy.root.Position)
-	end
 	if resolution.outcome == "Parry" then
 		QuestService.onParry(player)
 	end
@@ -128,6 +132,59 @@ local function enemyStrikes(enemy: EnemyState, player: Player, playerRoot: BaseP
 		incoming = true,
 		tejas = pstate.tejas,
 	})
+	return resolution
+end
+
+local function enemyStrikes(enemy: EnemyState, player: Player, playerRoot: BasePart, playerHum: Humanoid)
+	-- Everyone sees the wind-up haymaker.
+	Net.AnimEvent:FireAllClients(enemy.model, "enemySwing")
+
+	local resolution = resolveHitOnPlayer(player, playerRoot, playerHum, enemy.archetype.attackDamage, enemy.root.Position)
+	if resolution.attackerStaggered then
+		enemy.staggeredUntil = os.clock() + 1.0
+		enemy.humanoid:MoveTo(enemy.root.Position)
+	end
+end
+
+-- Ranged strike: loose a visible arrow at where the target stands NOW. It flies in
+-- real time — step out of its path and it thuds into the dirt. Impacts run through
+-- the same defense pipeline (yes, you can parry an arrow).
+local function rangedStrikes(enemy: EnemyState, player: Player, playerRoot: BasePart)
+	local a = enemy.archetype
+	Net.AnimEvent:FireAllClients(enemy.model, "throw")
+
+	local origin = enemy.root.Position + Vector3.new(0, 1.5, 0)
+	local targetPos = playerRoot.Position
+	local speed = a.projectileSpeed or 70
+	local flight = (targetPos - origin).Magnitude / speed
+
+	local arrow = Instance.new("Part")
+	arrow.Anchored = true
+	arrow.CanCollide = false
+	arrow.CanQuery = false
+	arrow.CanTouch = false
+	arrow.Material = Enum.Material.Neon
+	arrow.Color = Color3.fromRGB(255, 190, 90)
+	arrow.Size = Vector3.new(0.25, 0.25, 3)
+	arrow.CFrame = CFrame.lookAt(origin, targetPos)
+	arrow.Parent = workspace
+	TweenService:Create(arrow, TweenInfo.new(flight, Enum.EasingStyle.Linear), {
+		CFrame = CFrame.lookAt(targetPos, targetPos + (targetPos - origin)),
+	}):Play()
+	Debris:AddItem(arrow, flight + 0.1)
+
+	task.delay(flight, function()
+		local char = player.Character
+		local root = char and getRoot(char)
+		local hum = char and char:FindFirstChildOfClass("Humanoid")
+		if not char or not root or not hum or hum.Health <= 0 then
+			return
+		end
+		if (root.Position - targetPos).Magnitude > 6 then
+			return -- they moved; the arrow misses
+		end
+		resolveHitOnPlayer(player, root, hum, a.attackDamage, origin)
+	end)
 end
 
 local function stepEnemy(enemy: EnemyState)
@@ -145,13 +202,24 @@ local function stepEnemy(enemy: EnemyState)
 		attackRange = a.attackRange,
 		attackReady = now >= enemy.nextAttackAt,
 		targetAlive = player ~= nil,
+		retreatRange = a.retreatRange,
 	})
 
 	if action == "Chase" and playerRoot then
 		enemy.humanoid:MoveTo(playerRoot.Position)
+	elseif action == "Retreat" and playerRoot then
+		-- Kite away from the crowding target.
+		local away = enemy.root.Position - playerRoot.Position
+		away = Vector3.new(away.X, 0, away.Z)
+		away = if away.Magnitude > 0.01 then away.Unit else Vector3.new(0, 0, 1)
+		enemy.humanoid:MoveTo(enemy.root.Position + away * 14)
 	elseif action == "Attack" and player and playerRoot and playerHum then
 		enemy.nextAttackAt = now + a.attackInterval
-		enemyStrikes(enemy, player, playerRoot, playerHum)
+		if a.ranged then
+			rangedStrikes(enemy, player, playerRoot)
+		else
+			enemyStrikes(enemy, player, playerRoot, playerHum)
+		end
 	end
 end
 

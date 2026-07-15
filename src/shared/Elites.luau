@@ -29,6 +29,9 @@ export type Archetype = {
 	isBoss: boolean?,
 	title: string?,
 	isElite: boolean?,
+	ranged: boolean?,
+	projectileSpeed: number?,
+	retreatRange: number?,
 }
 
 -- Does this spawn roll elite? `rng` returns [0,1) (injectable for tests).
@@ -56,6 +59,10 @@ function Elites.makeElite(base: Archetype): Archetype
 		weight = base.weight,
 		isBoss = false,
 		isElite = true,
+		-- An elite archer is still an archer.
+		ranged = base.ranged,
+		projectileSpeed = base.projectileSpeed,
+		retreatRange = base.retreatRange,
 	}
 end
 

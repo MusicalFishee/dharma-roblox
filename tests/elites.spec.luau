@@ -43,6 +43,10 @@ check("elite is never a boss", elite.isBoss == false)
 -- Immutability: the roster must never be corrupted by empowerment.
 check("original archetype untouched", base.maxHealth == EnemyTypes.get("Asura").maxHealth and base.displayName == "Asura")
 
+-- An elite archer keeps its bow (ranged kit must survive empowerment).
+local eliteArcher = Elites.makeElite(EnemyTypes.get("Maricha") :: any)
+check("elite archer stays ranged", eliteArcher.ranged == true and (eliteArcher.projectileSpeed or 0) > 0 and (eliteArcher.retreatRange or 0) > 0)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

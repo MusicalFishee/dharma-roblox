@@ -40,6 +40,14 @@ check("in reach + ready -> Attack", EnemyAI.decide(perceive({ distance = 10, att
 check("in reach but on cooldown -> Chase", EnemyAI.decide(perceive({ distance = 10, attackReady = false })) == "Chase")
 check("exactly at attackRange counts as in reach", EnemyAI.decide(perceive({ distance = 16, attackReady = true })) == "Attack")
 
+-- Kiting (ranged archetypes with a retreatRange).
+local kite = { attackRange = 55, retreatRange = 20 }
+check("kiter crowded + on cooldown -> Retreat", EnemyAI.decide(perceive({ distance = 10, attackReady = false, attackRange = kite.attackRange, retreatRange = kite.retreatRange })) == "Retreat")
+check("kiter crowded but ready snaps a point-blank shot", EnemyAI.decide(perceive({ distance = 10, attackReady = true, attackRange = kite.attackRange, retreatRange = kite.retreatRange })) == "Attack")
+check("kiter in the sweet spot on cooldown holds ground", EnemyAI.decide(perceive({ distance = 35, attackReady = false, attackRange = kite.attackRange, retreatRange = kite.retreatRange })) == "Idle")
+check("kiter beyond range still chases", EnemyAI.decide(perceive({ distance = 80, attackReady = false, attackRange = kite.attackRange, retreatRange = kite.retreatRange, aggroRange = 130 })) == "Chase")
+check("melee (no retreatRange) still pressures on cooldown", EnemyAI.decide(perceive({ distance = 10, attackReady = false })) == "Chase")
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

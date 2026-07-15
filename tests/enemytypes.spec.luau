@@ -36,6 +36,20 @@ check("Rakshasa tankier than Asura", EnemyTypes.get("Rakshasa").maxHealth > Enem
 check("Pisacha faster than Rakshasa", EnemyTypes.get("Pisacha").walkSpeed > EnemyTypes.get("Rakshasa").walkSpeed)
 check("tougher enemies reward more XP", EnemyTypes.get("Rakshasa").xpReward > EnemyTypes.get("Pisacha").xpReward)
 
+-- The archer (ranged kiter).
+local maricha = EnemyTypes.get("Maricha")
+check("Maricha exists and is ranged", maricha.id == "Maricha" and maricha.ranged == true)
+check("Maricha outranges every melee reach", maricha.attackRange >= 40)
+check("Maricha retreats inside a sane band", (maricha.retreatRange or 0) > 0 and (maricha.retreatRange or 0) < maricha.attackRange)
+check("Maricha arrows actually fly", (maricha.projectileSpeed or 0) > 0)
+local meleeUnaffected = true
+for _, a in EnemyTypes.List do
+	if not a.ranged and (a.retreatRange or a.projectileSpeed) then
+		meleeUnaffected = false
+	end
+end
+check("melee archetypes carry no ranged fields", meleeUnaffected)
+
 -- get() falls back safely.
 check("unknown id falls back to Asura", EnemyTypes.get("Nonexistent").id == "Asura")
 
