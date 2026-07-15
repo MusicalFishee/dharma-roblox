@@ -23,6 +23,7 @@ SoundDefs.Sfx = {
 	swingHeavy = sfx("rbxasset://sounds/swordlunge.wav", 0.7, 0.8, 0.95),
 	punchLand = sfx("rbxasset://sounds/snap.mp3", 0.6, 0.85, 1.15),
 	finisherLand = sfx("rbxasset://sounds/collide.wav", 0.8, 0.7, 0.9),
+	critHit = sfx("rbxasset://sounds/metal.mp3", 0.85, 1.2, 1.4),
 
 	-- Defense
 	guardUp = sfx("rbxasset://sounds/unsheath.wav", 0.5, 0.9, 1.0),

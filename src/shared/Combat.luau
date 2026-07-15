@@ -25,6 +25,10 @@ Combat.Config = {
 	-- Recovery lockout after the heavy finisher lands.
 	ComboFinisherLockout = 0.7,
 
+	-- Critical hits: a chance for a swing to land for extra.
+	CritChance = 0.15,
+	CritMultiplier = 2.0,
+
 	-- Defensive resolution.
 	ParryWindowSeconds = 0.30,
 	BlockDamageMultiplier = 0.25,
@@ -87,6 +91,22 @@ function Combat.computeAttackDamage(kind: AttackKind, comboCount: number): numbe
 	local base = Combat.baseDamage(kind)
 	local multiplier = 1 + (math.max(comboCount, 0) * Combat.Config.ComboDamageStep)
 	return base * multiplier
+end
+
+-- Rolls a critical hit. `rng` returns [0, 1) (defaults to math.random); injectable for tests.
+function Combat.rollCrit(rng: (() -> number)?): boolean
+	local roll: () -> number = rng or function(): number
+		return math.random()
+	end
+	return roll() < Combat.Config.CritChance
+end
+
+-- Applies the crit multiplier when isCrit, otherwise returns the damage unchanged.
+function Combat.critDamage(damage: number, isCrit: boolean): number
+	if isCrit then
+		return damage * Combat.Config.CritMultiplier
+	end
+	return damage
 end
 
 -- ------------------------------------------------------------------

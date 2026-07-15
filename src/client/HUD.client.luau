@@ -386,6 +386,8 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 			else
 				showToast(string.upper(tostring(data.abilityName)) .. "!", SAFFRON)
 			end
+		elseif data.outcome == "Hit" and data.isCrit then
+			showToast(string.format("CRIT!   %d", math.floor((data.damage or 0) + 0.5)), Color3.fromRGB(255, 120, 40))
 		elseif data.outcome == "Hit" and data.isFinisher then
 			showToast("FINISHER!", MAGENTA)
 		elseif data.outcome == "Hit" and data.combo and data.combo >= 5 then

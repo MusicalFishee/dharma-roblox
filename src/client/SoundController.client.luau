@@ -113,7 +113,11 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		return
 	end
 
-	-- Own offense: landing the finisher gets extra crunch.
+	-- Own offense: crits ring sharp, finishers land with extra crunch.
+	if data.outcome == "Hit" and data.isCrit then
+		play("critHit")
+		return
+	end
 	if data.outcome == "Hit" and data.isFinisher then
 		play("finisherLand")
 		return

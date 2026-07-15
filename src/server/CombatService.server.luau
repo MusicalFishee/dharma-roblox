@@ -83,9 +83,13 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 
 	local comboCount = state.combo:registerHit(os.clock())
 	local level = Progression.resolve(state.totalXp).level
-	local damage = Combat.computeAttackDamage(kind, comboCount - 1)
-		* Progression.damageMultiplierForLevel(level)
-		* Shop.damageMult(state.upgrades.damage)
+	local isCrit = Combat.rollCrit()
+	local damage = Combat.critDamage(
+		Combat.computeAttackDamage(kind, comboCount - 1)
+			* Progression.damageMultiplierForLevel(level)
+			* Shop.damageMult(state.upgrades.damage),
+		isCrit
+	)
 
 	for _, humanoid in targets do
 		-- Tag the enemy with who hit it so it can grant XP on death.
@@ -114,6 +118,7 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 		combo = comboCount,
 		chain = swing.index,
 		isFinisher = swing.isFinisher,
+		isCrit = isCrit,
 		damage = damage,
 		tejas = state.tejas,
 	})

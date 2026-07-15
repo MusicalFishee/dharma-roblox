@@ -64,6 +64,14 @@ check("block from behind fails", blockedFromBehind.outcome == "Hit" and near(blo
 local hit = Combat.resolveIncomingAttack(20, state({}))
 check("unguarded takes full", hit.outcome == "Hit" and near(hit.damage, 20))
 
+-- Critical hits
+check("crit doubles damage", near(Combat.critDamage(10, true), 20))
+check("non-crit leaves damage untouched", near(Combat.critDamage(10, false), 10))
+check("crit fires when the roll is under the chance", Combat.rollCrit(function() return 0.0 end) == true)
+check("crit misses when the roll is above the chance", Combat.rollCrit(function() return 0.99 end) == false)
+check("crit chance sits in a sane band", Combat.Config.CritChance > 0 and Combat.Config.CritChance <= 0.4)
+check("crit multiplier is a real boost", Combat.Config.CritMultiplier > 1)
+
 -- Tejas economy
 local afterSpend, ok = Combat.trySpendTejas(100, Combat.Config.AgniAstraCost)
 check("astra spend ok", ok and afterSpend == 65)
