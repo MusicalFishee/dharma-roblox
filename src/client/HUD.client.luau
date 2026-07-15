@@ -299,6 +299,30 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("You take up the %s — %s!", tostring(data.name), tostring(data.title)), YELLOW)
 		return
 	end
+
+	-- Vajra Shards (boss-kill mantra currency).
+	if data.shardUpdate then
+		showToast(string.format("◆ +%d Vajra Shard%s", data.gained, if data.gained == 1 then "" else "s"), Color3.fromRGB(150, 120, 255))
+		return
+	end
+
+	-- Mantra inscriptions: mythics get the full fireworks.
+	if data.enchantResult then
+		if data.mythic then
+			showToast(string.format("✦ MYTHIC ✦   %s", tostring(data.name)), Color3.fromRGB(255, 170, 50))
+		else
+			showToast(string.format("Inscribed:  %s", tostring(data.name)), Color3.fromRGB(150, 120, 255))
+		end
+		return
+	end
+	if data.altarDenied then
+		if data.reason == "shards" then
+			showToast("Not enough Vajra Shards — slay bosses", Color3.fromRGB(200, 120, 120))
+		elseif data.reason == "noweapon" then
+			showToast("Choose a weapon first", Color3.fromRGB(200, 120, 120))
+		end
+		return
+	end
 	if data.shopDenied then
 		if data.reason == "gold" then
 			showToast("Not enough gold", Color3.fromRGB(200, 120, 120))
@@ -397,6 +421,8 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 			else
 				showToast(string.upper(tostring(data.abilityName)) .. "!", SAFFRON)
 			end
+		elseif data.outcome == "Hit" and data.executed then
+			showToast("YAMA'S LEDGER CLOSES", Color3.fromRGB(200, 60, 255))
 		elseif data.outcome == "Hit" and data.isCrit then
 			showToast(string.format("CRIT!   %d", math.floor((data.damage or 0) + 0.5)), Color3.fromRGB(255, 120, 40))
 		elseif data.outcome == "Hit" and data.isFinisher then

@@ -71,6 +71,10 @@ check("crit fires when the roll is under the chance", Combat.rollCrit(function()
 check("crit misses when the roll is above the chance", Combat.rollCrit(function() return 0.99 end) == false)
 check("crit chance sits in a sane band", Combat.Config.CritChance > 0 and Combat.Config.CritChance <= 0.4)
 check("crit multiplier is a real boost", Combat.Config.CritMultiplier > 1)
+check("bonus chance widens the crit window", Combat.rollCrit(function() return Combat.Config.CritChance + 0.05 end, 0.10) == true)
+check("no bonus leaves the window unchanged", Combat.rollCrit(function() return Combat.Config.CritChance + 0.05 end) == false)
+check("crit multiplier override applies", near(Combat.critDamage(10, true, 3), 30))
+check("multiplier override ignored on non-crit", near(Combat.critDamage(10, false, 3), 10))
 
 -- Tejas economy
 local afterSpend, ok = Combat.trySpendTejas(100, Combat.Config.AgniAstraCost)

@@ -93,18 +93,20 @@ function Combat.computeAttackDamage(kind: AttackKind, comboCount: number): numbe
 	return base * multiplier
 end
 
--- Rolls a critical hit. `rng` returns [0, 1) (defaults to math.random); injectable for tests.
-function Combat.rollCrit(rng: (() -> number)?): boolean
+-- Rolls a critical hit. `rng` returns [0, 1) (defaults to math.random); injectable for
+-- tests. `bonusChance` is an additive boost (e.g. from a mantra).
+function Combat.rollCrit(rng: (() -> number)?, bonusChance: number?): boolean
 	local roll: () -> number = rng or function(): number
 		return math.random()
 	end
-	return roll() < Combat.Config.CritChance
+	return roll() < Combat.Config.CritChance + (bonusChance or 0)
 end
 
 -- Applies the crit multiplier when isCrit, otherwise returns the damage unchanged.
-function Combat.critDamage(damage: number, isCrit: boolean): number
+-- `multiplier` overrides the default (e.g. a mantra's heavier crits).
+function Combat.critDamage(damage: number, isCrit: boolean, multiplier: number?): number
 	if isCrit then
-		return damage * Combat.Config.CritMultiplier
+		return damage * (multiplier or Combat.Config.CritMultiplier)
 	end
 	return damage
 end

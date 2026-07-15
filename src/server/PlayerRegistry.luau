@@ -18,6 +18,9 @@ export type PlayerState = {
 	gold: number,
 	upgrades: { damage: number, health: number },
 	weapon: { id: string, tier: number },
+	-- Vajra Shards (boss-kill currency) and the mantra inscribed on the weapon.
+	shards: number,
+	enchant: string,
 	bestWave: number,
 	quests: { { id: string, progress: number } },
 	-- True once persistent data has loaded; guards against saving over real progress.
@@ -54,6 +57,8 @@ function PlayerRegistry.get(player: Player): PlayerState
 		gold = 0,
 		upgrades = { damage = 0, health = 0 },
 		weapon = { id = "", tier = 1 },
+		shards = 0,
+		enchant = "",
 		bestWave = 0,
 		quests = {},
 		dataLoaded = false,

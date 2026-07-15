@@ -47,6 +47,8 @@ local function loadPlayer(player: Player)
 	state.gold = data.gold
 	state.upgrades = { damage = data.upgrades.damage, health = data.upgrades.health }
 	state.weapon = { id = data.weapon.id, tier = data.weapon.tier }
+	state.shards = data.shards
+	state.enchant = data.enchant
 	state.bestWave = data.bestWave
 	state.quests = data.quests
 	state.dataLoaded = ok
@@ -74,10 +76,12 @@ local function savePlayer(player: Player)
 	local bestWave = state.bestWave
 	local quests = state.quests
 	local weapon = { id = state.weapon.id, tier = state.weapon.tier }
+	local shards = state.shards
+	local enchant = state.enchant
 
 	retry(function()
 		return store:UpdateAsync(keyFor(player), function(old: any)
-			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave, quests, weapon)
+			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave, quests, weapon, shards, enchant)
 			-- Never roll back XP or bestWave: keep whichever is higher.
 			-- (Gold is NOT anti-rollbacked — the shop legitimately spends it.)
 			if type(old) == "table" then

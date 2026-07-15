@@ -152,6 +152,15 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play("levelUp")
 		return
 	end
+	if data.shardUpdate then
+		play("amritPickup")
+		return
+	end
+	if data.enchantResult then
+		-- A mythic reveal cracks like thunder; ordinary inscriptions chime.
+		play(if data.mythic then "thunderCrack" else "questDone")
+		return
+	end
 
 	-- Zone transitions get the deep boom.
 	if data.zoneChange then

@@ -9,6 +9,7 @@ local Players = game:GetService("Players")
 
 local Net = require(ReplicatedStorage.Shared.Net)
 local Weapons = require(ReplicatedStorage.Shared.Weapons)
+local Enchants = require(ReplicatedStorage.Shared.Enchants)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 
 local WeaponService = {}
@@ -171,6 +172,41 @@ function WeaponService.refresh(player: Player, allowPrompt: boolean?)
 	weld.C0 = HAND_C0
 	weld.Parent = grip
 	model.Parent = char
+
+	-- A mythic mantra wraps the weapon in its own aura — the sub-1% flex.
+	local eff = Enchants.effects(state.enchant)
+	if eff.aura then
+		local focus: BasePart? = nil
+		for _, partName in { "Blade", "Prong", "Head", "Disc" } do
+			local part = model:FindFirstChild(partName)
+			if part and part:IsA("BasePart") then
+				focus = part
+				break
+			end
+		end
+		local color = if eff.auraColor
+			then Color3.fromRGB(eff.auraColor[1], eff.auraColor[2], eff.auraColor[3])
+			else Color3.fromRGB(255, 255, 255)
+		if focus then
+			if eff.aura == "fire" then
+				local flame = Instance.new("Fire")
+				flame.Size = 5
+				flame.Heat = 9
+				flame.Color = color
+				flame.SecondaryColor = Color3.fromRGB(120, 30, 10)
+				flame.Parent = focus
+			elseif eff.aura == "sparkles" then
+				local sparkles = Instance.new("Sparkles")
+				sparkles.SparkleColor = color
+				sparkles.Parent = focus
+			end
+			local light = Instance.new("PointLight")
+			light.Brightness = 4
+			light.Range = 14
+			light.Color = color
+			light.Parent = focus
+		end
+	end
 
 	Net.CombatFeedback:FireClient(player, {
 		weaponEquipped = true,

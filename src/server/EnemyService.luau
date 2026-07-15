@@ -12,6 +12,8 @@ local Combat = require(ReplicatedStorage.Shared.Combat)
 local EnemyAI = require(ReplicatedStorage.Shared.EnemyAI)
 local EnemyTypes = require(ReplicatedStorage.Shared.EnemyTypes)
 local BossSpecials = require(ReplicatedStorage.Shared.BossSpecials)
+local Enchants = require(ReplicatedStorage.Shared.Enchants)
+local Loot = require(ReplicatedStorage.Shared.Loot)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local ProgressionService = require(script.Parent.ProgressionService)
 local LootService = require(script.Parent.LootService)
@@ -100,16 +102,18 @@ local function enemyStrikes(enemy: EnemyState, player: Player, playerRoot: BaseP
 	}
 
 	local resolution = Combat.resolveIncomingAttack(enemy.archetype.attackDamage, state)
+	local ench = Enchants.effects(pstate.enchant)
 
 	if resolution.damage > 0 then
-		playerHum:TakeDamage(resolution.damage)
+		-- Stoneskin Sutra and kin: the defender's mantra soaks part of the blow.
+		playerHum:TakeDamage(resolution.damage * (ench.damageTakenMult or 1))
 		local char = player.Character
 		if char and resolution.outcome == "Hit" then
 			Net.AnimEvent:FireAllClients(char, "flinch")
 		end
 	end
 	if resolution.defenderTejasGain > 0 then
-		pstate.tejas = Combat.clampTejas(pstate.tejas + resolution.defenderTejasGain)
+		pstate.tejas = Combat.clampTejas(pstate.tejas + resolution.defenderTejasGain * (ench.tejasMult or 1))
 	end
 	if resolution.attackerStaggered then
 		enemy.staggeredUntil = now + 1.0
@@ -198,6 +202,7 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 
 	model:PivotTo(CFrame.new(position))
 	model.Name = archetype.displayName
+	model:SetAttribute("IsBoss", archetype.isBoss == true) -- read by CombatService (executes never claim bosses)
 	model.Parent = workspace
 	CollectionService:AddTag(model, ENEMY_TAG)
 
@@ -323,7 +328,8 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 					local res = BossSpecials.resolveBlast(special.damage, os.clock() < vstate.dodgeUntil, vstate.isBlocking)
 
 					if res.damage > 0 then
-						hum:TakeDamage(res.damage)
+						local vench = Enchants.effects(vstate.enchant)
+						hum:TakeDamage(res.damage * (vench.damageTakenMult or 1))
 						Net.AnimEvent:FireAllClients(char, "flinch")
 						-- Shockwave knockback, away from the blast centre.
 						if hrp and hrp:IsA("BasePart") then
@@ -358,6 +364,27 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 			if killer then
 				ProgressionService.awardXp(killer, archetype.xpReward)
 				QuestService.onKill(killer, archetype.id, archetype.isBoss == true)
+
+				local kstate = PlayerRegistry.get(killer)
+				-- Only bosses yield Vajra Shards — the mantra currency.
+				if archetype.isBoss then
+					kstate.shards += Enchants.ShardsPerBossKill
+					Net.CombatFeedback:FireClient(killer, {
+						shardUpdate = true,
+						gained = Enchants.ShardsPerBossKill,
+						shards = kstate.shards,
+					})
+				end
+				-- Kubera's Whisper: bonus gold rides every killing blow.
+				local kench = Enchants.effects(kstate.enchant)
+				if kench.bonusGoldPerKill then
+					kstate.gold = Loot.clampGold(kstate.gold + kench.bonusGoldPerKill)
+					Net.CombatFeedback:FireClient(killer, {
+						goldUpdate = true,
+						gained = kench.bonusGoldPerKill,
+						gold = kstate.gold,
+					})
+				end
 			end
 		end
 

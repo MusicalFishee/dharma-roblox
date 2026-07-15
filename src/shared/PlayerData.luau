@@ -5,7 +5,7 @@
 
 local PlayerData = {}
 
-PlayerData.Version = 3
+PlayerData.Version = 4
 
 -- Mirrors Shop.MaxTier (kept dependency-free for Lune; a test guards against drift).
 local MAX_TIER = 10
@@ -51,6 +51,8 @@ export type Data = {
 	bestWave: number,
 	quests: { QuestSlot },
 	weapon: WeaponSave,
+	shards: number, -- Vajra Shards (boss-kill currency for mantras)
+	enchant: string, -- inscribed mantra id, "" when the weapon is unmarked
 }
 
 function PlayerData.default(): Data
@@ -62,6 +64,8 @@ function PlayerData.default(): Data
 		bestWave = 0,
 		quests = {},
 		weapon = { id = "", tier = WEAPON_MIN_TIER },
+		shards = 0,
+		enchant = "",
 	}
 end
 
@@ -98,6 +102,12 @@ function PlayerData.validate(raw: any): Data
 			d.weapon.id = raw.weapon.id
 			d.weapon.tier = clampWeaponTier(raw.weapon.tier)
 		end
+		if type(raw.shards) == "number" and raw.shards >= 0 and raw.shards == raw.shards then
+			d.shards = math.floor(raw.shards)
+		end
+		if type(raw.enchant) == "string" and #raw.enchant <= 40 then
+			d.enchant = raw.enchant
+		end
 	end
 	return d
 end
@@ -109,7 +119,9 @@ function PlayerData.serialize(
 	upgrades: Upgrades?,
 	bestWave: number?,
 	quests: { QuestSlot }?,
-	weapon: WeaponSave?
+	weapon: WeaponSave?,
+	shards: number?,
+	enchant: string?
 ): Data
 	local questsCopy: { QuestSlot } = {}
 	if quests then
@@ -134,6 +146,8 @@ function PlayerData.serialize(
 			id = if weapon and type(weapon.id) == "string" then weapon.id else "",
 			tier = clampWeaponTier(if weapon then weapon.tier else WEAPON_MIN_TIER),
 		},
+		shards = math.max(0, math.floor(shards or 0)),
+		enchant = if type(enchant) == "string" and #enchant <= 40 then enchant else "",
 	}
 end
 

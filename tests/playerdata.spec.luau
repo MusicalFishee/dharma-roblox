@@ -82,6 +82,18 @@ local wrt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, { id = "
 check("weapon round-trips through serialize", wrt.weapon.id == "chakram" and wrt.weapon.tier == 4)
 check("serialize without weapon -> unchosen tier 1", PlayerData.serialize(1, 1).weapon.id == "" and PlayerData.serialize(1, 1).weapon.tier == 1)
 
+-- Shards + enchant (added with the mantra system).
+check("default shards 0, no mantra", PlayerData.default().shards == 0 and PlayerData.default().enchant == "")
+check("valid shards preserved", PlayerData.validate({ shards = 12 }).shards == 12)
+check("negative/junk shards rejected", PlayerData.validate({ shards = -3 }).shards == 0 and PlayerData.validate({ shards = "lots" }).shards == 0)
+check("float shards floored", PlayerData.validate({ shards = 5.9 }).shards == 5)
+check("valid enchant preserved", PlayerData.validate({ enchant = "yama_ledger" }).enchant == "yama_ledger")
+check("non-string enchant rejected", PlayerData.validate({ enchant = 7 }).enchant == "")
+check("oversized enchant rejected", PlayerData.validate({ enchant = string.rep("x", 41) }).enchant == "")
+local ert = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 9, "trinetra"))
+check("shards + enchant round-trip through serialize", ert.shards == 9 and ert.enchant == "trinetra")
+check("serialize without them defaults 0 + empty", PlayerData.serialize(1, 1).shards == 0 and PlayerData.serialize(1, 1).enchant == "")
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

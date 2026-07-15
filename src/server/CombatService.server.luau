@@ -9,7 +9,10 @@ local Combat = require(ReplicatedStorage.Shared.Combat)
 local Progression = require(ReplicatedStorage.Shared.Progression)
 local Shop = require(ReplicatedStorage.Shared.Shop)
 local Weapons = require(ReplicatedStorage.Shared.Weapons)
+local Enchants = require(ReplicatedStorage.Shared.Enchants)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
+
+local Debris = game:GetService("Debris")
 
 local MELEE_REACH = 13 -- studs
 local MELEE_ARC_DOT = 0.25 -- how forward-facing a target must be
@@ -54,6 +57,60 @@ local function findTargets(fromRoot: BasePart): { Humanoid }
 	return hits
 end
 
+-- Agni's Kiss: a burn that ticks on the enemy for a few seconds. One burn at a time
+-- per enemy; the flame visual rides on the enemy so everyone sees who's alight.
+local function igniteEnemy(model: Model, humanoid: Humanoid, totalDamage: number, seconds: number)
+	if model:GetAttribute("Burning") == true then
+		return
+	end
+	model:SetAttribute("Burning", true)
+	local root = getRoot(model)
+	if root then
+		local flame = Instance.new("Fire")
+		flame.Size = 4
+		flame.Heat = 8
+		flame.Color = Color3.fromRGB(255, 120, 30)
+		flame.SecondaryColor = Color3.fromRGB(140, 40, 10)
+		flame.Parent = root
+		Debris:AddItem(flame, seconds)
+	end
+	task.spawn(function()
+		local ticks = math.max(1, math.floor(seconds))
+		for _ = 1, ticks do
+			task.wait(1)
+			if humanoid.Health <= 0 or not model.Parent then
+				break
+			end
+			humanoid:TakeDamage(totalDamage / ticks)
+		end
+		model:SetAttribute("Burning", nil)
+	end)
+end
+
+-- Sudarshana's Storm: sky-fire crashes down on the struck enemy.
+local function skyFire(targetRoot: BasePart, humanoid: Humanoid, damage: number)
+	humanoid:TakeDamage(damage)
+	local bolt = Instance.new("Part")
+	bolt.Anchored = true
+	bolt.CanCollide = false
+	bolt.CanQuery = false
+	bolt.Material = Enum.Material.Neon
+	bolt.Color = Color3.fromRGB(150, 220, 255)
+	bolt.Size = Vector3.new(0.6, 42, 0.6)
+	bolt.CFrame = CFrame.new(targetRoot.Position + Vector3.new(0, 21, 0))
+	bolt.Parent = workspace
+	Debris:AddItem(bolt, 0.25)
+	-- The crack outlives the flash, so it rides the enemy, not the bolt.
+	local crack = Instance.new("Sound")
+	crack.SoundId = "rbxasset://sounds/glassbreak.wav"
+	crack.Volume = 0.7
+	crack.PlaybackSpeed = 0.5
+	crack.RollOffMaxDistance = 150
+	crack.Parent = targetRoot
+	crack:Play()
+	Debris:AddItem(crack, 3)
+end
+
 Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 	local character = player.Character
 	if not character then
@@ -84,15 +141,19 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 
 	local comboCount = state.combo:registerHit(os.clock())
 	local level = Progression.resolve(state.totalXp).level
-	local isCrit = Combat.rollCrit()
+	local ench = Enchants.effects(state.enchant)
+	local isCrit = Combat.rollCrit(nil, ench.critChanceBonus)
 	local damage = Combat.critDamage(
 		Combat.computeAttackDamage(kind, comboCount - 1)
 			* Progression.damageMultiplierForLevel(level)
 			* Shop.damageMult(state.upgrades.damage)
 			* Weapons.damageMult(state.weapon.id, state.weapon.tier),
-		isCrit
+		isCrit,
+		ench.critMultiplier
 	)
 
+	local healed = 0
+	local anyExecuted = false
 	for _, humanoid in targets do
 		-- Tag the enemy with who hit it so it can grant XP on death.
 		local enemyModel = humanoid.Parent
@@ -101,8 +162,35 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 			Net.AnimEvent:FireAllClients(enemyModel, "flinch")
 		end
 
-		humanoid:TakeDamage(damage)
-		state.tejas = Combat.clampTejas(state.tejas + Combat.Config.TejasPerHitLanded)
+		-- Yama's Ledger: a non-boss left below the threshold is claimed outright.
+		local dealt = damage
+		if
+			ench.executeThreshold
+			and enemyModel
+			and enemyModel:GetAttribute("IsBoss") ~= true
+			and humanoid.Health - damage <= humanoid.MaxHealth * ench.executeThreshold
+		then
+			dealt = humanoid.Health
+			if humanoid.Health > damage then
+				anyExecuted = true -- the ledger did the killing, not the swing
+			end
+		end
+
+		humanoid:TakeDamage(dealt)
+		state.tejas = Combat.clampTejas(state.tejas + Combat.Config.TejasPerHitLanded * (ench.tejasMult or 1))
+
+		if ench.lifesteal then
+			healed += dealt * ench.lifesteal
+		end
+		if ench.burnDamage and humanoid.Health > 0 and enemyModel and enemyModel:IsA("Model") then
+			igniteEnemy(enemyModel, humanoid, ench.burnDamage, ench.burnSeconds or 3)
+		end
+		if ench.procChance and humanoid.Health > 0 and math.random() < ench.procChance then
+			local eroot = humanoid.RootPart
+			if eroot then
+				skyFire(eroot, humanoid, ench.procDamage or 0)
+			end
+		end
 
 		-- The heavy finisher knocks enemies back.
 		local hrp = humanoid.RootPart
@@ -114,6 +202,14 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 		end
 	end
 
+	-- Rakta Thirst: drink back a share of everything dealt.
+	if healed > 0 then
+		local myHum = character:FindFirstChildOfClass("Humanoid")
+		if myHum and myHum.Health > 0 then
+			myHum.Health = math.min(myHum.MaxHealth, myHum.Health + healed)
+		end
+	end
+
 	Net.CombatFeedback:FireClient(player, {
 		outcome = "Hit",
 		kind = kind,
@@ -121,6 +217,7 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 		chain = swing.index,
 		isFinisher = swing.isFinisher,
 		isCrit = isCrit,
+		executed = anyExecuted,
 		damage = damage,
 		tejas = state.tejas,
 	})
@@ -144,7 +241,9 @@ Net.DefenseState.OnServerEvent:Connect(function(player: Player, data: any)
 	end
 
 	if data.dodge == true then
-		state.dodgeUntil = os.clock() + Combat.Config.ParryWindowSeconds -- brief i-frames
+		-- Brief i-frames; Vayu's Grace stretches them.
+		local ench = Enchants.effects(state.enchant)
+		state.dodgeUntil = os.clock() + Combat.Config.ParryWindowSeconds * (1 + (ench.dodgeBonus or 0))
 		if char then
 			Net.AnimEvent:FireAllClients(char, "dash")
 		end
