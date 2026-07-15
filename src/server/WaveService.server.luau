@@ -7,6 +7,8 @@ local Players = game:GetService("Players")
 local Net = require(ReplicatedStorage.Shared.Net)
 local Waves = require(ReplicatedStorage.Shared.Waves)
 local Survival = require(ReplicatedStorage.Shared.Survival)
+local Milestones = require(ReplicatedStorage.Shared.Milestones)
+local Loot = require(ReplicatedStorage.Shared.Loot)
 local EnemyTypes = require(ReplicatedStorage.Shared.EnemyTypes)
 local Bosses = require(ReplicatedStorage.Shared.Bosses)
 local Elites = require(ReplicatedStorage.Shared.Elites)
@@ -55,6 +57,24 @@ local function onWaveClear(wave: number)
 		QuestService.onWaveClear(p)
 	end
 	announce({ waveState = "clear", wave = wave, bonusXp = bonus, intermission = Waves.Intermission })
+
+	-- Landmark waves pay a bounty and confer a title.
+	local milestone = Milestones.forWave(wave)
+	if milestone then
+		for _, p in Players:GetPlayers() do
+			local state = PlayerRegistry.get(p)
+			state.gold = Loot.clampGold(state.gold + milestone.gold)
+			-- Silent gold-counter refresh, then the headline title banner.
+			Net.CombatFeedback:FireClient(p, { goldUpdate = true, gained = 0, gold = state.gold })
+			Net.CombatFeedback:FireClient(p, {
+				milestone = true,
+				title = milestone.title,
+				wave = milestone.wave,
+				gold = milestone.gold,
+			})
+		end
+	end
+
 	task.delay(Waves.Intermission, function()
 		startWave(wave + 1)
 	end)

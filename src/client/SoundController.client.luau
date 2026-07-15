@@ -144,6 +144,10 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play("questDone")
 		return
 	end
+	if data.milestone then
+		play("levelUp")
+		return
+	end
 
 	-- Zone transitions get the deep boom.
 	if data.zoneChange then

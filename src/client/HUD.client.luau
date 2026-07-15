@@ -288,6 +288,13 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("%s  →  Tier %d", tostring(data.itemName), data.tier), Color3.fromRGB(255, 200, 40))
 		return
 	end
+	if data.milestone then
+		showToast(
+			string.format("WAVE %d MILESTONE!   « %s »   +%d gold", data.wave, tostring(data.title), data.gold),
+			YELLOW
+		)
+		return
+	end
 	if data.shopDenied then
 		if data.reason == "gold" then
 			showToast("Not enough gold", Color3.fromRGB(200, 120, 120))
