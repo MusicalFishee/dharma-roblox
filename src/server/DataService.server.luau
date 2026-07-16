@@ -56,6 +56,7 @@ local function loadPlayer(player: Player)
 		playtimeSeconds = data.stats.playtimeSeconds,
 		trialsPassed = data.stats.trialsPassed,
 		duelWins = data.stats.duelWins,
+		raidClears = data.stats.raidClears,
 	}
 	state.title = data.title
 	state.path = data.path
@@ -104,6 +105,7 @@ local function savePlayer(player: Player)
 		playtimeSeconds = state.stats.playtimeSeconds,
 		trialsPassed = state.stats.trialsPassed,
 		duelWins = state.stats.duelWins,
+		raidClears = state.stats.raidClears,
 	}
 	local dailies = state.dailies
 	local titleId = state.title

@@ -173,6 +173,18 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play(if data.mythic then "thunderCrack" else "questDone")
 		return
 	end
+	if data.headFall then
+		play("finisherLand")
+		return
+	end
+	if data.raidEnrage then
+		play("bossSpawn")
+		return
+	end
+	if data.raidVictory then
+		play("bossDefeated")
+		return
+	end
 	if data.titleEquipped then
 		play("shopBuy")
 		return

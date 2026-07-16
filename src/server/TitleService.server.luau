@@ -22,6 +22,7 @@ local function snapshotOf(player: Player): Titles.Snapshot
 		level = Progression.resolve(state.totalXp).level,
 		trials = state.stats.trialsPassed,
 		duelWins = state.stats.duelWins,
+		raidClears = state.stats.raidClears,
 	}
 end
 

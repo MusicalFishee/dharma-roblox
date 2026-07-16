@@ -383,6 +383,22 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		end
 		return
 	end
+	-- The Ten-Headed King.
+	if data.headFall then
+		showToast(
+			string.format("%s — %s — IS SEVERED   (%d heads remain)", string.upper(tostring(data.headName)), string.upper(tostring(data.vice)), data.remaining),
+			Color3.fromRGB(255, 200, 60)
+		)
+		return
+	end
+	if data.raidEnrage then
+		showToast("ONLY THE EGO REMAINS — RAVANA ENRAGES", RED)
+		return
+	end
+	if data.raidVictory then
+		showToast(tostring(data.message), YELLOW)
+		return
+	end
 	-- Honor duels.
 	if data.pvp then
 		local PINK = Color3.fromRGB(255, 110, 140)

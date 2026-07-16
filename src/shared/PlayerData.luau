@@ -5,7 +5,7 @@
 
 local PlayerData = {}
 
-PlayerData.Version = 10
+PlayerData.Version = 11
 
 -- Mirrors Relics.MaxOwned (dependency-free; a test guards against drift).
 local RELICS_MAX_OWNED = 40
@@ -48,6 +48,7 @@ export type StatsSave = {
 	playtimeSeconds: number,
 	trialsPassed: number,
 	duelWins: number,
+	raidClears: number,
 }
 
 export type DailySlot = {
@@ -131,7 +132,7 @@ function PlayerData.default(): Data
 		weapon = { id = "", tier = WEAPON_MIN_TIER },
 		shards = 0,
 		enchant = "",
-		stats = { kills = 0, bossKills = 0, deaths = 0, playtimeSeconds = 0, trialsPassed = 0, duelWins = 0 },
+		stats = { kills = 0, bossKills = 0, deaths = 0, playtimeSeconds = 0, trialsPassed = 0, duelWins = 0, raidClears = 0 },
 		dailies = { stamp = 0, slots = {} }, -- stamp 0 = stale, forces a fresh roll
 		title = "",
 		path = "",
@@ -185,6 +186,7 @@ function PlayerData.validate(raw: any): Data
 			d.stats.playtimeSeconds = cleanCount(raw.stats.playtimeSeconds)
 			d.stats.trialsPassed = cleanCount(raw.stats.trialsPassed)
 			d.stats.duelWins = cleanCount(raw.stats.duelWins)
+			d.stats.raidClears = cleanCount(raw.stats.raidClears)
 		end
 		if type(raw.title) == "string" and #raw.title <= 40 then
 			d.title = raw.title
@@ -259,6 +261,7 @@ function PlayerData.serialize(
 			playtimeSeconds = cleanCount(if stats then stats.playtimeSeconds else 0),
 			trialsPassed = cleanCount(if stats then stats.trialsPassed else 0),
 			duelWins = cleanCount(if stats then stats.duelWins else 0),
+			raidClears = cleanCount(if stats then stats.raidClears else 0),
 		},
 		dailies = {
 			stamp = cleanCount(if dailies then dailies.stamp else 0),

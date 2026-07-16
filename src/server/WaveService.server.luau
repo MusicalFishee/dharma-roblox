@@ -11,6 +11,8 @@ local Milestones = require(ReplicatedStorage.Shared.Milestones)
 local Loot = require(ReplicatedStorage.Shared.Loot)
 local Trial = require(ReplicatedStorage.Shared.Trial)
 local TrialBoss = require(script.Parent.TrialBoss)
+local Ravana = require(ReplicatedStorage.Shared.Ravana)
+local RavanaRaid = require(script.Parent.RavanaRaid)
 local EnemyTypes = require(ReplicatedStorage.Shared.EnemyTypes)
 local Bosses = require(ReplicatedStorage.Shared.Bosses)
 local Elites = require(ReplicatedStorage.Shared.Elites)
@@ -130,6 +132,17 @@ function startWave(wave: number)
 		return
 	end
 
+	-- The Ten-Headed King claims wave 50 and every 50th after (below the Trial, by law).
+	if Ravana.isRaidWave(wave) then
+		announce({ waveState = "boss", wave = wave, bossName = "Ravana", bossTitle = "the Ten-Headed King" })
+		RavanaRaid.begin(wave, function()
+			if gen == waveGen then
+				onWaveClear(wave)
+			end
+		end)
+		return
+	end
+
 	if Waves.isBossWave(wave) then
 		spawnBossWave(wave, gen)
 		return
@@ -168,6 +181,7 @@ function failRun()
 	local failedWave = currentWave
 	EnemyService.clearAll()
 	TrialBoss.clear() -- a wiped trial dissolves too (no blessing, no reward)
+	RavanaRaid.clear() -- and the king keeps his heads
 	local resume = Survival.restartWave(checkpoint, Waves.BossInterval)
 	announce({
 		waveState = "wipe",
