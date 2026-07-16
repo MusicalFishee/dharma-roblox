@@ -595,6 +595,23 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("SIDDHI UNLOCKED:  %s — %s", tostring(data.name), tostring(data.line)), YELLOW)
 		return
 	end
+	if data.utsava then
+		if data.utsava == "begin" then
+			showToast(string.format("UTSAVA!  %s", tostring(data.announce)), YELLOW)
+		elseif data.utsava == "deerSlain" then
+			showToast(string.format("%s felled the golden deer!  (+%d gold, +%d ◆)", tostring(data.byName), data.gold, data.shards), YELLOW)
+		elseif data.utsava == "deerFled" then
+			showToast("The golden illusion laughs — and fades.", Color3.fromRGB(170, 170, 170))
+		elseif data.utsava == "merchantSold" then
+			showToast(string.format("The vaidya bows — %d ◆ for %d gold.", data.shards, data.price), YELLOW)
+		elseif data.utsava == "merchantDenied" then
+			local why = if data.reason == "served" then "The vaidya has already served you" else "The vaidya eyes your empty purse"
+			showToast(why, Color3.fromRGB(200, 120, 120))
+		elseif data.utsava == "merchantLeft" then
+			showToast("The vaidya rolls up his mat and walks on.", Color3.fromRGB(170, 170, 170))
+		end
+		return
+	end
 
 	-- Afflictions the horde puts on you.
 	if data.statusEffect == "venom" then

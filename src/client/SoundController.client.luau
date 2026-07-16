@@ -189,6 +189,14 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play("thunderCrack")
 		return
 	end
+	if data.utsava == "begin" then
+		play("waveStart")
+		return
+	end
+	if data.utsava == "deerSlain" or data.utsava == "merchantSold" then
+		play("goldPickup")
+		return
+	end
 	if data.headFall then
 		play("finisherLand")
 		return

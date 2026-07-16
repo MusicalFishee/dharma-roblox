@@ -18,6 +18,7 @@ local Bosses = require(ReplicatedStorage.Shared.Bosses)
 local Elites = require(ReplicatedStorage.Shared.Elites)
 local EnemyService = require(script.Parent.EnemyService)
 local ZoneService = require(script.Parent.ZoneService)
+local UtsavaService = require(script.Parent.UtsavaService)
 local ProgressionService = require(script.Parent.ProgressionService)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local QuestService = require(script.Parent.QuestService)
@@ -122,6 +123,9 @@ function startWave(wave: number)
 	local gen = waveGen
 	currentWave = wave
 	ZoneService.applyForWave(wave)
+
+	-- Festival roll: never on the spectacle nights (boss / trial / raid).
+	UtsavaService.onWaveStart(wave, Trial.isTrialWave(wave) or Ravana.isRaidWave(wave) or Waves.isBossWave(wave))
 
 	-- The Kirata Trial claims its waves outright (no adds — the god comes alone).
 	if Trial.isTrialWave(wave) then

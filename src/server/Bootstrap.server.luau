@@ -10,6 +10,7 @@ require(script.Parent.WeaponService) -- activates the armory (weapon build/weld 
 require(script.Parent.PathService) -- activates the Astra Path oath + respec remote
 require(script.Parent.RelicService) -- activates relic drops + the satchel remote
 require(script.Parent.ReviveService) -- activates Uddhāra (bleed-out + lift prompts)
+require(script.Parent.UtsavaService) -- activates festival events (deer/storm/vaidya)
 require(script.Parent.StoryService) -- activates Agastya's journal remote
 
 print(string.format(
