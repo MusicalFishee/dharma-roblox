@@ -112,6 +112,21 @@ EnemyTypes.List = {
 		skin = { 122, 32, 30 },
 		weight = 1,
 	},
+	-- Mountain treasure-guard: near-boss bulk, slow as a glacier, pays like one.
+	Yaksha = {
+		id = "Yaksha",
+		displayName = "Yaksha",
+		maxHealth = 300,
+		walkSpeed = 8,
+		attackDamage = 20,
+		attackInterval = 2.4,
+		aggroRange = 100,
+		attackRange = 11,
+		xpReward = 90,
+		scale = 1.5,
+		skin = { 120, 130, 150 },
+		weight = 1,
+	},
 } :: { [string]: EnemyArchetype }
 
 function EnemyTypes.get(id: string): EnemyArchetype

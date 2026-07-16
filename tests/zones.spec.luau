@@ -32,7 +32,7 @@ end
 print("Zones")
 
 -- Defs well-formed, thresholds strictly ascending starting at 1.
-check("has 3 zones", #Zones.List == 3)
+check("has 4 zones", #Zones.List == 4)
 local prev = 0
 local defsValid = true
 local ids: { [string]: boolean } = {}
@@ -58,7 +58,9 @@ check("wave 14 still the Ashram", Zones.forWave(14).id == "ashram")
 check("wave 15 enters Dandakaranya", Zones.forWave(15).id == "dandakaranya")
 check("wave 29 still Dandakaranya", Zones.forWave(29).id == "dandakaranya")
 check("wave 30 enters Sagara Tala", Zones.forWave(30).id == "sagara")
-check("wave 999 stays in the deepest zone", Zones.forWave(999).id == "sagara")
+check("wave 59 still Sagara Tala", Zones.forWave(59).id == "sagara")
+check("wave 60 climbs into Himavat", Zones.forWave(60).id == "himavat")
+check("wave 999 stays in the deepest zone", Zones.forWave(999).id == "himavat")
 
 -- The forest closes in (fog tightens as you go deeper).
 check("deeper zones have heavier fog", Zones.forWave(15).fogEnd < Zones.forWave(1).fogEnd)

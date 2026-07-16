@@ -71,6 +71,21 @@ Zones.List = {
 		fogEnd = 220,
 		clockTime = 20.5,
 	},
+	{
+		id = "himavat",
+		name = "Himavat, the Roof of the World",
+		threshold = 60,
+		ground = { 225, 230, 240 },
+		groundMaterial = "Snow",
+		pillar = { 170, 200, 225 },
+		pillarMaterial = "Ice",
+		cap = { 235, 240, 248 },
+		flame = { 150, 200, 255 },
+		ambient = { 150, 165, 190 },
+		fogColor = { 205, 215, 232 },
+		fogEnd = 190,
+		clockTime = 7.5,
+	},
 } :: { ZoneDef }
 
 -- The zone in effect for a given wave (the deepest threshold reached).

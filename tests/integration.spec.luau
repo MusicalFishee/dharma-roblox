@@ -59,7 +59,7 @@ check("ability slots match between Abilities.Config and unlock levels", slotsOk)
 
 -- 3. Every roster boss has its own named special (never the generic fallback).
 local specialsOk = true
-for encounter = 1, 5 do
+for encounter = 1, 7 do
 	local boss = Bosses.forWave(encounter * 5, 5)
 	local sp = BossSpecials.forBoss(boss.id)
 	if sp.name == BossSpecials.forBoss("__nonexistent__").name then
@@ -67,7 +67,7 @@ for encounter = 1, 5 do
 		print("    !! boss " .. boss.id .. " fell back to the default special")
 	end
 end
-check("all 5 roster bosses have bespoke specials", specialsOk)
+check("all roster bosses have bespoke specials", specialsOk)
 
 -- 4. Every animation the SERVER broadcasts exists as a track (or handled alias).
 -- Canonical list of names fired via Net.AnimEvent in server code — keep in sync.
@@ -115,7 +115,7 @@ for _, a in EnemyTypes.List do
 		xpOk = false
 	end
 end
-for encounter = 1, 5 do
+for encounter = 1, 7 do
 	if Bosses.forWave(encounter * 5, 5).xpReward <= 0 then
 		xpOk = false
 	end

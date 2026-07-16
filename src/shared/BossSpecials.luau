@@ -23,6 +23,8 @@ local CONFIGS: { [string]: Special } = {
 	Kumbhakarna = { name = "Earthshatter", telegraph = 2.0, radius = 30, damage = 60, cooldown = 11.0, targetPlayer = false },
 	Hiranyakashipu = { name = "Tyrant's Decree", telegraph = 1.2, radius = 15, damage = 50, cooldown = 6.5, targetPlayer = true },
 	Bakasura = { name = "Hungering Maw", telegraph = 1.8, radius = 26, damage = 55, cooldown = 10.0, targetPlayer = false },
+	Vritra = { name = "Coiling Drought", telegraph = 1.7, radius = 24, damage = 52, cooldown = 9.0, targetPlayer = false },
+	Kalanemi = { name = "Mountain's Curse", telegraph = 1.2, radius = 16, damage = 55, cooldown = 6.8, targetPlayer = true },
 }
 
 local DEFAULT: Special = { name = "Ground Slam", telegraph = 1.4, radius = 20, damage = 35, cooldown = 8.0, targetPlayer = false }

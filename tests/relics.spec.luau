@@ -68,7 +68,7 @@ check("ravana set has 3 pieces + a 3-piece bonus", #Relics.Sets.ravana.pieces ==
 -- Every wave boss the roster can serve up has relics to drop.
 local bossesCovered = true
 local seenBossIds: { [string]: boolean } = {}
-for encounter = 1, 6 do
+for encounter = 1, 8 do
 	local boss = Bosses.forWave(encounter * Waves.BossInterval, Waves.BossInterval)
 	if not seenBossIds[boss.id] then
 		seenBossIds[boss.id] = true

@@ -73,6 +73,12 @@ Relics.Defs = {
 	-- Bakasura — the glutton's feast.
 	baka_crown = { id = "baka_crown", name = "The Glutton's Toothy Crown", slot = "crown", rarity = "rare", setId = "baka", line = "Every tooth a finished meal.", bonus = { healthBonus = 18 } },
 	baka_kavacha = { id = "baka_kavacha", name = "Feast-Hardened Kavacha", slot = "kavacha", rarity = "rare", setId = "baka", line = "Fat turned to iron.", bonus = { goldMult = 1.08 } },
+	-- Vritra — the coils of the enveloper.
+	vritra_crown = { id = "vritra_crown", name = "Crown of the Enveloper", slot = "crown", rarity = "epic", setId = "vritra", line = "It still smells of the stolen rains.", bonus = { tejasMult = 1.08 } },
+	vritra_kavacha = { id = "vritra_kavacha", name = "Serpent-Coil Kavacha", slot = "kavacha", rarity = "epic", setId = "vritra", line = "Scales that once dammed the rivers.", bonus = { healthBonus = 22 } },
+	-- Kalanemi — the sorcerer's regalia.
+	kalanemi_crown = { id = "kalanemi_crown", name = "The Sorcerer's Circlet", slot = "crown", rarity = "epic", setId = "kalanemi", line = "It hums with borrowed mantras.", bonus = { critChance = 0.03 } },
+	kalanemi_kavacha = { id = "kalanemi_kavacha", name = "Peak-Warded Kavacha", slot = "kavacha", rarity = "epic", setId = "kalanemi", line = "Cold iron, colder cunning.", bonus = { damageTakenMult = 0.96 } },
 	-- Ravana — Dashanana's dominion (raid-only).
 	ravana_crown = { id = "ravana_crown", name = "Dashanana's Crown", slot = "crown", rarity = "mythic", setId = "ravana", line = "Ten heads wore it. None kept it.", bonus = { damageMult = 1.08 } },
 	ravana_kavacha = { id = "ravana_kavacha", name = "Kavacha of Ten Heads", slot = "kavacha", rarity = "mythic", setId = "ravana", line = "Shiva himself once weighed this chest down.", bonus = { damageTakenMult = 0.90 } },
@@ -90,6 +96,8 @@ Relics.Sets = {
 	kumbha = { id = "kumbha", name = "The Mountain Asleep", pieces = { "kumbha_crown", "kumbha_kavacha" }, bonus2 = { damageTakenMult = 0.92 } },
 	hiranya = { id = "hiranya", name = "The Tyrant's Regalia", pieces = { "hiranya_crown", "hiranya_kavacha" }, bonus2 = { goldMult = 1.15 } },
 	baka = { id = "baka", name = "The Glutton's Feast", pieces = { "baka_crown", "baka_kavacha" }, bonus2 = { healthBonus = 25 } },
+	vritra = { id = "vritra", name = "Coils of the Enveloper", pieces = { "vritra_crown", "vritra_kavacha" }, bonus2 = { tejasMult = 1.12 } },
+	kalanemi = { id = "kalanemi", name = "The Sorcerer's Regalia", pieces = { "kalanemi_crown", "kalanemi_kavacha" }, bonus2 = { critChance = 0.04 } },
 	ravana = { id = "ravana", name = "Dashanana's Dominion", pieces = { "ravana_crown", "ravana_kavacha", "ravana_charm" }, bonus2 = { damageMult = 1.10 }, bonus3 = { damageMult = 1.05, damageTakenMult = 0.95, critChance = 0.03 } },
 } :: { [string]: SetDef }
 
@@ -100,6 +108,8 @@ Relics.BossDrops = {
 	Kumbhakarna = { "kumbha_crown", "kumbha_kavacha" },
 	Hiranyakashipu = { "hiranya_crown", "hiranya_kavacha" },
 	Bakasura = { "baka_crown", "baka_kavacha" },
+	Vritra = { "vritra_crown", "vritra_kavacha" },
+	Kalanemi = { "kalanemi_crown", "kalanemi_kavacha" },
 	Ravana = { "ravana_crown", "ravana_kavacha", "ravana_charm" },
 } :: { [string]: { string } }
 
