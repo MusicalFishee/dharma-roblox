@@ -144,6 +144,14 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play("questDone")
 		return
 	end
+	if data.dailyComplete then
+		play("levelUp")
+		return
+	end
+	if data.dailyReset then
+		play("waveStart")
+		return
+	end
 	if data.milestone then
 		play("levelUp")
 		return

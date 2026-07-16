@@ -22,8 +22,11 @@ screenGui.Name = "DharmaQuests"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
+local SHARD = Color3.fromRGB(150, 120, 255)
+local DAILY_FILL = Color3.fromRGB(255, 200, 40)
+
 local panel = Instance.new("Frame")
-panel.Size = UDim2.fromOffset(230, 210)
+panel.Size = UDim2.fromOffset(230, 424)
 panel.AnchorPoint = Vector2.new(1, 0.5)
 panel.Position = UDim2.new(1, -12, 0.5, 0)
 panel.BackgroundColor3 = PANEL_BG
@@ -50,10 +53,7 @@ type Row = {
 	barFill: Frame,
 }
 
-local rows: { Row } = {}
-for i = 1, 3 do
-	local y = 34 + (i - 1) * 58
-
+local function makeRow(y: number): Row
 	local title = Instance.new("TextLabel")
 	title.Size = UDim2.new(1, -20, 0, 18)
 	title.Position = UDim2.fromOffset(10, y)
@@ -95,7 +95,28 @@ for i = 1, 3 do
 	fc.CornerRadius = UDim.new(0, 3)
 	fc.Parent = barFill
 
-	rows[i] = { title = title, progressText = progressText, barFill = barFill }
+	return { title = title, progressText = progressText, barFill = barFill }
+end
+
+local rows: { Row } = {}
+for i = 1, 3 do
+	rows[i] = makeRow(34 + (i - 1) * 58)
+end
+
+-- Today's trials: same three for everyone, reset at midnight, paid in gold + shards.
+local dailyHeader = Instance.new("TextLabel")
+dailyHeader.Size = UDim2.new(1, 0, 0, 30)
+dailyHeader.Position = UDim2.fromOffset(0, 210)
+dailyHeader.BackgroundTransparency = 1
+dailyHeader.Font = Enum.Font.GothamBlack
+dailyHeader.TextSize = 16
+dailyHeader.TextColor3 = SHARD
+dailyHeader.Text = "DAILY TRIALS"
+dailyHeader.Parent = panel
+
+local dailyRows: { Row } = {}
+for i = 1, 3 do
+	dailyRows[i] = makeRow(244 + (i - 1) * 58)
 end
 
 Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
@@ -113,6 +134,42 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 			local pct = math.clamp(q.progress / math.max(1, q.goal), 0, 1)
 			TweenService:Create(row.barFill, TweenInfo.new(0.25), { Size = UDim2.new(pct, 0, 1, 0) }):Play()
 			row.barFill.BackgroundColor3 = if pct >= 1 then DONE else BAR_FILL
+		else
+			row.title.Text = ""
+			row.progressText.Text = ""
+			row.barFill.Size = UDim2.new(0, 0, 1, 0)
+		end
+	end
+
+	for i = 1, 3 do
+		local row = dailyRows[i]
+		local q = data.dailies and data.dailies[i]
+		if q then
+			local rewardBits = {}
+			if q.rewardGold > 0 then
+				table.insert(rewardBits, string.format("%d ◈", q.rewardGold))
+			end
+			if q.rewardShards and q.rewardShards > 0 then
+				table.insert(rewardBits, string.format("%d ◆", q.rewardShards))
+			end
+			if q.rewardXp > 0 and #rewardBits == 0 then
+				table.insert(rewardBits, string.format("%d XP", q.rewardXp))
+			end
+			local reward = table.concat(rewardBits, " + ")
+			if q.done then
+				row.title.Text = "✓  " .. tostring(q.title)
+				row.title.TextColor3 = DONE
+				row.progressText.Text = "Complete — resets at midnight"
+				row.barFill.Size = UDim2.new(1, 0, 1, 0)
+				row.barFill.BackgroundColor3 = DONE
+			else
+				row.title.Text = tostring(q.title)
+				row.title.TextColor3 = Color3.fromRGB(235, 235, 235)
+				row.progressText.Text = string.format("%s   %d/%d   (%s)", q.desc, q.progress, q.goal, reward)
+				local pct = math.clamp(q.progress / math.max(1, q.goal), 0, 1)
+				TweenService:Create(row.barFill, TweenInfo.new(0.25), { Size = UDim2.new(pct, 0, 1, 0) }):Play()
+				row.barFill.BackgroundColor3 = DAILY_FILL
+			end
 		else
 			row.title.Text = ""
 			row.progressText.Text = ""

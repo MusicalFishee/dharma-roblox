@@ -5,7 +5,7 @@
 
 local PlayerData = {}
 
-PlayerData.Version = 5
+PlayerData.Version = 6
 
 -- Mirrors Shop.MaxTier (kept dependency-free for Lune; a test guards against drift).
 local MAX_TIER = 10
@@ -45,6 +45,17 @@ export type StatsSave = {
 	playtimeSeconds: number,
 }
 
+export type DailySlot = {
+	id: string,
+	progress: number,
+	done: boolean,
+}
+
+export type DailiesSave = {
+	stamp: number, -- day number the slots belong to; a new day rerolls them
+	slots: { DailySlot },
+}
+
 local function cleanCount(value: any): number
 	if type(value) ~= "number" or value ~= value or value < 0 then
 		return 0
@@ -68,6 +79,7 @@ export type Data = {
 	shards: number, -- Vajra Shards (boss-kill currency for mantras)
 	enchant: string, -- inscribed mantra id, "" when the weapon is unmarked
 	stats: StatsSave, -- lifetime records (kills, bosses, deaths, playtime)
+	dailies: DailiesSave, -- today's trials + progress (reset when stamp goes stale)
 }
 
 function PlayerData.default(): Data
@@ -82,6 +94,7 @@ function PlayerData.default(): Data
 		shards = 0,
 		enchant = "",
 		stats = { kills = 0, bossKills = 0, deaths = 0, playtimeSeconds = 0 },
+		dailies = { stamp = 0, slots = {} }, -- stamp 0 = stale, forces a fresh roll
 	}
 end
 
@@ -130,6 +143,20 @@ function PlayerData.validate(raw: any): Data
 			d.stats.deaths = cleanCount(raw.stats.deaths)
 			d.stats.playtimeSeconds = cleanCount(raw.stats.playtimeSeconds)
 		end
+		if type(raw.dailies) == "table" then
+			d.dailies.stamp = cleanCount(raw.dailies.stamp)
+			if type(raw.dailies.slots) == "table" then
+				for _, slot in raw.dailies.slots do
+					if type(slot) == "table" and type(slot.id) == "string" and #d.dailies.slots < 5 then
+						table.insert(d.dailies.slots, {
+							id = slot.id,
+							progress = cleanCount(slot.progress),
+							done = slot.done == true,
+						})
+					end
+				end
+			end
+		end
 	end
 	return d
 end
@@ -144,7 +171,8 @@ function PlayerData.serialize(
 	weapon: WeaponSave?,
 	shards: number?,
 	enchant: string?,
-	stats: StatsSave?
+	stats: StatsSave?,
+	dailies: DailiesSave?
 ): Data
 	local questsCopy: { QuestSlot } = {}
 	if quests then
@@ -176,6 +204,24 @@ function PlayerData.serialize(
 			bossKills = cleanCount(if stats then stats.bossKills else 0),
 			deaths = cleanCount(if stats then stats.deaths else 0),
 			playtimeSeconds = cleanCount(if stats then stats.playtimeSeconds else 0),
+		},
+		dailies = {
+			stamp = cleanCount(if dailies then dailies.stamp else 0),
+			slots = (function(): { DailySlot }
+				local out: { DailySlot } = {}
+				if dailies then
+					for _, slot in dailies.slots do
+						if #out < 5 then
+							table.insert(out, {
+								id = slot.id,
+								progress = cleanCount(slot.progress),
+								done = slot.done == true,
+							})
+						end
+					end
+				end
+				return out
+			end)(),
 		},
 	}
 end

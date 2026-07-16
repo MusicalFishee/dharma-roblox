@@ -487,7 +487,7 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 			killer = Players:GetPlayerByUserId(killerId)
 			if killer then
 				ProgressionService.awardXp(killer, archetype.xpReward)
-				QuestService.onKill(killer, archetype.id, archetype.isBoss == true)
+				QuestService.onKill(killer, archetype.id, archetype.isBoss == true, archetype.isElite == true)
 
 				local kstate = PlayerRegistry.get(killer)
 				-- Lifetime records.

@@ -13,9 +13,10 @@ export type QuestDef = {
 	title: string,
 	desc: string,
 	kind: QuestKind,
-	-- kill-quests only: restrict to one archetype, or to bosses.
+	-- kill-quests only: restrict to one archetype, to bosses, or to elites.
 	enemyId: string?,
 	bossOnly: boolean?,
+	eliteOnly: boolean?,
 	goal: number,
 	rewardGold: number,
 	rewardXp: number,
@@ -25,6 +26,7 @@ export type Event = {
 	type: string,
 	enemyId: string?,
 	isBoss: boolean?,
+	isElite: boolean?,
 	amount: number?,
 }
 
@@ -66,6 +68,9 @@ function Quests.increment(def: QuestDef, event: Event): number
 			return 0
 		end
 		if def.bossOnly and not event.isBoss then
+			return 0
+		end
+		if def.eliteOnly and not event.isElite then
 			return 0
 		end
 		if def.enemyId and event.enemyId ~= def.enemyId then

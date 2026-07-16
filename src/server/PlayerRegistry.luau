@@ -23,6 +23,8 @@ export type PlayerState = {
 	enchant: string,
 	bestWave: number,
 	quests: { { id: string, progress: number } },
+	-- Today's trials: stamp = day number, slots reroll when it goes stale.
+	dailies: { stamp: number, slots: { { id: string, progress: number, done: boolean } } },
 	-- True once persistent data has loaded; guards against saving over real progress.
 	dataLoaded: boolean,
 	-- True once a load has been ATTEMPTED (success or fail) — the weapon hook waits
@@ -67,6 +69,7 @@ function PlayerRegistry.get(player: Player): PlayerState
 		enchant = "",
 		bestWave = 0,
 		quests = {},
+		dailies = { stamp = 0, slots = {} },
 		dataLoaded = false,
 		dataReady = false,
 		isBlocking = false,

@@ -58,6 +58,7 @@ local function loadPlayer(player: Player)
 	state.playtimeMark = os.clock() -- playtime accrues from the moment the save lands
 	state.bestWave = data.bestWave
 	state.quests = data.quests
+	state.dailies = data.dailies
 	state.dataLoaded = ok
 	state.dataReady = true -- load resolved (success or fail); the weapon hook may proceed
 
@@ -70,6 +71,7 @@ local function loadPlayer(player: Player)
 	ProgressionService.onCharacterSpawn(player)
 	Net.CombatFeedback:FireClient(player, { goldUpdate = true, gained = 0, gold = state.gold })
 	QuestService.ensureFilled(player)
+	QuestService.ensureDailies(player)
 end
 
 local function savePlayer(player: Player)
@@ -96,10 +98,11 @@ local function savePlayer(player: Player)
 		deaths = state.stats.deaths,
 		playtimeSeconds = state.stats.playtimeSeconds,
 	}
+	local dailies = state.dailies
 
 	retry(function()
 		return store:UpdateAsync(keyFor(player), function(old: any)
-			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave, quests, weapon, shards, enchant, stats)
+			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave, quests, weapon, shards, enchant, stats, dailies)
 			-- Never roll back XP or bestWave: keep whichever is higher.
 			-- (Gold is NOT anti-rollbacked — the shop legitimately spends it.)
 			if type(old) == "table" then

@@ -106,6 +106,18 @@ local srt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, 
 check("stats round-trip through serialize", srt.stats.kills == 42 and srt.stats.bossKills == 3 and srt.stats.deaths == 1 and srt.stats.playtimeSeconds == 999)
 check("serialize without stats -> zeros", PlayerData.serialize(1, 1).stats.kills == 0 and PlayerData.serialize(1, 1).stats.playtimeSeconds == 0)
 
+-- Dailies (added with daily trials).
+check("default dailies are stale and empty", PlayerData.default().dailies.stamp == 0 and #PlayerData.default().dailies.slots == 0)
+local dv = PlayerData.validate({ dailies = { stamp = 20650, slots = { { id = "daily_lords", progress = 2, done = false }, { id = "daily_gold", progress = 600, done = true } } } })
+check("valid dailies preserved", dv.dailies.stamp == 20650 and #dv.dailies.slots == 2 and dv.dailies.slots[1].id == "daily_lords" and dv.dailies.slots[1].progress == 2)
+check("done flag survives", dv.dailies.slots[2].done == true and dv.dailies.slots[1].done == false)
+local dj = PlayerData.validate({ dailies = { stamp = "today", slots = { { id = 42, progress = 1 }, { id = "x", progress = "some", done = "yes" } } } })
+check("junk dailies cleaned per-field", dj.dailies.stamp == 0 and #dj.dailies.slots == 1 and dj.dailies.slots[1].progress == 0 and dj.dailies.slots[1].done == false)
+check("non-table dailies -> defaults", PlayerData.validate({ dailies = "reset" }).dailies.stamp == 0)
+local drt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, { stamp = 7, slots = { { id = "daily_parry", progress = 5, done = false } } }))
+check("dailies round-trip through serialize", drt.dailies.stamp == 7 and drt.dailies.slots[1].id == "daily_parry" and drt.dailies.slots[1].progress == 5)
+check("serialize without dailies -> stale empty", PlayerData.serialize(1, 1).dailies.stamp == 0 and #PlayerData.serialize(1, 1).dailies.slots == 0)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

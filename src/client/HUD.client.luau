@@ -327,6 +327,24 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("QUEST COMPLETE:  %s  (%s)", tostring(data.title), reward), GREEN)
 		return
 	end
+	if data.dailyComplete then
+		local bits = {}
+		if data.rewardGold and data.rewardGold > 0 then
+			table.insert(bits, string.format("+%d gold", data.rewardGold))
+		end
+		if data.rewardShards and data.rewardShards > 0 then
+			table.insert(bits, string.format("+%d ◆", data.rewardShards))
+		end
+		if data.rewardXp and data.rewardXp > 0 then
+			table.insert(bits, string.format("+%d XP", data.rewardXp))
+		end
+		showToast(string.format("DAILY COMPLETE:  %s  (%s)", tostring(data.title), table.concat(bits, "  ")), YELLOW)
+		return
+	end
+	if data.dailyReset then
+		showToast("A new day — fresh daily trials await", Color3.fromRGB(150, 120, 255))
+		return
+	end
 	if data.shopBought then
 		showToast(string.format("%s  →  Tier %d", tostring(data.itemName), data.tier), Color3.fromRGB(255, 200, 40))
 		return
