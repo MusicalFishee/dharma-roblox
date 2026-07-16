@@ -9,6 +9,8 @@ local Waves = require(ReplicatedStorage.Shared.Waves)
 local Survival = require(ReplicatedStorage.Shared.Survival)
 local Milestones = require(ReplicatedStorage.Shared.Milestones)
 local Loot = require(ReplicatedStorage.Shared.Loot)
+local Trial = require(ReplicatedStorage.Shared.Trial)
+local TrialBoss = require(script.Parent.TrialBoss)
 local EnemyTypes = require(ReplicatedStorage.Shared.EnemyTypes)
 local Bosses = require(ReplicatedStorage.Shared.Bosses)
 local Elites = require(ReplicatedStorage.Shared.Elites)
@@ -116,6 +118,18 @@ function startWave(wave: number)
 	local gen = waveGen
 	currentWave = wave
 	ZoneService.applyForWave(wave)
+
+	-- The Kirata Trial claims its waves outright (no adds — the god comes alone).
+	if Trial.isTrialWave(wave) then
+		announce({ waveState = "boss", wave = wave, bossName = Trial.Phase1.name, bossTitle = Trial.Phase1.title })
+		TrialBoss.begin(function()
+			if gen == waveGen then
+				onWaveClear(wave)
+			end
+		end)
+		return
+	end
+
 	if Waves.isBossWave(wave) then
 		spawnBossWave(wave, gen)
 		return
@@ -153,6 +167,7 @@ function failRun()
 	waveGen += 1 -- every in-flight enemy-death callback from the doomed wave is now void
 	local failedWave = currentWave
 	EnemyService.clearAll()
+	TrialBoss.clear() -- a wiped trial dissolves too (no blessing, no reward)
 	local resume = Survival.restartWave(checkpoint, Waves.BossInterval)
 	announce({
 		waveState = "wipe",

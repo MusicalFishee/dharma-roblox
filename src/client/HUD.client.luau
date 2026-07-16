@@ -160,6 +160,49 @@ local function showToast(text: string, color: Color3)
 	TweenService:Create(toast, TweenInfo.new(0.9, Enum.EasingStyle.Quad), { TextTransparency = 1 }):Play()
 end
 
+-- Boss speech: scripted lines delivered cold, held long enough to read.
+local speechSpeaker = Instance.new("TextLabel")
+speechSpeaker.Size = UDim2.fromOffset(700, 22)
+speechSpeaker.AnchorPoint = Vector2.new(0.5, 0)
+speechSpeaker.Position = UDim2.new(0.5, 0, 0.62, 0)
+speechSpeaker.BackgroundTransparency = 1
+speechSpeaker.Font = Enum.Font.GothamBold
+speechSpeaker.TextSize = 15
+speechSpeaker.TextColor3 = Color3.fromRGB(255, 170, 50)
+speechSpeaker.TextTransparency = 1
+speechSpeaker.Text = ""
+speechSpeaker.Parent = screenGui
+
+local speechLine = Instance.new("TextLabel")
+speechLine.Size = UDim2.fromOffset(760, 40)
+speechLine.AnchorPoint = Vector2.new(0.5, 0)
+speechLine.Position = UDim2.new(0.5, 0, 0.62, 24)
+speechLine.BackgroundTransparency = 1
+speechLine.Font = Enum.Font.Garamond
+speechLine.TextSize = 30
+speechLine.TextColor3 = Color3.fromRGB(240, 235, 225)
+speechLine.TextStrokeTransparency = 0.4
+speechLine.TextTransparency = 1
+speechLine.TextWrapped = true
+speechLine.Text = ""
+speechLine.Parent = screenGui
+
+local speechToken = 0
+local function showSpeech(speaker: string, text: string)
+	speechToken += 1
+	local token = speechToken
+	speechSpeaker.Text = string.upper(speaker)
+	speechLine.Text = "“" .. text .. "”"
+	speechSpeaker.TextTransparency = 0
+	speechLine.TextTransparency = 0
+	task.delay(3.6, function()
+		if token == speechToken then
+			TweenService:Create(speechSpeaker, TweenInfo.new(0.8), { TextTransparency = 1 }):Play()
+			TweenService:Create(speechLine, TweenInfo.new(0.8), { TextTransparency = 1 }):Play()
+		end
+	end)
+end
+
 -- Party-wipe overlay (full-screen, hidden until the line breaks).
 local wipeOverlay = Instance.new("Frame")
 wipeOverlay.Size = UDim2.fromScale(1, 1)
@@ -388,12 +431,21 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		return
 	end
 
+	-- Boss speech lines.
+	if data.bossLine then
+		showSpeech(tostring(data.speaker), tostring(data.text))
+		return
+	end
+
 	-- Boss health bar.
 	if data.bossState then
 		if data.bossState == "spawn" then
 			bossFrame.Visible = true
 			bossName.Text = string.format("%s  —  %s", tostring(data.bossName), tostring(data.bossTitle))
-			bossBarFill.Size = UDim2.fromScale(1, 1)
+			local pct = if data.bossMaxHealth and data.bossMaxHealth > 0
+				then math.clamp((data.bossHealth or data.bossMaxHealth) / data.bossMaxHealth, 0, 1)
+				else 1
+			bossBarFill.Size = UDim2.fromScale(pct, 1)
 			showToast(string.format("BOSS:  %s", tostring(data.bossName)), Color3.fromRGB(255, 90, 80))
 		elseif data.bossState == "health" then
 			local pct = if data.bossMaxHealth > 0 then math.clamp(data.bossHealth / data.bossMaxHealth, 0, 1) else 0
@@ -401,6 +453,10 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		elseif data.bossState == "defeated" then
 			bossFrame.Visible = false
 			showToast(string.format("%s  DEFEATED!", tostring(data.bossName)), YELLOW)
+		elseif data.bossState == "passed" then
+			-- The trial's ending: he was never going to fall.
+			bossFrame.Visible = false
+			showToast(tostring(data.message or "THE TRIAL IS PASSED"), Color3.fromRGB(255, 220, 130))
 		end
 		return
 	end

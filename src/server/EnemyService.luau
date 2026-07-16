@@ -187,6 +187,9 @@ local function resolveHitOnPlayer(
 	return resolution
 end
 
+-- Exposed so bespoke encounters (the Kirata Trial) share the exact same defense rules.
+EnemyService.resolveHitOnPlayer = resolveHitOnPlayer
+
 local function enemyStrikes(enemy: EnemyState, player: Player, playerRoot: BasePart, playerHum: Humanoid)
 	-- Everyone sees the wind-up haymaker.
 	Net.AnimEvent:FireAllClients(enemy.model, "enemySwing")

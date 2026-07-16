@@ -186,6 +186,12 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		return
 	end
 
+	-- Boss speech: every line lands on a deep drum note.
+	if data.bossLine then
+		play("waveStart")
+		return
+	end
+
 	-- Bosses.
 	if data.bossState == "spawn" then
 		play("bossSpawn")
@@ -193,6 +199,11 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		return
 	end
 	if data.bossState == "defeated" then
+		play("bossDefeated")
+		setDrums(false)
+		return
+	end
+	if data.bossState == "passed" then
 		play("bossDefeated")
 		setDrums(false)
 		return
