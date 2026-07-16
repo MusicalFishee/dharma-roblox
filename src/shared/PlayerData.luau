@@ -5,7 +5,7 @@
 
 local PlayerData = {}
 
-PlayerData.Version = 4
+PlayerData.Version = 5
 
 -- Mirrors Shop.MaxTier (kept dependency-free for Lune; a test guards against drift).
 local MAX_TIER = 10
@@ -38,6 +38,20 @@ export type WeaponSave = {
 	tier: number,
 }
 
+export type StatsSave = {
+	kills: number,
+	bossKills: number,
+	deaths: number,
+	playtimeSeconds: number,
+}
+
+local function cleanCount(value: any): number
+	if type(value) ~= "number" or value ~= value or value < 0 then
+		return 0
+	end
+	return math.floor(value)
+end
+
 export type QuestSlot = {
 	id: string,
 	progress: number,
@@ -53,6 +67,7 @@ export type Data = {
 	weapon: WeaponSave,
 	shards: number, -- Vajra Shards (boss-kill currency for mantras)
 	enchant: string, -- inscribed mantra id, "" when the weapon is unmarked
+	stats: StatsSave, -- lifetime records (kills, bosses, deaths, playtime)
 }
 
 function PlayerData.default(): Data
@@ -66,6 +81,7 @@ function PlayerData.default(): Data
 		weapon = { id = "", tier = WEAPON_MIN_TIER },
 		shards = 0,
 		enchant = "",
+		stats = { kills = 0, bossKills = 0, deaths = 0, playtimeSeconds = 0 },
 	}
 end
 
@@ -108,6 +124,12 @@ function PlayerData.validate(raw: any): Data
 		if type(raw.enchant) == "string" and #raw.enchant <= 40 then
 			d.enchant = raw.enchant
 		end
+		if type(raw.stats) == "table" then
+			d.stats.kills = cleanCount(raw.stats.kills)
+			d.stats.bossKills = cleanCount(raw.stats.bossKills)
+			d.stats.deaths = cleanCount(raw.stats.deaths)
+			d.stats.playtimeSeconds = cleanCount(raw.stats.playtimeSeconds)
+		end
 	end
 	return d
 end
@@ -121,7 +143,8 @@ function PlayerData.serialize(
 	quests: { QuestSlot }?,
 	weapon: WeaponSave?,
 	shards: number?,
-	enchant: string?
+	enchant: string?,
+	stats: StatsSave?
 ): Data
 	local questsCopy: { QuestSlot } = {}
 	if quests then
@@ -148,6 +171,12 @@ function PlayerData.serialize(
 		},
 		shards = math.max(0, math.floor(shards or 0)),
 		enchant = if type(enchant) == "string" and #enchant <= 40 then enchant else "",
+		stats = {
+			kills = cleanCount(if stats then stats.kills else 0),
+			bossKills = cleanCount(if stats then stats.bossKills else 0),
+			deaths = cleanCount(if stats then stats.deaths else 0),
+			playtimeSeconds = cleanCount(if stats then stats.playtimeSeconds else 0),
+		},
 	}
 end
 

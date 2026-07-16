@@ -49,6 +49,13 @@ local function loadPlayer(player: Player)
 	state.weapon = { id = data.weapon.id, tier = data.weapon.tier }
 	state.shards = data.shards
 	state.enchant = data.enchant
+	state.stats = {
+		kills = data.stats.kills,
+		bossKills = data.stats.bossKills,
+		deaths = data.stats.deaths,
+		playtimeSeconds = data.stats.playtimeSeconds,
+	}
+	state.playtimeMark = os.clock() -- playtime accrues from the moment the save lands
 	state.bestWave = data.bestWave
 	state.quests = data.quests
 	state.dataLoaded = ok
@@ -79,9 +86,20 @@ local function savePlayer(player: Player)
 	local shards = state.shards
 	local enchant = state.enchant
 
+	-- Bank playtime since the last save into the lifetime total.
+	local now = os.clock()
+	state.stats.playtimeSeconds += math.max(0, math.floor(now - state.playtimeMark))
+	state.playtimeMark = now
+	local stats = {
+		kills = state.stats.kills,
+		bossKills = state.stats.bossKills,
+		deaths = state.stats.deaths,
+		playtimeSeconds = state.stats.playtimeSeconds,
+	}
+
 	retry(function()
 		return store:UpdateAsync(keyFor(player), function(old: any)
-			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave, quests, weapon, shards, enchant)
+			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave, quests, weapon, shards, enchant, stats)
 			-- Never roll back XP or bestWave: keep whichever is higher.
 			-- (Gold is NOT anti-rollbacked — the shop legitimately spends it.)
 			if type(old) == "table" then

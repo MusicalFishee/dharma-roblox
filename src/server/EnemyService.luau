@@ -487,6 +487,11 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 				QuestService.onKill(killer, archetype.id, archetype.isBoss == true)
 
 				local kstate = PlayerRegistry.get(killer)
+				-- Lifetime records.
+				kstate.stats.kills += 1
+				if archetype.isBoss then
+					kstate.stats.bossKills += 1
+				end
 				-- Only bosses yield Vajra Shards — the mantra currency.
 				if archetype.isBoss then
 					kstate.shards += Enchants.ShardsPerBossKill

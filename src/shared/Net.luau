@@ -30,6 +30,8 @@ local Net = {
 	WeaponRequest = ensureRemote("WeaponRequest"),
 	-- client -> server: Mantra Altar actions ({action="info"} or {action="inscribe"})
 	EnchantRequest = ensureRemote("EnchantRequest"),
+	-- client -> server: stats page requests ({action="info"})
+	StatsRequest = ensureRemote("StatsRequest"),
 	-- client -> server: current guard state (blocking / dodging)
 	DefenseState = ensureRemote("DefenseState"),
 	-- server -> client: HUD feedback (combo count, tejas, outcome text)

@@ -184,6 +184,7 @@ local function onPlayerDied(player: Player)
 		return -- this death already counted
 	end
 	alivePlayers[player] = false
+	PlayerRegistry.get(player).stats.deaths += 1
 	Net.CombatFeedback:FireClient(player, { youFell = true, wave = currentWave })
 	if failing then
 		return

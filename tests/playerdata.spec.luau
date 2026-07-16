@@ -94,6 +94,18 @@ local ert = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 9, 
 check("shards + enchant round-trip through serialize", ert.shards == 9 and ert.enchant == "trinetra")
 check("serialize without them defaults 0 + empty", PlayerData.serialize(1, 1).shards == 0 and PlayerData.serialize(1, 1).enchant == "")
 
+-- Lifetime stats (added with the stats page).
+local sd = PlayerData.default().stats
+check("default stats all zero", sd.kills == 0 and sd.bossKills == 0 and sd.deaths == 0 and sd.playtimeSeconds == 0)
+local sv = PlayerData.validate({ stats = { kills = 250, bossKills = 12, deaths = 9, playtimeSeconds = 7300 } })
+check("valid stats preserved", sv.stats.kills == 250 and sv.stats.bossKills == 12 and sv.stats.deaths == 9 and sv.stats.playtimeSeconds == 7300)
+local sj = PlayerData.validate({ stats = { kills = -5, bossKills = "many", deaths = 2.9, playtimeSeconds = 0 / 0 } })
+check("junk stats cleaned per-field", sj.stats.kills == 0 and sj.stats.bossKills == 0 and sj.stats.deaths == 2 and sj.stats.playtimeSeconds == 0)
+check("non-table stats -> defaults", PlayerData.validate({ stats = "grinding" }).stats.kills == 0)
+local srt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", { kills = 42, bossKills = 3, deaths = 1, playtimeSeconds = 999 }))
+check("stats round-trip through serialize", srt.stats.kills == 42 and srt.stats.bossKills == 3 and srt.stats.deaths == 1 and srt.stats.playtimeSeconds == 999)
+check("serialize without stats -> zeros", PlayerData.serialize(1, 1).stats.kills == 0 and PlayerData.serialize(1, 1).stats.playtimeSeconds == 0)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))
