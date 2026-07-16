@@ -36,6 +36,8 @@ local Net = {
 	TitleRequest = ensureRemote("TitleRequest"),
 	-- client -> server: duel actions ({action="list"|"challenge"|"accept"|"decline", userId=...})
 	PvPRequest = ensureRemote("PvPRequest"),
+	-- client -> server: Astra Path actions ({action="info"} or {action="choose", id=...})
+	PathRequest = ensureRemote("PathRequest"),
 	-- client -> server: current guard state (blocking / dodging)
 	DefenseState = ensureRemote("DefenseState"),
 	-- server -> client: HUD feedback (combo count, tejas, outcome text)

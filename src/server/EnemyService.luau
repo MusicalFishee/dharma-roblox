@@ -15,6 +15,7 @@ local EnemyAI = require(ReplicatedStorage.Shared.EnemyAI)
 local EnemyTypes = require(ReplicatedStorage.Shared.EnemyTypes)
 local BossSpecials = require(ReplicatedStorage.Shared.BossSpecials)
 local Enchants = require(ReplicatedStorage.Shared.Enchants)
+local Paths = require(ReplicatedStorage.Shared.Paths)
 local Loot = require(ReplicatedStorage.Shared.Loot)
 local StatusEffects = require(ReplicatedStorage.Shared.StatusEffects)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
@@ -156,15 +157,17 @@ local function resolveHitOnPlayer(
 	local ench = Enchants.effects(pstate.enchant)
 
 	if resolution.damage > 0 then
-		-- Stoneskin Sutra and kin: the defender's mantra soaks part of the blow.
-		playerHum:TakeDamage(resolution.damage * (ench.damageTakenMult or 1))
+		-- Stoneskin Sutra and kin: the defender's mantra soaks part of the blow;
+		-- an active shield ward (Zephyr Veil) soaks its share on top.
+		local ward = if now < pstate.wardUntil then pstate.wardMult else 1
+		playerHum:TakeDamage(resolution.damage * (ench.damageTakenMult or 1) * ward)
 		local char = player.Character
 		if char and resolution.outcome == "Hit" then
 			Net.AnimEvent:FireAllClients(char, "flinch")
 		end
 	end
 	if resolution.defenderTejasGain > 0 then
-		pstate.tejas = Combat.clampTejas(pstate.tejas + resolution.defenderTejasGain * (ench.tejasMult or 1))
+		pstate.tejas = Combat.clampTejas(pstate.tejas + resolution.defenderTejasGain * (ench.tejasMult or 1) * Paths.passiveOf(pstate.path).tejasMult)
 	end
 	if resolution.outcome == "Parry" then
 		QuestService.onParry(player)
@@ -453,7 +456,8 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 
 					if res.damage > 0 then
 						local vench = Enchants.effects(vstate.enchant)
-						hum:TakeDamage(res.damage * (vench.damageTakenMult or 1))
+						local vward = if os.clock() < vstate.wardUntil then vstate.wardMult else 1
+						hum:TakeDamage(res.damage * (vench.damageTakenMult or 1) * vward)
 						Net.AnimEvent:FireAllClients(char, "flinch")
 						-- Shockwave knockback, away from the blast centre.
 						if hrp and hrp:IsA("BasePart") then

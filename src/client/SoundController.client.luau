@@ -165,6 +165,10 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play("levelUp")
 		return
 	end
+	if data.pathChosen then
+		play("levelUp")
+		return
+	end
 	if data.titleEquipped then
 		play("shopBuy")
 		return

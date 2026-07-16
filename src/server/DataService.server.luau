@@ -58,6 +58,7 @@ local function loadPlayer(player: Player)
 		duelWins = data.stats.duelWins,
 	}
 	state.title = data.title
+	state.path = data.path
 	state.playtimeMark = os.clock() -- playtime accrues from the moment the save lands
 	state.bestWave = data.bestWave
 	state.quests = data.quests
@@ -105,10 +106,11 @@ local function savePlayer(player: Player)
 	}
 	local dailies = state.dailies
 	local titleId = state.title
+	local pathId = state.path
 
 	retry(function()
 		return store:UpdateAsync(keyFor(player), function(old: any)
-			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave, quests, weapon, shards, enchant, stats, dailies, titleId)
+			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave, quests, weapon, shards, enchant, stats, dailies, titleId, pathId)
 			-- Never roll back XP or bestWave: keep whichever is higher.
 			-- (Gold is NOT anti-rollbacked — the shop legitimately spends it.)
 			if type(old) == "table" then
@@ -117,6 +119,10 @@ local function savePlayer(player: Player)
 				end
 				if type(old.bestWave) == "number" and old.bestWave > payload.bestWave then
 					payload.bestWave = old.bestWave
+				end
+				-- Never lose a sworn Astra Path to a stale write.
+				if payload.path == "" and type(old.path) == "string" and old.path ~= "" then
+					payload.path = old.path
 				end
 				-- Never lose a chosen weapon or a bought upgrade tier to a stale write.
 				if type(old.weapon) == "table" then

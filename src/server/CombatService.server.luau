@@ -9,6 +9,7 @@ local Combat = require(ReplicatedStorage.Shared.Combat)
 local Progression = require(ReplicatedStorage.Shared.Progression)
 local Shop = require(ReplicatedStorage.Shared.Shop)
 local Weapons = require(ReplicatedStorage.Shared.Weapons)
+local Paths = require(ReplicatedStorage.Shared.Paths)
 local Enchants = require(ReplicatedStorage.Shared.Enchants)
 local StatusEffects = require(ReplicatedStorage.Shared.StatusEffects)
 local PvP = require(ReplicatedStorage.Shared.PvP)
@@ -164,12 +165,17 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 	local comboCount = state.combo:registerHit(os.clock())
 	local level = Progression.resolve(state.totalXp).level
 	local ench = Enchants.effects(state.enchant)
+	local passive = Paths.passiveOf(state.path)
 	local isCrit = Combat.rollCrit(nil, ench.critChanceBonus)
+	-- Static Ward and kin: an active empower scales everything dealt while it lasts.
+	local empower = if os.clock() < state.empowerUntil then state.empowerMult else 1
 	local damage = Combat.critDamage(
 		Combat.computeAttackDamage(kind, comboCount - 1)
 			* Progression.damageMultiplierForLevel(level)
 			* Shop.damageMult(state.upgrades.damage)
-			* Weapons.damageMult(state.weapon.id, state.weapon.tier),
+			* Weapons.damageMult(state.weapon.id, state.weapon.tier)
+			* passive.damageMult
+			* empower,
 		isCrit,
 		ench.critMultiplier
 	)
@@ -199,7 +205,7 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 		end
 
 		humanoid:TakeDamage(dealt)
-		state.tejas = Combat.clampTejas(state.tejas + Combat.Config.TejasPerHitLanded * (ench.tejasMult or 1))
+		state.tejas = Combat.clampTejas(state.tejas + Combat.Config.TejasPerHitLanded * (ench.tejasMult or 1) * passive.tejasMult)
 
 		if ench.lifesteal then
 			healed += dealt * ench.lifesteal
@@ -229,7 +235,7 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 	-- stay out of duels; this is a contest of skill, not of luck.
 	if foe and foeRoot and foeHum then
 		EnemyService.resolveHitOnPlayer(foe, foeRoot, foeHum, damage * PvP.Config.DamageMult, root.Position, nil)
-		state.tejas = Combat.clampTejas(state.tejas + Combat.Config.TejasPerHitLanded * (ench.tejasMult or 1))
+		state.tejas = Combat.clampTejas(state.tejas + Combat.Config.TejasPerHitLanded * (ench.tejasMult or 1) * passive.tejasMult)
 		if swing.isFinisher then
 			local dir = foeRoot.Position - root.Position
 			dir = Vector3.new(dir.X, 0, dir.Z)
@@ -278,9 +284,11 @@ Net.DefenseState.OnServerEvent:Connect(function(player: Player, data: any)
 	end
 
 	if data.dodge == true then
-		-- Brief i-frames; Vayu's Grace stretches them.
+		-- Brief i-frames; Vayu's Grace (mantra) and the Path of Vayu both stretch them.
 		local ench = Enchants.effects(state.enchant)
-		state.dodgeUntil = os.clock() + Combat.Config.ParryWindowSeconds * (1 + (ench.dodgeBonus or 0))
+		state.dodgeUntil = os.clock()
+			+ Combat.Config.ParryWindowSeconds * (1 + (ench.dodgeBonus or 0))
+			+ Paths.passiveOf(state.path).dodgeBonusSeconds
 		if char then
 			Net.AnimEvent:FireAllClients(char, "dash")
 		end

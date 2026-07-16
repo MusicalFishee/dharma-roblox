@@ -127,6 +127,14 @@ check("duelWins validated + defaulted", PlayerData.validate({ stats = { duelWins
 local trt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", { kills = 0, bossKills = 0, deaths = 0, playtimeSeconds = 0, trialsPassed = 2 }, nil, "blessed_mahadeva"))
 check("title + trials round-trip through serialize", trt.title == "blessed_mahadeva" and trt.stats.trialsPassed == 2)
 
+-- Astra Path (added with the path system, v9).
+check("default path empty", PlayerData.default().path == "")
+check("valid path preserved", PlayerData.validate({ path = "agni" }).path == "agni")
+check("junk path rejected", PlayerData.validate({ path = 42 }).path == "" and PlayerData.validate({ path = string.rep("p", 21) }).path == "")
+local prt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "varuna"))
+check("path round-trips through serialize", prt.path == "varuna")
+check("serialize without path -> unsworn", PlayerData.serialize(1, 1).path == "")
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

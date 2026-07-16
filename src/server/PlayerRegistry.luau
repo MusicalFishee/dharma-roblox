@@ -34,6 +34,13 @@ export type PlayerState = {
 	blockStartedAt: number,
 	-- Wall-clock time (os.clock) until which dodge i-frames are active.
 	dodgeUntil: number,
+	-- Sworn Astra Path id ("" = unsworn, classic mixed kit).
+	path: string,
+	-- Ward windows (os.clock expiry): shield scales damage TAKEN, empower scales damage DEALT.
+	wardUntil: number,
+	wardMult: number,
+	empowerUntil: number,
+	empowerMult: number,
 	-- Status-effect expiries (os.clock): venom DoT active / healing cursed.
 	venomUntil: number,
 	curseUntil: number,
@@ -77,6 +84,11 @@ function PlayerRegistry.get(player: Player): PlayerState
 		isBlocking = false,
 		blockStartedAt = 0,
 		dodgeUntil = 0,
+		path = "",
+		wardUntil = 0,
+		wardMult = 1,
+		empowerUntil = 0,
+		empowerMult = 1,
 		venomUntil = 0,
 		curseUntil = 0,
 		stats = { kills = 0, bossKills = 0, deaths = 0, playtimeSeconds = 0, trialsPassed = 0, duelWins = 0 },

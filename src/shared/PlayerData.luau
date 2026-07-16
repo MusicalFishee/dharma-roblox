@@ -5,7 +5,7 @@
 
 local PlayerData = {}
 
-PlayerData.Version = 8
+PlayerData.Version = 9
 
 -- Mirrors Shop.MaxTier (kept dependency-free for Lune; a test guards against drift).
 local MAX_TIER = 10
@@ -83,6 +83,7 @@ export type Data = {
 	stats: StatsSave, -- lifetime records (kills, bosses, deaths, playtime)
 	dailies: DailiesSave, -- today's trials + progress (reset when stamp goes stale)
 	title: string, -- equipped title id, "" for a bare head
+	path: string, -- sworn Astra Path id, "" while unsworn
 }
 
 function PlayerData.default(): Data
@@ -99,6 +100,7 @@ function PlayerData.default(): Data
 		stats = { kills = 0, bossKills = 0, deaths = 0, playtimeSeconds = 0, trialsPassed = 0, duelWins = 0 },
 		dailies = { stamp = 0, slots = {} }, -- stamp 0 = stale, forces a fresh roll
 		title = "",
+		path = "",
 	}
 end
 
@@ -152,6 +154,9 @@ function PlayerData.validate(raw: any): Data
 		if type(raw.title) == "string" and #raw.title <= 40 then
 			d.title = raw.title
 		end
+		if type(raw.path) == "string" and #raw.path <= 20 then
+			d.path = raw.path
+		end
 		if type(raw.dailies) == "table" then
 			d.dailies.stamp = cleanCount(raw.dailies.stamp)
 			if type(raw.dailies.slots) == "table" then
@@ -182,7 +187,8 @@ function PlayerData.serialize(
 	enchant: string?,
 	stats: StatsSave?,
 	dailies: DailiesSave?,
-	title: string?
+	title: string?,
+	path: string?
 ): Data
 	local questsCopy: { QuestSlot } = {}
 	if quests then
@@ -236,6 +242,7 @@ function PlayerData.serialize(
 			end)(),
 		},
 		title = if type(title) == "string" and #title <= 40 then title else "",
+		path = if type(path) == "string" and #path <= 20 then path else "",
 	}
 end
 

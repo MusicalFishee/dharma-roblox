@@ -360,6 +360,18 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("You take up the %s — %s!", tostring(data.name), tostring(data.title)), YELLOW)
 		return
 	end
+	if data.pathChosen then
+		local pathColor = if typeof(data.color) == "table"
+			then Color3.fromRGB(data.color[1], data.color[2], data.color[3])
+			else YELLOW
+		showToast(string.format("You walk the %s — %s!", tostring(data.name), tostring(data.epithet)), pathColor)
+		return
+	end
+	if data.pathDenied then
+		local why = if data.reason == "gold" then "Not enough gold to change paths" else "The path refuses you"
+		showToast(why, Color3.fromRGB(200, 120, 120))
+		return
+	end
 	-- Honor duels.
 	if data.pvp then
 		local PINK = Color3.fromRGB(255, 110, 140)

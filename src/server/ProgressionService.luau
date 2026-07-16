@@ -6,7 +6,10 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Net = require(ReplicatedStorage.Shared.Net)
 local Progression = require(ReplicatedStorage.Shared.Progression)
 local Shop = require(ReplicatedStorage.Shared.Shop)
+local Paths = require(ReplicatedStorage.Shared.Paths)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
+
+local BASE_WALK_SPEED = 16
 
 local ProgressionService = {}
 
@@ -20,7 +23,9 @@ local function applyLevelStats(player: Player, level: number, fullHeal: boolean)
 		return
 	end
 	local state = PlayerRegistry.get(player)
-	humanoid.MaxHealth = Progression.maxHealthForLevel(level) + Shop.healthBonus(state.upgrades.health)
+	local passive = Paths.passiveOf(state.path)
+	humanoid.MaxHealth = Progression.maxHealthForLevel(level) + Shop.healthBonus(state.upgrades.health) + passive.healthBonus
+	humanoid.WalkSpeed = BASE_WALK_SPEED * passive.speedMult
 	if fullHeal then
 		humanoid.Health = humanoid.MaxHealth
 	end

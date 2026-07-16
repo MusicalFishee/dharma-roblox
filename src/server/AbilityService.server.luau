@@ -1,9 +1,13 @@
 --!strict
--- The Astra kit, server-side:
---   Z  Agni Astra     — fire projectile
---   X  Vayu Dash      — wind dash with brief i-frames
---   C  Varuna's Grace — healing surge
---   V  Indra's Wrath  — lightning storm on every enemy near the caster
+-- The Astra kit, server-side. Since Astra Paths, the Z/X/C/V slots resolve
+-- through the player's sworn path (Paths.kitFor) into the ability Catalog;
+-- every ability is one of six primitives steered by its def:
+--   projectile — a flying bolt (Agni Astra, Vayu Blade, Tide Lash, Vajra Bolt)
+--   dash       — an impulse with i-frames (Vayu Dash, Ember Rush, Gale Step, ...)
+--   heal       — mend a fraction of max HP, optionally cleansing (Varuna's Grace, Deep Mending)
+--   ward       — a timed buff: shield (damage taken down) or empower (damage dealt up)
+--   nova       — a self-centered blast with knockback (Pyre Nova, Tempest, Pralaya Flame)
+--   smite      — sky-strikes on every enemy in a radius (Indra's Wrath, The Deluge)
 -- Gating (Tejas cost, cooldown, level unlock) is validated server-side.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -14,6 +18,7 @@ local TweenService = game:GetService("TweenService")
 
 local Net = require(ReplicatedStorage.Shared.Net)
 local Abilities = require(ReplicatedStorage.Shared.Abilities)
+local Paths = require(ReplicatedStorage.Shared.Paths)
 local Progression = require(ReplicatedStorage.Shared.Progression)
 local StatusEffects = require(ReplicatedStorage.Shared.StatusEffects)
 local PvP = require(ReplicatedStorage.Shared.PvP)
@@ -23,7 +28,6 @@ local PvPService = require(script.Parent.PvPService)
 local EnemyService = require(script.Parent.EnemyService)
 
 local ENEMY_TAG = "DharmaEnemy"
-local ASTRA_SPEED = 90
 
 -- Per-player, per-slot last-cast times (cooldowns).
 local lastCast: { [Player]: { [string]: number } } = {}
@@ -45,41 +49,63 @@ local function getCharacterParts(player: Player): (Model?, BasePart?, Humanoid?)
 	return char, nil, hum
 end
 
+local function toColor3(rgb: { number }): Color3
+	return Color3.fromRGB(rgb[1], rgb[2], rgb[3])
+end
+
+-- Path passive + active empower ward, applied to all ability damage.
+local function damageMultFor(state: any): number
+	local mult = Paths.passiveOf(state.path).damageMult
+	if os.clock() < state.empowerUntil then
+		mult *= state.empowerMult
+	end
+	return mult
+end
+
 -- ---------------------------------------------------------------------------
--- Z — Agni Astra
+-- projectile
 -- ---------------------------------------------------------------------------
-local function castAgniAstra(player: Player, character: Model, root: BasePart)
-	local cfg = Abilities.Config.Z
+local function castProjectile(player: Player, character: Model, root: BasePart, def: Abilities.AbilityDef, mult: number)
 	local aim = root.CFrame.LookVector
 	local spawnPos = root.Position + aim * 3 + Vector3.new(0, 1, 0)
+	local color = toColor3(def.color)
 
 	local bolt = Instance.new("Part")
-	bolt.Name = "AgniAstra"
+	bolt.Name = "AstraBolt"
 	bolt.Shape = Enum.PartType.Ball
 	bolt.Size = Vector3.new(2, 2, 2)
-	bolt.Color = Color3.fromRGB(255, 120, 30)
+	bolt.Color = color
 	bolt.Material = Enum.Material.Neon
 	bolt.CanCollide = false
 	bolt.Massless = true
 	bolt.CFrame = CFrame.new(spawnPos, spawnPos + aim)
 	bolt.Parent = workspace
 
-	local fire = Instance.new("Fire")
-	fire.Size = 5
-	fire.Heat = 10
-	fire.Color = Color3.fromRGB(255, 150, 40)
-	fire.Parent = bolt
+	if def.flame then
+		local fire = Instance.new("Fire")
+		fire.Size = 5
+		fire.Heat = 10
+		fire.Color = color
+		fire.Parent = bolt
+	else
+		local light = Instance.new("PointLight")
+		light.Color = color
+		light.Range = 12
+		light.Brightness = 2
+		light.Parent = bolt
+	end
 
 	local att = Instance.new("Attachment")
 	att.Parent = bolt
 	local lv = Instance.new("LinearVelocity")
 	lv.Attachment0 = att
 	lv.MaxForce = math.huge
-	lv.VectorVelocity = aim * ASTRA_SPEED
+	lv.VectorVelocity = aim * (def.speed or 90)
 	lv.Parent = bolt
 
 	Debris:AddItem(bolt, 3)
 
+	local damage = def.power * mult
 	local spent = false
 	local conn: RBXScriptConnection
 	conn = bolt.Touched:Connect(function(other: BasePart)
@@ -91,7 +117,7 @@ local function castAgniAstra(player: Player, character: Model, root: BasePart)
 			return
 		end
 
-		-- Enemies burn as always.
+		-- Enemies eat the bolt as always.
 		if CollectionService:HasTag(model, ENEMY_TAG) then
 			local humanoid = model:FindFirstChildOfClass("Humanoid")
 			if not humanoid or humanoid.Health <= 0 then
@@ -100,12 +126,12 @@ local function castAgniAstra(player: Player, character: Model, root: BasePart)
 			spent = true
 			conn:Disconnect()
 			model:SetAttribute("LastAttacker", player.UserId)
-			humanoid:TakeDamage(cfg.power)
+			humanoid:TakeDamage(damage)
 			bolt:Destroy()
 			return
 		end
 
-		-- A live duel foe can eat the bolt too (softened, dodgeable, blockable).
+		-- A live duel foe can eat it too (softened, dodgeable, blockable).
 		local foe = PvPService.duelOpponentOf(player)
 		if foe and foe.Character == model then
 			local hum = model:FindFirstChildOfClass("Humanoid")
@@ -113,7 +139,7 @@ local function castAgniAstra(player: Player, character: Model, root: BasePart)
 			if hum and hum.Health > 0 and froot and froot:IsA("BasePart") then
 				spent = true
 				conn:Disconnect()
-				EnemyService.resolveHitOnPlayer(foe, froot, hum, cfg.power * PvP.Config.DamageMult, bolt.Position, nil)
+				EnemyService.resolveHitOnPlayer(foe, froot, hum, damage * PvP.Config.DamageMult, bolt.Position, nil)
 				bolt:Destroy()
 			end
 		end
@@ -121,11 +147,9 @@ local function castAgniAstra(player: Player, character: Model, root: BasePart)
 end
 
 -- ---------------------------------------------------------------------------
--- X — Vayu Dash
+-- dash
 -- ---------------------------------------------------------------------------
-local function castVayuDash(player: Player, root: BasePart, hum: Humanoid)
-	local cfg = Abilities.Config.X
-
+local function castDash(player: Player, root: BasePart, hum: Humanoid, def: Abilities.AbilityDef)
 	-- Dash along the current move direction (or facing if standing still).
 	local dir = hum.MoveDirection
 	if dir.Magnitude < 0.1 then
@@ -133,43 +157,51 @@ local function castVayuDash(player: Player, root: BasePart, hum: Humanoid)
 	end
 	dir = Vector3.new(dir.X, 0, dir.Z).Unit
 
-	root.AssemblyLinearVelocity = dir * cfg.power + Vector3.new(0, 12, 0)
+	root.AssemblyLinearVelocity = dir * def.power + Vector3.new(0, 12, 0)
 
-	-- Brief wind i-frames (reuses the dodge window).
 	local state = PlayerRegistry.get(player)
-	state.dodgeUntil = os.clock() + 0.5
+	state.dodgeUntil = os.clock() + (def.iFrames or 0.5)
 
-	-- Wind streak.
 	local streak = Instance.new("Part")
 	streak.Size = Vector3.new(1.2, 1.2, 7)
 	streak.CFrame = CFrame.new(root.Position - dir * 3, root.Position + dir * 4)
-	streak.Color = Color3.fromRGB(210, 240, 255)
+	streak.Color = toColor3(def.color)
 	streak.Material = Enum.Material.Neon
 	streak.Transparency = 0.35
 	streak.Anchored = true
 	streak.CanCollide = false
 	streak.CanQuery = false
 	streak.Parent = workspace
+	if def.flame then
+		local fire = Instance.new("Fire")
+		fire.Size = 4
+		fire.Color = toColor3(def.color)
+		fire.Parent = streak
+	end
 	TweenService:Create(streak, TweenInfo.new(0.35), { Transparency = 1 }):Play()
 	Debris:AddItem(streak, 0.4)
 end
 
 -- ---------------------------------------------------------------------------
--- C — Varuna's Grace
+-- heal
 -- ---------------------------------------------------------------------------
-local function castVarunaHeal(player: Player, root: BasePart, hum: Humanoid)
-	local cfg = Abilities.Config.C
+local function castHeal(player: Player, root: BasePart, hum: Humanoid, def: Abilities.AbilityDef)
 	local state = PlayerRegistry.get(player)
-	-- A curse thins even Varuna's waters.
-	local heal = StatusEffects.effectiveHeal(hum.MaxHealth * cfg.power, os.clock() < state.curseUntil)
+	if def.cleanse then
+		-- Deep Mending washes afflictions away BEFORE the heal, so it's never thinned.
+		state.venomUntil = 0
+		state.curseUntil = 0
+	end
+	-- A curse thins even Varuna's waters (unless just cleansed).
+	local heal = StatusEffects.effectiveHeal(hum.MaxHealth * def.power, os.clock() < state.curseUntil)
 	hum.Health = math.min(hum.MaxHealth, hum.Health + heal)
 
-	-- Rising water glow.
+	-- Rising glow in the ability's color.
 	local glow = Instance.new("Part")
 	glow.Shape = Enum.PartType.Ball
 	glow.Size = Vector3.new(8, 8, 8)
 	glow.Position = root.Position
-	glow.Color = Color3.fromRGB(80, 170, 255)
+	glow.Color = toColor3(def.color)
 	glow.Material = Enum.Material.Neon
 	glow.Transparency = 0.45
 	glow.Anchored = true
@@ -185,11 +217,99 @@ local function castVarunaHeal(player: Player, root: BasePart, hum: Humanoid)
 end
 
 -- ---------------------------------------------------------------------------
--- V — Indra's Wrath
+-- ward
 -- ---------------------------------------------------------------------------
-local function castIndraWrath(player: Player, root: BasePart): number
-	local cfg = Abilities.Config.V
-	local radius = cfg.radius or 60
+local function castWard(player: Player, root: BasePart, def: Abilities.AbilityDef)
+	local state = PlayerRegistry.get(player)
+	local until_ = os.clock() + (def.duration or 4)
+	if def.wardKind == "empower" then
+		state.empowerUntil = until_
+		state.empowerMult = def.power
+	else
+		state.wardUntil = until_
+		state.wardMult = def.power
+	end
+
+	-- A swirling shell that clings to the player for the duration.
+	local shell = Instance.new("Part")
+	shell.Shape = Enum.PartType.Ball
+	shell.Size = Vector3.new(9, 9, 9)
+	shell.Color = toColor3(def.color)
+	shell.Material = Enum.Material.ForceField
+	shell.Transparency = 0.5
+	shell.CanCollide = false
+	shell.CanQuery = false
+	shell.Massless = true
+	shell.CFrame = root.CFrame
+	shell.Parent = workspace
+	local weld = Instance.new("WeldConstraint")
+	weld.Part0 = shell
+	weld.Part1 = root
+	weld.Parent = shell
+	Debris:AddItem(shell, def.duration or 4)
+end
+
+-- ---------------------------------------------------------------------------
+-- nova
+-- ---------------------------------------------------------------------------
+local function castNova(player: Player, root: BasePart, def: Abilities.AbilityDef, mult: number): number
+	local radius = def.radius or 14
+	local damage = def.power * mult
+	local knockback = def.knockback or 0
+	local struck = 0
+
+	for _, enemy in CollectionService:GetTagged(ENEMY_TAG) do
+		if not enemy:IsA("Model") then
+			continue
+		end
+		local humanoid = enemy:FindFirstChildOfClass("Humanoid")
+		local eroot = enemy:FindFirstChild("HumanoidRootPart")
+		if not humanoid or humanoid.Health <= 0 or not eroot or not eroot:IsA("BasePart") then
+			continue
+		end
+		local offset = eroot.Position - root.Position
+		if Vector3.new(offset.X, 0, offset.Z).Magnitude > radius then
+			continue
+		end
+
+		struck += 1
+		enemy:SetAttribute("LastAttacker", player.UserId)
+		humanoid:TakeDamage(damage)
+
+		if knockback > 0 then
+			local flat = Vector3.new(offset.X, 0, offset.Z)
+			local dir = if flat.Magnitude > 0.01 then flat.Unit else root.CFrame.LookVector
+			eroot.AssemblyLinearVelocity = dir * knockback + Vector3.new(0, knockback * 0.4, 0)
+		end
+	end
+
+	-- The blast ring races outward and fades.
+	local ring = Instance.new("Part")
+	ring.Shape = Enum.PartType.Cylinder
+	ring.Size = Vector3.new(0.6, 4, 4)
+	ring.CFrame = CFrame.new(root.Position) * CFrame.Angles(0, 0, math.rad(90))
+	ring.Color = toColor3(def.color)
+	ring.Material = Enum.Material.Neon
+	ring.Transparency = 0.2
+	ring.Anchored = true
+	ring.CanCollide = false
+	ring.CanQuery = false
+	ring.Parent = workspace
+	TweenService:Create(ring, TweenInfo.new(0.45, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Size = Vector3.new(0.6, radius * 2, radius * 2),
+		Transparency = 1,
+	}):Play()
+	Debris:AddItem(ring, 0.5)
+
+	return struck
+end
+
+-- ---------------------------------------------------------------------------
+-- smite
+-- ---------------------------------------------------------------------------
+local function castSmite(player: Player, root: BasePart, hum: Humanoid, def: Abilities.AbilityDef, mult: number): number
+	local radius = def.radius or 60
+	local damage = def.power * mult
 	local struck = 0
 
 	for _, enemy in CollectionService:GetTagged(ENEMY_TAG) do
@@ -207,14 +327,14 @@ local function castIndraWrath(player: Player, root: BasePart): number
 
 		struck += 1
 		enemy:SetAttribute("LastAttacker", player.UserId)
-		humanoid:TakeDamage(cfg.power)
+		humanoid:TakeDamage(damage)
 
-		-- Lightning bolt from the sky onto the enemy.
+		-- A bolt from the sky onto the enemy, in the ability's color.
 		local top = eroot.Position + Vector3.new(0, 60, 0)
 		local bolt = Instance.new("Part")
 		bolt.Size = Vector3.new(1.4, (top - eroot.Position).Magnitude, 1.4)
 		bolt.CFrame = CFrame.new((top + eroot.Position) / 2, eroot.Position) * CFrame.Angles(math.rad(90), 0, 0)
-		bolt.Color = Color3.fromRGB(180, 220, 255)
+		bolt.Color = toColor3(def.color)
 		bolt.Material = Enum.Material.Neon
 		bolt.Transparency = 0.1
 		bolt.Anchored = true
@@ -225,6 +345,13 @@ local function castIndraWrath(player: Player, root: BasePart): number
 		Debris:AddItem(bolt, 0.45)
 	end
 
+	-- The Deluge gives back: the storm mends its caster.
+	if def.selfHeal and struck > 0 then
+		local state = PlayerRegistry.get(player)
+		local heal = StatusEffects.effectiveHeal(hum.MaxHealth * def.selfHeal, os.clock() < state.curseUntil)
+		hum.Health = math.min(hum.MaxHealth, hum.Health + heal)
+	end
+
 	return struck
 end
 
@@ -233,15 +360,21 @@ end
 -- ---------------------------------------------------------------------------
 Net.AbilityRequest.OnServerEvent:Connect(function(player: Player, slotArg: any)
 	local slot = tostring(slotArg)
-	local cfg = Abilities.Config[slot]
-	if not cfg then
+	if slot ~= "Z" and slot ~= "X" and slot ~= "C" and slot ~= "V" then
 		return
 	end
 
 	local state = PlayerRegistry.get(player)
+	local kit = Paths.kitFor(state.path)
+	local abilityId = (kit :: any)[slot] :: string
+	local def = Abilities.Catalog[abilityId]
+	if not def then
+		return
+	end
+
 	local level = Progression.resolve(state.totalXp).level
 
-	-- Level gate.
+	-- Level gate (slot-based: Z@1, X@4, C@8, V@12 regardless of path).
 	if not Progression.isAbilityUnlocked(slot, level) then
 		Net.CombatFeedback:FireClient(player, {
 			outcome = "AbilityLocked",
@@ -258,12 +391,12 @@ Net.AbilityRequest.OnServerEvent:Connect(function(player: Player, slotArg: any)
 		lastCast[player] = casts
 	end
 	local now = os.clock()
-	local gate = Abilities.tryCast(slot, state.tejas, casts[slot] or -math.huge, now)
-	if not gate.ok then
+	local gateCheck = Abilities.tryCastAbility(abilityId, state.tejas, casts[slot] or -math.huge, now)
+	if not gateCheck.ok then
 		Net.CombatFeedback:FireClient(player, {
-			outcome = if gate.reason == "tejas" then "NoTejas" else "AbilityCooldown",
+			outcome = if gateCheck.reason == "tejas" then "NoTejas" else "AbilityCooldown",
 			ability = slot,
-			abilityName = cfg.name,
+			abilityName = def.name,
 			tejas = state.tejas,
 		})
 		return
@@ -275,7 +408,7 @@ Net.AbilityRequest.OnServerEvent:Connect(function(player: Player, slotArg: any)
 	end
 
 	-- Commit the cast.
-	state.tejas = gate.tejasAfter
+	state.tejas = gateCheck.tejasAfter
 	casts[slot] = now
 	QuestService.onAbility(player)
 
@@ -283,23 +416,28 @@ Net.AbilityRequest.OnServerEvent:Connect(function(player: Player, slotArg: any)
 	local animBySlot = { Z = "throw", X = "dash", C = "heal", V = "ult" }
 	Net.AnimEvent:FireAllClients(character, animBySlot[slot])
 
-	if slot == "Z" then
-		castAgniAstra(player, character, root)
-	elseif slot == "X" then
-		castVayuDash(player, root, hum)
-	elseif slot == "C" then
-		castVarunaHeal(player, root, hum)
-	elseif slot == "V" then
-		extra.struck = castIndraWrath(player, root)
+	local mult = damageMultFor(state)
+	if def.kind == "projectile" then
+		castProjectile(player, character, root, def, mult)
+	elseif def.kind == "dash" then
+		castDash(player, root, hum, def)
+	elseif def.kind == "heal" then
+		castHeal(player, root, hum, def)
+	elseif def.kind == "ward" then
+		castWard(player, root, def)
+	elseif def.kind == "nova" then
+		extra.struck = castNova(player, root, def, mult)
+	elseif def.kind == "smite" then
+		extra.struck = castSmite(player, root, hum, def, mult)
 	end
 
 	Net.CombatFeedback:FireClient(player, {
 		outcome = "AbilityCast",
 		ability = slot,
-		abilityName = cfg.name,
+		abilityName = def.name,
 		tejas = state.tejas,
 		struck = extra.struck,
 	})
 end)
 
-print("[Dharma] AbilityService ready — Z Agni, X Vayu, C Varuna, V Indra.")
+print("[Dharma] AbilityService ready — Astra Paths dispatch online.")
