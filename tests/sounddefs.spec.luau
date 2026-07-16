@@ -76,6 +76,12 @@ end
 check("drum beats sorted, in-cycle, sane", beatsValid)
 check("drums use a built-in asset", string.match(drums.sfxPath, "^rbxasset://sounds/") ~= nil)
 
+-- Combo pitch-up: swings climb, gently, and junk can't break the multiplier.
+check("first swing is unpitched", SoundDefs.comboPitch(1) == 1)
+check("pitch climbs with the chain", SoundDefs.comboPitch(2) > SoundDefs.comboPitch(1) and SoundDefs.comboPitch(4) > SoundDefs.comboPitch(2))
+check("the climb stays subtle", SoundDefs.comboPitch(4) <= 1.25)
+check("pitch clamps against junk indices", SoundDefs.comboPitch(0) == 1 and SoundDefs.comboPitch(99) <= 1.5)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

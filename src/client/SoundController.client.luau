@@ -15,7 +15,8 @@ local player = Players.LocalPlayer
 local rng = Random.new()
 
 -- Play a named SFX. With `at` (a BasePart), it's positional 3D; otherwise 2D/local.
-local function play(name: string, at: BasePart?)
+-- `pitchMult` scales the randomized pitch (combo chains climb as they go).
+local function play(name: string, at: BasePart?, pitchMult: number?)
 	local def = SoundDefs.Sfx[name]
 	if not def then
 		return
@@ -24,7 +25,7 @@ local function play(name: string, at: BasePart?)
 	local sound = Instance.new("Sound")
 	sound.SoundId = def.path
 	sound.Volume = def.volume
-	sound.PlaybackSpeed = rng:NextNumber(def.pitchMin, def.pitchMax)
+	sound.PlaybackSpeed = rng:NextNumber(def.pitchMin, def.pitchMax) * (pitchMult or 1)
 	sound.RollOffMaxDistance = 140
 	sound.Parent = at or SoundService
 	sound:Play()
@@ -46,9 +47,13 @@ Net.AnimEvent.OnClientEvent:Connect(function(model: any, trackName: any)
 	if typeof(model) ~= "Instance" or not model:IsA("Model") then
 		return
 	end
-	local sfxName = SoundDefs.AnimSounds[tostring(trackName)]
+	local name = tostring(trackName)
+	local sfxName = SoundDefs.AnimSounds[name]
 	if sfxName then
-		play(sfxName, rootOf(model))
+		-- Swing sounds climb with the chain (combo1 lowest -> combo4 finisher).
+		local comboIndex = string.match(name, "^combo(%d)$")
+		local pitchMult = if comboIndex then SoundDefs.comboPitch(tonumber(comboIndex) :: number) else 1
+		play(sfxName, rootOf(model), pitchMult)
 	end
 end)
 

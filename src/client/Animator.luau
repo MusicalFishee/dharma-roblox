@@ -71,8 +71,25 @@ function Animator.stop(model: Model)
 	end
 end
 
-RunService.RenderStepped:Connect(function()
+-- Hit-stop: freeze EVERY animation clock for a beat. The world catches its breath
+-- on a big hit, then snaps back — pure impact feel, no physics touched.
+local frozenUntil = 0
+
+function Animator.freeze(duration: number)
+	frozenUntil = math.max(frozenUntil, os.clock() + duration)
+end
+
+RunService.RenderStepped:Connect(function(dt: number)
 	local now = os.clock()
+
+	-- While frozen, push every clock forward by the frame so poses hold in place.
+	if now < frozenUntil then
+		for _, state in active do
+			state.startedAt += dt
+		end
+		return
+	end
+
 	for model, state in active do
 		local t = now - state.startedAt
 		local trackDef = state.track

@@ -77,6 +77,13 @@ SoundDefs.FeedbackSounds = {
 	Hit = "hurt",
 } :: { [string]: string }
 
+-- Combo pitch-up: each swing of the LMB chain rings slightly higher than the last,
+-- so your ears track the chain climbing toward the finisher.
+function SoundDefs.comboPitch(index: number): number
+	local i = math.clamp(math.floor(index), 1, 8)
+	return 1 + (i - 1) * 0.06
+end
+
 -- Boss war-drums: a rhythmic pattern looped while a boss lives.
 -- Beats are offsets (seconds) into each cycle; pitch/volume shape the pulse.
 SoundDefs.BossDrums = {
