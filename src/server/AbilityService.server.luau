@@ -19,6 +19,7 @@ local TweenService = game:GetService("TweenService")
 local Net = require(ReplicatedStorage.Shared.Net)
 local Abilities = require(ReplicatedStorage.Shared.Abilities)
 local Paths = require(ReplicatedStorage.Shared.Paths)
+local Siddhis = require(ReplicatedStorage.Shared.Siddhis)
 local Progression = require(ReplicatedStorage.Shared.Progression)
 local StatusEffects = require(ReplicatedStorage.Shared.StatusEffects)
 local PvP = require(ReplicatedStorage.Shared.PvP)
@@ -65,85 +66,108 @@ end
 -- ---------------------------------------------------------------------------
 -- projectile
 -- ---------------------------------------------------------------------------
-local function castProjectile(player: Player, character: Model, root: BasePart, def: Abilities.AbilityDef, mult: number)
-	local aim = root.CFrame.LookVector
-	local spawnPos = root.Position + aim * 3 + Vector3.new(0, 1, 0)
+local function castProjectile(player: Player, character: Model, root: BasePart, def: Abilities.AbilityDef, mult: number, pierceExtra: number, forkExtra: number)
 	local color = toColor3(def.color)
 
-	local bolt = Instance.new("Part")
-	bolt.Name = "AstraBolt"
-	bolt.Shape = Enum.PartType.Ball
-	bolt.Size = Vector3.new(2, 2, 2)
-	bolt.Color = color
-	bolt.Material = Enum.Material.Neon
-	bolt.CanCollide = false
-	bolt.Massless = true
-	bolt.CFrame = CFrame.new(spawnPos, spawnPos + aim)
-	bolt.Parent = workspace
+	-- One bolt. Siddhi-pierced bolts survive (pierceLimit - 1) extra enemies;
+	-- forked twins fly at an angle with softened damage and no further forking.
+	local function fire(aim: Vector3, damage: number, pierceLimit: number)
+		local spawnPos = root.Position + aim * 3 + Vector3.new(0, 1, 0)
 
-	if def.flame then
-		local fire = Instance.new("Fire")
-		fire.Size = 5
-		fire.Heat = 10
-		fire.Color = color
-		fire.Parent = bolt
-	else
-		local light = Instance.new("PointLight")
-		light.Color = color
-		light.Range = 12
-		light.Brightness = 2
-		light.Parent = bolt
-	end
+		local bolt = Instance.new("Part")
+		bolt.Name = "AstraBolt"
+		bolt.Shape = Enum.PartType.Ball
+		bolt.Size = Vector3.new(2, 2, 2)
+		bolt.Color = color
+		bolt.Material = Enum.Material.Neon
+		bolt.CanCollide = false
+		bolt.Massless = true
+		bolt.CFrame = CFrame.new(spawnPos, spawnPos + aim)
+		bolt.Parent = workspace
 
-	local att = Instance.new("Attachment")
-	att.Parent = bolt
-	local lv = Instance.new("LinearVelocity")
-	lv.Attachment0 = att
-	lv.MaxForce = math.huge
-	lv.VectorVelocity = aim * (def.speed or 90)
-	lv.Parent = bolt
-
-	Debris:AddItem(bolt, 3)
-
-	local damage = def.power * mult
-	local spent = false
-	local conn: RBXScriptConnection
-	conn = bolt.Touched:Connect(function(other: BasePart)
-		if spent then
-			return
-		end
-		local model = other:FindFirstAncestorOfClass("Model")
-		if not model or model == character then
-			return
+		if def.flame then
+			local fire2 = Instance.new("Fire")
+			fire2.Size = 5
+			fire2.Heat = 10
+			fire2.Color = color
+			fire2.Parent = bolt
+		else
+			local light = Instance.new("PointLight")
+			light.Color = color
+			light.Range = 12
+			light.Brightness = 2
+			light.Parent = bolt
 		end
 
-		-- Enemies eat the bolt as always.
-		if CollectionService:HasTag(model, ENEMY_TAG) then
-			local humanoid = model:FindFirstChildOfClass("Humanoid")
-			if not humanoid or humanoid.Health <= 0 then
+		local att = Instance.new("Attachment")
+		att.Parent = bolt
+		local lv = Instance.new("LinearVelocity")
+		lv.Attachment0 = att
+		lv.MaxForce = math.huge
+		lv.VectorVelocity = aim * (def.speed or 90)
+		lv.Parent = bolt
+
+		Debris:AddItem(bolt, 3)
+
+		local pierceLeft = pierceLimit
+		local struck: { [Model]: boolean } = {}
+		local spent = false
+		local conn: RBXScriptConnection
+		conn = bolt.Touched:Connect(function(other: BasePart)
+			if spent then
 				return
 			end
-			spent = true
-			conn:Disconnect()
-			model:SetAttribute("LastAttacker", player.UserId)
-			humanoid:TakeDamage(damage)
-			bolt:Destroy()
-			return
-		end
-
-		-- A live duel foe can eat it too (softened, dodgeable, blockable).
-		local foe = PvPService.duelOpponentOf(player)
-		if foe and foe.Character == model then
-			local hum = model:FindFirstChildOfClass("Humanoid")
-			local froot = model:FindFirstChild("HumanoidRootPart")
-			if hum and hum.Health > 0 and froot and froot:IsA("BasePart") then
-				spent = true
-				conn:Disconnect()
-				EnemyService.resolveHitOnPlayer(foe, froot, hum, damage * PvP.Config.DamageMult, bolt.Position, nil)
-				bolt:Destroy()
+			local model = other:FindFirstAncestorOfClass("Model")
+			if not model or model == character then
+				return
 			end
-		end
-	end)
+
+			-- Enemies eat the bolt; a pierced bolt keeps flying through them.
+			if CollectionService:HasTag(model, ENEMY_TAG) then
+				if struck[model] then
+					return
+				end
+				local humanoid = model:FindFirstChildOfClass("Humanoid")
+				if not humanoid or humanoid.Health <= 0 then
+					return
+				end
+				struck[model] = true
+				model:SetAttribute("LastAttacker", player.UserId)
+				humanoid:TakeDamage(damage)
+				pierceLeft -= 1
+				if pierceLeft <= 0 then
+					spent = true
+					conn:Disconnect()
+					bolt:Destroy()
+				end
+				return
+			end
+
+			-- A live duel foe can eat it too (softened, dodgeable, blockable).
+			local foe = PvPService.duelOpponentOf(player)
+			if foe and foe.Character == model then
+				local hum = model:FindFirstChildOfClass("Humanoid")
+				local froot = model:FindFirstChild("HumanoidRootPart")
+				if hum and hum.Health > 0 and froot and froot:IsA("BasePart") then
+					spent = true
+					conn:Disconnect()
+					EnemyService.resolveHitOnPlayer(foe, froot, hum, damage * PvP.Config.DamageMult, bolt.Position, nil)
+					bolt:Destroy()
+				end
+			end
+		end)
+	end
+
+	local aim = root.CFrame.LookVector
+	local damage = def.power * mult
+	fire(aim, damage, 1 + pierceExtra)
+	for i = 1, forkExtra do
+		-- Twins alternate sides: +14°, -14°, +28°, ...
+		local side = if i % 2 == 1 then 1 else -1
+		local angle = math.rad(14 * math.ceil(i / 2) * side)
+		local rotated = CFrame.fromAxisAngle(Vector3.yAxis, angle) * aim
+		fire(rotated, damage * 0.6, 1 + pierceExtra)
+	end
 end
 
 -- ---------------------------------------------------------------------------
@@ -185,7 +209,7 @@ end
 -- ---------------------------------------------------------------------------
 -- heal
 -- ---------------------------------------------------------------------------
-local function castHeal(player: Player, root: BasePart, hum: Humanoid, def: Abilities.AbilityDef)
+local function castHeal(player: Player, root: BasePart, hum: Humanoid, def: Abilities.AbilityDef, bonusFraction: number)
 	local state = PlayerRegistry.get(player)
 	if def.cleanse then
 		-- Deep Mending washes afflictions away BEFORE the heal, so it's never thinned.
@@ -193,7 +217,7 @@ local function castHeal(player: Player, root: BasePart, hum: Humanoid, def: Abil
 		state.curseUntil = 0
 	end
 	-- A curse thins even Varuna's waters (unless just cleansed).
-	local heal = StatusEffects.effectiveHeal(hum.MaxHealth * def.power, os.clock() < state.curseUntil)
+	local heal = StatusEffects.effectiveHeal(hum.MaxHealth * (def.power + bonusFraction), os.clock() < state.curseUntil)
 	hum.Health = math.min(hum.MaxHealth, hum.Health + heal)
 
 	-- Rising glow in the ability's color.
@@ -219,9 +243,10 @@ end
 -- ---------------------------------------------------------------------------
 -- ward
 -- ---------------------------------------------------------------------------
-local function castWard(player: Player, root: BasePart, def: Abilities.AbilityDef)
+local function castWard(player: Player, root: BasePart, def: Abilities.AbilityDef, bonusSeconds: number)
 	local state = PlayerRegistry.get(player)
-	local until_ = os.clock() + (def.duration or 4)
+	local duration = (def.duration or 4) + bonusSeconds
+	local until_ = os.clock() + duration
 	if def.wardKind == "empower" then
 		state.empowerUntil = until_
 		state.empowerMult = def.power
@@ -246,14 +271,14 @@ local function castWard(player: Player, root: BasePart, def: Abilities.AbilityDe
 	weld.Part0 = shell
 	weld.Part1 = root
 	weld.Parent = shell
-	Debris:AddItem(shell, def.duration or 4)
+	Debris:AddItem(shell, duration)
 end
 
 -- ---------------------------------------------------------------------------
 -- nova
 -- ---------------------------------------------------------------------------
-local function castNova(player: Player, root: BasePart, def: Abilities.AbilityDef, mult: number): number
-	local radius = def.radius or 14
+local function castNova(player: Player, root: BasePart, def: Abilities.AbilityDef, mult: number, radiusMult: number, ultIFrames: number): number
+	local radius = (def.radius or 14) * radiusMult
 	local damage = def.power * mult
 	local knockback = def.knockback or 0
 	local struck = 0
@@ -301,14 +326,20 @@ local function castNova(player: Player, root: BasePart, def: Abilities.AbilityDe
 	}):Play()
 	Debris:AddItem(ring, 0.5)
 
+	-- Eye of the Tempest: the ultimate's aftermath leaves its caster untouchable.
+	if ultIFrames > 0 then
+		local state = PlayerRegistry.get(player)
+		state.dodgeUntil = math.max(state.dodgeUntil, os.clock() + ultIFrames)
+	end
+
 	return struck
 end
 
 -- ---------------------------------------------------------------------------
 -- smite
 -- ---------------------------------------------------------------------------
-local function castSmite(player: Player, root: BasePart, hum: Humanoid, def: Abilities.AbilityDef, mult: number): number
-	local radius = def.radius or 60
+local function castSmite(player: Player, root: BasePart, hum: Humanoid, def: Abilities.AbilityDef, mult: number, radiusMult: number, selfHealMult: number): number
+	local radius = (def.radius or 60) * radiusMult
 	local damage = def.power * mult
 	local struck = 0
 
@@ -348,7 +379,7 @@ local function castSmite(player: Player, root: BasePart, hum: Humanoid, def: Abi
 	-- The Deluge gives back: the storm mends its caster.
 	if def.selfHeal and struck > 0 then
 		local state = PlayerRegistry.get(player)
-		local heal = StatusEffects.effectiveHeal(hum.MaxHealth * def.selfHeal, os.clock() < state.curseUntil)
+		local heal = StatusEffects.effectiveHeal(hum.MaxHealth * def.selfHeal * selfHealMult, os.clock() < state.curseUntil)
 		hum.Health = math.min(hum.MaxHealth, hum.Health + heal)
 	end
 
@@ -391,7 +422,10 @@ Net.AbilityRequest.OnServerEvent:Connect(function(player: Player, slotArg: any)
 		lastCast[player] = casts
 	end
 	local now = os.clock()
-	local gateCheck = Abilities.tryCastAbility(abilityId, state.tejas, casts[slot] or -math.huge, now)
+	-- Mastery: what this path's ledger has already earned.
+	local masteryLevel = Siddhis.resolve((state.mastery :: any)[state.path] or 0).level
+	local eff = Siddhis.effectsFor(state.path, masteryLevel)
+	local gateCheck = Abilities.tryCastAbility(abilityId, state.tejas, casts[slot] or -math.huge, now, eff.cooldownMult)
 	if not gateCheck.ok then
 		Net.CombatFeedback:FireClient(player, {
 			outcome = if gateCheck.reason == "tejas" then "NoTejas" else "AbilityCooldown",
@@ -415,23 +449,44 @@ Net.AbilityRequest.OnServerEvent:Connect(function(player: Player, slotArg: any)
 	casts[slot] = now
 	QuestService.onAbility(player)
 
+	-- Every cast feeds the sworn path's siddhi ledger (XP = the Tejas it burned).
+	if Paths.isValid(state.path) then
+		local ledger = state.mastery :: any
+		local before = masteryLevel
+		ledger[state.path] += def.tejasCost
+		local after = Siddhis.resolve(ledger[state.path]).level
+		if after > before then
+			Net.CombatFeedback:FireClient(player, {
+				masteryUp = true,
+				level = after,
+				pathName = Paths.Defs[state.path].name,
+			})
+			for lvl = before + 1, after do
+				local unlock = Siddhis.unlockAt(state.path, lvl)
+				if unlock then
+					Net.CombatFeedback:FireClient(player, { siddhiUnlocked = true, name = unlock.name, line = unlock.line })
+				end
+			end
+		end
+	end
+
 	local extra: { [string]: any } = {}
 	local animBySlot = { Z = "throw", X = "dash", C = "heal", V = "ult" }
 	Net.AnimEvent:FireAllClients(character, animBySlot[slot])
 
-	local mult = damageMultFor(state)
+	local mult = damageMultFor(state) * eff.damageMult
 	if def.kind == "projectile" then
-		castProjectile(player, character, root, def, mult)
+		castProjectile(player, character, root, def, mult, eff.pierce[abilityId] or 0, eff.fork[abilityId] or 0)
 	elseif def.kind == "dash" then
 		castDash(player, root, hum, def)
 	elseif def.kind == "heal" then
-		castHeal(player, root, hum, def)
+		castHeal(player, root, hum, def, eff.healBonusFraction)
 	elseif def.kind == "ward" then
-		castWard(player, root, def)
+		castWard(player, root, def, eff.wardBonusSeconds)
 	elseif def.kind == "nova" then
-		extra.struck = castNova(player, root, def, mult)
+		extra.struck = castNova(player, root, def, mult, eff.radiusMult, if def.tejasCost >= 100 then eff.ultIFrames else 0)
 	elseif def.kind == "smite" then
-		extra.struck = castSmite(player, root, hum, def, mult)
+		extra.struck = castSmite(player, root, hum, def, mult, eff.radiusMult, eff.selfHealMult)
 	end
 
 	Net.CombatFeedback:FireClient(player, {

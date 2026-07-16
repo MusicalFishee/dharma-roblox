@@ -27,6 +27,12 @@ local function snapshot(player: Player)
 		path = state.path,
 		gold = state.gold,
 		respecCost = Paths.RespecCost,
+		mastery = {
+			agni = state.mastery.agni,
+			vayu = state.mastery.vayu,
+			varuna = state.mastery.varuna,
+			indra = state.mastery.indra,
+		},
 	})
 end
 

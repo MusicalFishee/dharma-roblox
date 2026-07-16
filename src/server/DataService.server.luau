@@ -64,6 +64,7 @@ local function loadPlayer(player: Player)
 	state.path = data.path
 	state.relics = data.relics
 	state.storyChapter = data.story
+	state.mastery = { agni = data.mastery.agni, vayu = data.mastery.vayu, varuna = data.mastery.varuna, indra = data.mastery.indra }
 	state.playtimeMark = os.clock() -- playtime accrues from the moment the save lands
 	state.bestWave = data.bestWave
 	state.quests = data.quests
@@ -117,10 +118,11 @@ local function savePlayer(player: Player)
 	local pathId = state.path
 	local relics = state.relics
 	local story = state.storyChapter
+	local mastery = { agni = state.mastery.agni, vayu = state.mastery.vayu, varuna = state.mastery.varuna, indra = state.mastery.indra }
 
 	retry(function()
 		return store:UpdateAsync(keyFor(player), function(old: any)
-			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave, quests, weapon, shards, enchant, stats, dailies, titleId, pathId, relics, story)
+			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave, quests, weapon, shards, enchant, stats, dailies, titleId, pathId, relics, story, mastery)
 			-- Never roll back XP or bestWave: keep whichever is higher.
 			-- (Gold is NOT anti-rollbacked — the shop legitimately spends it.)
 			if type(old) == "table" then
@@ -129,6 +131,15 @@ local function savePlayer(player: Player)
 				end
 				if type(old.bestWave) == "number" and old.bestWave > payload.bestWave then
 					payload.bestWave = old.bestWave
+				end
+				-- Mastery never decreases: keep the higher ledger per path.
+				if type(old.mastery) == "table" then
+					for _, pathId in { "agni", "vayu", "varuna", "indra" } do
+						local prev = old.mastery[pathId]
+						if type(prev) == "number" and prev > (payload.mastery :: any)[pathId] then
+							(payload.mastery :: any)[pathId] = math.floor(prev)
+						end
+					end
 				end
 				-- The story never un-tells itself.
 				if type(old.story) == "number" and old.story > payload.story then

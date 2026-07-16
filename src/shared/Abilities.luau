@@ -125,12 +125,13 @@ function Abilities.tryCast(slot: string, tejas: number, lastUsedAt: number, now:
 end
 
 -- Same gate, keyed by catalog ability id (the Astra Paths dispatch).
-function Abilities.tryCastAbility(abilityId: string, tejas: number, lastUsedAt: number, now: number): CastCheck
+-- `cooldownMult` lets mastery siddhis shorten cooldowns (default 1).
+function Abilities.tryCastAbility(abilityId: string, tejas: number, lastUsedAt: number, now: number, cooldownMult: number?): CastCheck
 	local def = Abilities.Catalog[abilityId]
 	if not def then
 		return { ok = false, reason = "unknown", tejasAfter = tejas }
 	end
-	return gate(def.tejasCost, def.cooldown, tejas, lastUsedAt, now)
+	return gate(def.tejasCost, def.cooldown * (cooldownMult or 1), tejas, lastUsedAt, now)
 end
 
 return Abilities

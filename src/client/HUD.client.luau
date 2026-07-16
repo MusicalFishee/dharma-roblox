@@ -587,6 +587,14 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("You lifted %s — Uddhāra!", tostring(data.name)), Color3.fromRGB(130, 255, 180))
 		return
 	end
+	if data.masteryUp then
+		showToast(string.format("MASTERY — %s reaches Lv %d", tostring(data.pathName), data.level), CYAN)
+		return
+	end
+	if data.siddhiUnlocked then
+		showToast(string.format("SIDDHI UNLOCKED:  %s — %s", tostring(data.name), tostring(data.line)), YELLOW)
+		return
+	end
 
 	-- Afflictions the horde puts on you.
 	if data.statusEffect == "venom" then

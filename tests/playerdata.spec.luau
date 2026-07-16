@@ -136,6 +136,16 @@ local prt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, 
 check("path round-trips through serialize", prt.path == "varuna")
 check("serialize without path -> unsworn", PlayerData.serialize(1, 1).path == "")
 
+-- Mastery (added with Astra Siddhis, v14).
+local md = PlayerData.default().mastery
+check("default mastery all zero", md.agni == 0 and md.vayu == 0 and md.varuna == 0 and md.indra == 0)
+local mv = PlayerData.validate({ mastery = { agni = 1200, vayu = -5, varuna = "lots", indra = 88.9 } })
+check("mastery validated per-path", mv.mastery.agni == 1200 and mv.mastery.vayu == 0 and mv.mastery.varuna == 0 and mv.mastery.indra == 88)
+check("non-table mastery -> zeros", PlayerData.validate({ mastery = "maxed" }).mastery.agni == 0)
+local mrt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", nil, 0, { agni = 777, vayu = 0, varuna = 3, indra = 0 }))
+check("mastery round-trips through serialize", mrt.mastery.agni == 777 and mrt.mastery.varuna == 3)
+check("serialize without mastery -> zeros", PlayerData.serialize(1, 1).mastery.indra == 0)
+
 -- Relics (added with the relic system, v10).
 local rdef = PlayerData.default().relics
 check("default satchel empty + bare", #rdef.owned == 0 and rdef.equipped.crown == "" and rdef.equipped.kavacha == "" and rdef.equipped.charm == "")

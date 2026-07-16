@@ -5,7 +5,7 @@
 
 local PlayerData = {}
 
-PlayerData.Version = 13
+PlayerData.Version = 14
 
 -- Mirrors Relics.MaxOwned (dependency-free; a test guards against drift).
 local RELICS_MAX_OWNED = 40
@@ -91,7 +91,28 @@ export type Data = {
 	path: string, -- sworn Astra Path id, "" while unsworn
 	relics: RelicsSave, -- the satchel + what's worn in each slot
 	story: number, -- Adhyayas completed (0 = the tale hasn't begun)
+	mastery: MasterySave, -- per-path siddhi mastery XP (never decreases)
 }
+
+export type MasterySave = {
+	agni: number,
+	vayu: number,
+	varuna: number,
+	indra: number,
+}
+
+local function cleanMastery(raw: any): MasterySave
+	local out: MasterySave = { agni = 0, vayu = 0, varuna = 0, indra = 0 }
+	if type(raw) == "table" then
+		for _, pathId in { "agni", "vayu", "varuna", "indra" } do
+			local v = raw[pathId]
+			if type(v) == "number" and v == v and v > 0 then
+				(out :: any)[pathId] = math.floor(v)
+			end
+		end
+	end
+	return out
+end
 
 export type RelicsSave = {
 	owned: { string },
@@ -140,6 +161,7 @@ function PlayerData.default(): Data
 		path = "",
 		relics = { owned = {}, equipped = { crown = "", kavacha = "", charm = "" } },
 		story = 0,
+		mastery = { agni = 0, vayu = 0, varuna = 0, indra = 0 },
 	}
 end
 
@@ -199,6 +221,7 @@ function PlayerData.validate(raw: any): Data
 			d.path = raw.path
 		end
 		d.relics = cleanRelics(raw.relics)
+		d.mastery = cleanMastery(raw.mastery)
 		if type(raw.story) == "number" and raw.story == raw.story and raw.story > 0 then
 			d.story = math.min(math.floor(raw.story), 50)
 		end
@@ -235,7 +258,8 @@ function PlayerData.serialize(
 	title: string?,
 	path: string?,
 	relics: RelicsSave?,
-	story: number?
+	story: number?,
+	mastery: MasterySave?
 ): Data
 	local questsCopy: { QuestSlot } = {}
 	if quests then
@@ -293,6 +317,7 @@ function PlayerData.serialize(
 		title = if type(title) == "string" and #title <= 40 then title else "",
 		path = if type(path) == "string" and #path <= 20 then path else "",
 		relics = cleanRelics(relics),
+		mastery = cleanMastery(mastery),
 		story = if type(story) == "number" and story == story and story > 0 then math.min(math.floor(story), 50) else 0,
 	}
 end

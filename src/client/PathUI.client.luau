@@ -10,6 +10,7 @@ local UserInputService = game:GetService("UserInputService")
 local Net = require(ReplicatedStorage.Shared.Net)
 local Paths = require(ReplicatedStorage.Shared.Paths)
 local Abilities = require(ReplicatedStorage.Shared.Abilities)
+local Siddhis = require(ReplicatedStorage.Shared.Siddhis)
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -42,7 +43,7 @@ dim.Parent = screenGui
 local panel = Instance.new("Frame")
 panel.AnchorPoint = Vector2.new(0.5, 0.5)
 panel.Position = UDim2.fromScale(0.5, 0.5)
-panel.Size = UDim2.fromOffset(860, 470)
+panel.Size = UDim2.fromOffset(860, 488)
 panel.BackgroundColor3 = PANEL_BG
 panel.BorderSizePixel = 0
 panel.Parent = screenGui
@@ -88,13 +89,29 @@ closeButton.Activated:Connect(function()
 end)
 
 local CARD_W = 196
-local CARD_H = 344
+local CARD_H = 362
 local GAP = 14
 local count = #Paths.Order
 local totalW = count * CARD_W + (count - 1) * GAP
 local startX = math.floor((860 - totalW) / 2)
 
 local buttons: { [string]: TextButton } = {}
+local masteryLabels: { [string]: TextLabel } = {}
+local masteryXp: { [string]: number } = {}
+
+local function refreshMastery()
+	for id, label in masteryLabels do
+		local info = Siddhis.resolve(masteryXp[id] or 0)
+		local nextUp = Siddhis.nextUnlock(id, info.level)
+		if info.isMax then
+			label.Text = string.format("MASTERY Lv %d — complete", info.level)
+		elseif nextUp then
+			label.Text = string.format("MASTERY Lv %d — next: %s (Lv %d)", info.level, nextUp.name, nextUp.level)
+		else
+			label.Text = string.format("MASTERY Lv %d", info.level)
+		end
+	end
+end
 
 local function refreshButtons()
 	for id, button in buttons do
@@ -208,6 +225,18 @@ local function makeCard(def: Paths.PathDef, index: number)
 		row.Parent = card
 	end
 
+	local mastery = Instance.new("TextLabel")
+	mastery.Size = UDim2.new(1, -20, 0, 16)
+	mastery.Position = UDim2.new(0, 10, 1, -64)
+	mastery.BackgroundTransparency = 1
+	mastery.Font = Enum.Font.GothamMedium
+	mastery.TextSize = 10
+	mastery.TextColor3 = accent3
+	mastery.TextXAlignment = Enum.TextXAlignment.Left
+	mastery.Text = "MASTERY Lv 1"
+	mastery.Parent = card
+	masteryLabels[def.id] = mastery
+
 	local button = Instance.new("TextButton")
 	button.Size = UDim2.new(1, -20, 0, 36)
 	button.Position = UDim2.new(0, 10, 1, -46)
@@ -253,7 +282,13 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		currentPath = tostring(data.path)
 		gold = tonumber(data.gold) or 0
 		respecCost = tonumber(data.respecCost) or respecCost
+		if typeof(data.mastery) == "table" then
+			for _, id in Paths.Order do
+				masteryXp[id] = tonumber(data.mastery[id]) or 0
+			end
+		end
 		refreshButtons()
+		refreshMastery()
 		return
 	end
 	if data.pathChosen then

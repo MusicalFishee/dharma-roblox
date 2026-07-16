@@ -53,6 +53,8 @@ export type PlayerState = {
 	relics: { owned: { string }, equipped: { crown: string, kavacha: string, charm: string } },
 	-- Adhyayas completed (Agastya's story; advances via Story.advance).
 	storyChapter: number,
+	-- Per-path siddhi mastery XP (fed by AbilityService, never decreases).
+	mastery: { agni: number, vayu: number, varuna: number, indra: number },
 }
 
 local PlayerRegistry = {}
@@ -100,6 +102,7 @@ function PlayerRegistry.get(player: Player): PlayerState
 		title = "",
 		relics = { owned = {}, equipped = { crown = "", kavacha = "", charm = "" } },
 		storyChapter = 0,
+		mastery = { agni = 0, vayu = 0, varuna = 0, indra = 0 },
 	}
 	states[player] = state
 	return state
