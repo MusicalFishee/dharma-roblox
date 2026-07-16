@@ -399,6 +399,21 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(tostring(data.message), YELLOW)
 		return
 	end
+	-- Agastya's story.
+	if data.storyChapter then
+		showToast(
+			string.format("ADHYAYA %s COMPLETE — %s   (+%d gold, +%d XP)", tostring(data.numeral), tostring(data.title), data.gold, data.xp),
+			Color3.fromRGB(230, 200, 140)
+		)
+		return
+	end
+	if data.storyCatchup then
+		showToast(
+			string.format("Your legend already speaks — Adhyaya %s   (+%d gold, +%d XP)", tostring(data.numeral), data.gold, data.xp),
+			Color3.fromRGB(230, 200, 140)
+		)
+		return
+	end
 	-- Honor duels.
 	if data.pvp then
 		local PINK = Color3.fromRGB(255, 110, 140)

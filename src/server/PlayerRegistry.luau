@@ -51,6 +51,8 @@ export type PlayerState = {
 	title: string,
 	-- Relic satchel + worn pieces (bonuses read via Relics.totalBonus).
 	relics: { owned: { string }, equipped: { crown: string, kavacha: string, charm: string } },
+	-- Adhyayas completed (Agastya's story; advances via Story.advance).
+	storyChapter: number,
 }
 
 local PlayerRegistry = {}
@@ -97,6 +99,7 @@ function PlayerRegistry.get(player: Player): PlayerState
 		playtimeMark = os.clock(),
 		title = "",
 		relics = { owned = {}, equipped = { crown = "", kavacha = "", charm = "" } },
+		storyChapter = 0,
 	}
 	states[player] = state
 	return state

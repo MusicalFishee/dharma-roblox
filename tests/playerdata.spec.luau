@@ -149,6 +149,13 @@ check("owned capped at 40", #PlayerData.validate({ relics = { owned = overfull }
 local rrt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", { owned = { "mahisha_crown" }, equipped = { crown = "mahisha_crown", kavacha = "", charm = "" } }))
 check("relics round-trip through serialize", #rrt.relics.owned == 1 and rrt.relics.equipped.crown == "mahisha_crown")
 
+-- Story (added with the Adhyayas, v12).
+check("default story untold", PlayerData.default().story == 0)
+check("story validated", PlayerData.validate({ story = 4 }).story == 4 and PlayerData.validate({ story = -2 }).story == 0 and PlayerData.validate({ story = 999 }).story == 50)
+check("raidClears validated", PlayerData.validate({ stats = { raidClears = 2 } }).stats.raidClears == 2 and PlayerData.default().stats.raidClears == 0)
+local srt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", nil, 6))
+check("story round-trips through serialize", srt.story == 6)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

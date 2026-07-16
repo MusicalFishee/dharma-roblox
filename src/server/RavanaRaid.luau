@@ -25,6 +25,7 @@ local ProgressionService = require(script.Parent.ProgressionService)
 local EnemyService = require(script.Parent.EnemyService)
 local RelicService = require(script.Parent.RelicService)
 local QuestService = require(script.Parent.QuestService)
+local StoryService = require(script.Parent.StoryService)
 
 local ENEMY_TAG = "DharmaEnemy"
 local SPAWN_POS = Vector3.new(0, 8, -40)
@@ -357,6 +358,7 @@ local function victory(st: FightState, killer: Player?, onClear: () -> ())
 		Net.CombatFeedback:FireClient(p, { shardUpdate = true, gained = spoils.shards, shards = pstate.shards })
 		ProgressionService.awardXp(p, spoils.xp)
 		RelicService.grantRaidTrophy(p)
+		StoryService.onEvent(p) -- the king's fall turns Adhyaya VI
 	end
 	-- The killing blow gets the kill-ledger credit (kills, boss quests, dailies).
 	if killer then

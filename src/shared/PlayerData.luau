@@ -5,7 +5,7 @@
 
 local PlayerData = {}
 
-PlayerData.Version = 11
+PlayerData.Version = 12
 
 -- Mirrors Relics.MaxOwned (dependency-free; a test guards against drift).
 local RELICS_MAX_OWNED = 40
@@ -89,6 +89,7 @@ export type Data = {
 	title: string, -- equipped title id, "" for a bare head
 	path: string, -- sworn Astra Path id, "" while unsworn
 	relics: RelicsSave, -- the satchel + what's worn in each slot
+	story: number, -- Adhyayas completed (0 = the tale hasn't begun)
 }
 
 export type RelicsSave = {
@@ -137,6 +138,7 @@ function PlayerData.default(): Data
 		title = "",
 		path = "",
 		relics = { owned = {}, equipped = { crown = "", kavacha = "", charm = "" } },
+		story = 0,
 	}
 end
 
@@ -195,6 +197,9 @@ function PlayerData.validate(raw: any): Data
 			d.path = raw.path
 		end
 		d.relics = cleanRelics(raw.relics)
+		if type(raw.story) == "number" and raw.story == raw.story and raw.story > 0 then
+			d.story = math.min(math.floor(raw.story), 50)
+		end
 		if type(raw.dailies) == "table" then
 			d.dailies.stamp = cleanCount(raw.dailies.stamp)
 			if type(raw.dailies.slots) == "table" then
@@ -227,7 +232,8 @@ function PlayerData.serialize(
 	dailies: DailiesSave?,
 	title: string?,
 	path: string?,
-	relics: RelicsSave?
+	relics: RelicsSave?,
+	story: number?
 ): Data
 	local questsCopy: { QuestSlot } = {}
 	if quests then
@@ -284,6 +290,7 @@ function PlayerData.serialize(
 		title = if type(title) == "string" and #title <= 40 then title else "",
 		path = if type(path) == "string" and #path <= 20 then path else "",
 		relics = cleanRelics(relics),
+		story = if type(story) == "number" and story == story and story > 0 then math.min(math.floor(story), 50) else 0,
 	}
 end
 

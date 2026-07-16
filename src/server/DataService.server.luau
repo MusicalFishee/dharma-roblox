@@ -13,6 +13,7 @@ local Net = require(ReplicatedStorage.Shared.Net)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local ProgressionService = require(script.Parent.ProgressionService)
 local QuestService = require(script.Parent.QuestService)
+local StoryService = require(script.Parent.StoryService)
 
 local store = DataStoreService:GetDataStore("DharmaPlayerData_v1")
 local AUTOSAVE_INTERVAL = 90
@@ -61,6 +62,7 @@ local function loadPlayer(player: Player)
 	state.title = data.title
 	state.path = data.path
 	state.relics = data.relics
+	state.storyChapter = data.story
 	state.playtimeMark = os.clock() -- playtime accrues from the moment the save lands
 	state.bestWave = data.bestWave
 	state.quests = data.quests
@@ -78,6 +80,7 @@ local function loadPlayer(player: Player)
 	Net.CombatFeedback:FireClient(player, { goldUpdate = true, gained = 0, gold = state.gold })
 	QuestService.ensureFilled(player)
 	QuestService.ensureDailies(player)
+	StoryService.ensure(player)
 end
 
 local function savePlayer(player: Player)
@@ -111,10 +114,11 @@ local function savePlayer(player: Player)
 	local titleId = state.title
 	local pathId = state.path
 	local relics = state.relics
+	local story = state.storyChapter
 
 	retry(function()
 		return store:UpdateAsync(keyFor(player), function(old: any)
-			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave, quests, weapon, shards, enchant, stats, dailies, titleId, pathId, relics)
+			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave, quests, weapon, shards, enchant, stats, dailies, titleId, pathId, relics, story)
 			-- Never roll back XP or bestWave: keep whichever is higher.
 			-- (Gold is NOT anti-rollbacked — the shop legitimately spends it.)
 			if type(old) == "table" then
@@ -123,6 +127,10 @@ local function savePlayer(player: Player)
 				end
 				if type(old.bestWave) == "number" and old.bestWave > payload.bestWave then
 					payload.bestWave = old.bestWave
+				end
+				-- The story never un-tells itself.
+				if type(old.story) == "number" and old.story > payload.story then
+					payload.story = old.story
 				end
 				-- Never lose a sworn Astra Path to a stale write.
 				if payload.path == "" and type(old.path) == "string" and old.path ~= "" then

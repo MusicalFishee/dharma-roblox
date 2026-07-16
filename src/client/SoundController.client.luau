@@ -185,6 +185,10 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play("bossDefeated")
 		return
 	end
+	if data.storyChapter or data.storyCatchup then
+		play("levelUp")
+		return
+	end
 	if data.titleEquipped then
 		play("shopBuy")
 		return

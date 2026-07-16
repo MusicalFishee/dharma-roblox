@@ -40,6 +40,8 @@ local Net = {
 	PathRequest = ensureRemote("PathRequest"),
 	-- client -> server: relic actions ({action="info"} or {action="equip", slot=..., id=...})
 	RelicRequest = ensureRemote("RelicRequest"),
+	-- client -> server: story journal requests ({action="info"})
+	StoryRequest = ensureRemote("StoryRequest"),
 	-- client -> server: current guard state (blocking / dodging)
 	DefenseState = ensureRemote("DefenseState"),
 	-- server -> client: HUD feedback (combo count, tejas, outcome text)

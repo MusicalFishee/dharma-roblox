@@ -24,6 +24,7 @@ local ProgressionService = require(script.Parent.ProgressionService)
 local LootService = require(script.Parent.LootService)
 local QuestService = require(script.Parent.QuestService)
 local RelicService = require(script.Parent.RelicService)
+local StoryService = require(script.Parent.StoryService)
 
 local ENEMY_TAG = "DharmaEnemy"
 
@@ -511,6 +512,7 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 						gained = Enchants.ShardsPerBossKill,
 						shards = kstate.shards,
 					})
+					StoryService.onEvent(killer) -- a first felled lord turns Adhyaya II
 				end
 				-- Kubera's Whisper: bonus gold rides every killing blow.
 				local kench = Enchants.effects(kstate.enchant)

@@ -21,6 +21,7 @@ local ZoneService = require(script.Parent.ZoneService)
 local ProgressionService = require(script.Parent.ProgressionService)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local QuestService = require(script.Parent.QuestService)
+local StoryService = require(script.Parent.StoryService)
 
 local ARENA_RADIUS = 45
 
@@ -59,6 +60,7 @@ local function onWaveClear(wave: number)
 		local state = PlayerRegistry.get(p)
 		state.bestWave = math.max(state.bestWave, wave)
 		QuestService.onWaveClear(p)
+		StoryService.onEvent(p) -- a deeper wave may turn an Adhyaya's page
 	end
 	announce({ waveState = "clear", wave = wave, bonusXp = bonus, intermission = Waves.Intermission })
 

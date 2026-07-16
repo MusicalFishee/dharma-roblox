@@ -24,6 +24,7 @@ local Loot = require(ReplicatedStorage.Shared.Loot)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local ProgressionService = require(script.Parent.ProgressionService)
 local EnemyService = require(script.Parent.EnemyService)
+local StoryService = require(script.Parent.StoryService)
 
 local ENEMY_TAG = "DharmaEnemy"
 local SPAWN_POS = Vector3.new(0, 8, -40)
@@ -429,6 +430,7 @@ local function bless(st: FightState, onClear: () -> ())
 		Net.CombatFeedback:FireClient(p, { shardUpdate = true, gained = boon.shards, shards = pstate.shards })
 		Net.CombatFeedback:FireClient(p, { goldUpdate = true, gained = boon.gold, gold = pstate.gold })
 		ProgressionService.awardXp(p, boon.xp)
+		StoryService.onEvent(p) -- a blessing may turn Adhyaya IV — or the finale
 	end
 
 	broadcastAll({ bossState = "passed", bossName = Trial.Phase3.name, message = Trial.Lines.passed })
