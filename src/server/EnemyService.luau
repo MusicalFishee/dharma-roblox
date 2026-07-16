@@ -74,6 +74,9 @@ local function nearestPlayer(pos: Vector3): (Player?, BasePart?, Humanoid?, numb
 		if not root or not hum or hum.Health <= 0 then
 			continue
 		end
+		if char:GetAttribute("DharmaDowned") == true then
+			continue -- the fallen are beneath the horde's notice
+		end
 		local d = (root.Position - pos).Magnitude
 		if d < bestDist then
 			bestDist = d
@@ -240,7 +243,7 @@ local function rangedStrikes(enemy: EnemyState, player: Player, playerRoot: Base
 		local char = player.Character
 		local root = char and getRoot(char)
 		local hum = char and char:FindFirstChildOfClass("Humanoid")
-		if not char or not root or not hum or hum.Health <= 0 then
+		if not char or not root or not hum or hum.Health <= 0 or char:GetAttribute("DharmaDowned") == true then
 			return
 		end
 		if (root.Position - targetPos).Magnitude > 6 then
@@ -450,7 +453,7 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 					local char = victim.Character
 					local hum = char and char:FindFirstChildOfClass("Humanoid")
 					local hrp = char and char:FindFirstChild("HumanoidRootPart")
-					if not char or not hum or hum.Health <= 0 then
+					if not char or not hum or hum.Health <= 0 or char:GetAttribute("DharmaDowned") == true then
 						continue
 					end
 
@@ -565,7 +568,7 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 						local char = plr.Character
 						local hrp = char and getRoot(char)
 						local hum = char and char:FindFirstChildOfClass("Humanoid")
-						if not hrp or not hum or hum.Health <= 0 then
+						if not hrp or not hum or hum.Health <= 0 or (char and char:GetAttribute("DharmaDowned") == true) then
 							continue
 						end
 						local flat = Vector3.new(hrp.Position.X - center.X, 0, hrp.Position.Z - center.Z)

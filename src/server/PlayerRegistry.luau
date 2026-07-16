@@ -45,7 +45,7 @@ export type PlayerState = {
 	venomUntil: number,
 	curseUntil: number,
 	-- Lifetime records; playtimeMark is the os.clock() of the last playtime bank.
-	stats: { kills: number, bossKills: number, deaths: number, playtimeSeconds: number, trialsPassed: number, duelWins: number, raidClears: number },
+	stats: { kills: number, bossKills: number, deaths: number, playtimeSeconds: number, trialsPassed: number, duelWins: number, raidClears: number, revives: number },
 	playtimeMark: number,
 	-- Equipped title id ("" = bare head).
 	title: string,
@@ -95,7 +95,7 @@ function PlayerRegistry.get(player: Player): PlayerState
 		empowerMult = 1,
 		venomUntil = 0,
 		curseUntil = 0,
-		stats = { kills = 0, bossKills = 0, deaths = 0, playtimeSeconds = 0, trialsPassed = 0, duelWins = 0, raidClears = 0 },
+		stats = { kills = 0, bossKills = 0, deaths = 0, playtimeSeconds = 0, trialsPassed = 0, duelWins = 0, raidClears = 0, revives = 0 },
 		playtimeMark = os.clock(),
 		title = "",
 		relics = { owned = {}, equipped = { crown = "", kavacha = "", charm = "" } },

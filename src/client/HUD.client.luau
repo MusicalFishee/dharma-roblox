@@ -240,6 +240,64 @@ wipeSub.ZIndex = 51
 wipeSub.Text = ""
 wipeSub.Parent = wipeOverlay
 
+-- Uddhāra banner (bottom-center, shown while YOU are down).
+local downFrame = Instance.new("Frame")
+downFrame.Size = UDim2.fromOffset(460, 64)
+downFrame.AnchorPoint = Vector2.new(0.5, 1)
+downFrame.Position = UDim2.new(0.5, 0, 1, -110)
+downFrame.BackgroundColor3 = Color3.fromRGB(40, 8, 10)
+downFrame.BackgroundTransparency = 0.25
+downFrame.Visible = false
+downFrame.ZIndex = 40
+downFrame.Parent = screenGui
+local downCorner = Instance.new("UICorner")
+downCorner.CornerRadius = UDim.new(0, 12)
+downCorner.Parent = downFrame
+
+local downTitle = Instance.new("TextLabel")
+downTitle.Size = UDim2.new(1, -20, 0, 30)
+downTitle.Position = UDim2.fromOffset(10, 6)
+downTitle.BackgroundTransparency = 1
+downTitle.Font = Enum.Font.GothamBlack
+downTitle.TextSize = 20
+downTitle.TextColor3 = Color3.fromRGB(240, 90, 80)
+downTitle.ZIndex = 41
+downTitle.Text = "YOU ARE DOWN"
+downTitle.Parent = downFrame
+
+local downSub = Instance.new("TextLabel")
+downSub.Size = UDim2.new(1, -20, 0, 20)
+downSub.Position = UDim2.fromOffset(10, 36)
+downSub.BackgroundTransparency = 1
+downSub.Font = Enum.Font.GothamMedium
+downSub.TextSize = 14
+downSub.TextColor3 = Color3.fromRGB(235, 200, 180)
+downSub.ZIndex = 41
+downSub.Text = ""
+downSub.Parent = downFrame
+
+local downToken = 0
+local function showDowned(seconds: number)
+	downToken += 1
+	local token = downToken
+	downFrame.Visible = true
+	task.spawn(function()
+		local left = seconds
+		while left > 0 and token == downToken do
+			downSub.Text = string.format("Crawl to your brothers — a lift saves you   (%ds)", math.ceil(left))
+			task.wait(0.25)
+			left -= 0.25
+		end
+		if token == downToken then
+			downFrame.Visible = false
+		end
+	end)
+end
+local function hideDowned()
+	downToken += 1
+	downFrame.Visible = false
+end
+
 local wipeToken = 0
 local function showWipe(failedWave: number, restartWave: number, delay: number)
 	wipeToken += 1
@@ -506,6 +564,27 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 	-- You personally fell (in co-op, teammates may still stand).
 	if data.youFell then
 		showToast("You fell — regrouping…", RED)
+		return
+	end
+	if data.downed then
+		showDowned(tonumber(data.seconds) or 20)
+		return
+	end
+	if data.revived then
+		hideDowned()
+		if data.byName then
+			showToast(string.format("%s lifted you — fight on!", tostring(data.byName)), Color3.fromRGB(130, 255, 180))
+		else
+			showToast("You rise — the nectar holds you up!", Color3.fromRGB(130, 255, 180))
+		end
+		return
+	end
+	if data.allyDown then
+		showToast(string.format("%s IS DOWN — get to them!", tostring(data.name)), RED)
+		return
+	end
+	if data.liftedAlly then
+		showToast(string.format("You lifted %s — Uddhāra!", tostring(data.name)), Color3.fromRGB(130, 255, 180))
 		return
 	end
 

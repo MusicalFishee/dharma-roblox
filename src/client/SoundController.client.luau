@@ -173,6 +173,14 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play(if data.mythic then "thunderCrack" else "questDone")
 		return
 	end
+	if data.downed then
+		play("playerDown")
+		return
+	end
+	if data.revived or data.liftedAlly then
+		play("levelUp")
+		return
+	end
 	if data.headFall then
 		play("finisherLand")
 		return

@@ -119,8 +119,8 @@ end
 
 Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 	local character = player.Character
-	if not character then
-		return
+	if not character or character:GetAttribute("DharmaDowned") == true then
+		return -- the downed crawl; they do not swing
 	end
 	local root = getRoot(character)
 	if not root then

@@ -19,7 +19,7 @@ local function check(name: string, cond: boolean)
 end
 
 local function snap(over: { [string]: number }): Titles.Snapshot
-	local s: Titles.Snapshot = { bestWave = 0, kills = 0, bossKills = 0, level = 1, trials = 0, duelWins = 0 }
+	local s: Titles.Snapshot = { bestWave = 0, kills = 0, bossKills = 0, level = 1, trials = 0, duelWins = 0, raidClears = 0, revives = 0 }
 	for k, v in over do
 		(s :: any)[k] = v
 	end
@@ -32,7 +32,7 @@ print("Titles")
 check("there are titles worth chasing", #Titles.List >= 6)
 local ids: { [string]: boolean } = {}
 local unique, wellFormed = true, true
-local knownKinds = { wave = true, kills = true, bossKills = true, level = true, trials = true, duelWins = true }
+local knownKinds = { wave = true, kills = true, bossKills = true, level = true, trials = true, duelWins = true, raidClears = true, revives = true }
 for _, def in Titles.List do
 	if ids[def.id] then
 		unique = false
@@ -50,7 +50,7 @@ local kindsSeen: { [string]: boolean } = {}
 for _, def in Titles.List do
 	kindsSeen[def.kind] = true
 end
-check("every requirement kind is used", kindsSeen.wave == true and kindsSeen.kills == true and kindsSeen.bossKills == true and kindsSeen.level == true and kindsSeen.trials == true and kindsSeen.duelWins == true)
+check("every requirement kind is used", kindsSeen.wave == true and kindsSeen.kills == true and kindsSeen.bossKills == true and kindsSeen.level == true and kindsSeen.trials == true and kindsSeen.duelWins == true and kindsSeen.raidClears == true and kindsSeen.revives == true)
 
 -- Unlock math, one per kind.
 local dharmapala = Titles.get("dharmapala") :: Titles.TitleDef
@@ -66,6 +66,10 @@ local blessed = Titles.get("blessed_mahadeva") :: Titles.TitleDef
 check("trial title needs the trial", Titles.isUnlocked(blessed, snap({ trials = 1 })) and not Titles.isUnlocked(blessed, snap({ bestWave = 100 })))
 local duelist = Titles.get("duelist") :: Titles.TitleDef
 check("duelist counts duel wins", Titles.isUnlocked(duelist, snap({ duelWins = 10 })) and not Titles.isUnlocked(duelist, snap({ duelWins = 9, kills = 9999 })))
+local ravanaBane = Titles.get("ravana_bane") :: Titles.TitleDef
+check("raid title counts raid clears", Titles.isUnlocked(ravanaBane, snap({ raidClears = 1 })) and not Titles.isUnlocked(ravanaBane, snap({ bossKills = 999 })))
+local uddharaHand = Titles.get("uddhara_hand") :: Titles.TitleDef
+check("lift title counts revives", Titles.isUnlocked(uddharaHand, snap({ revives = 10 })) and not Titles.isUnlocked(uddharaHand, snap({ revives = 9 })))
 
 -- Equip validation.
 check("bare head is always allowed", Titles.canEquip("", snap({})))

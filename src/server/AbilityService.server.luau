@@ -406,6 +406,9 @@ Net.AbilityRequest.OnServerEvent:Connect(function(player: Player, slotArg: any)
 	if not character or not root or not hum or hum.Health <= 0 then
 		return
 	end
+	if character:GetAttribute("DharmaDowned") == true then
+		return -- the downed crawl; they do not cast
+	end
 
 	-- Commit the cast.
 	state.tejas = gateCheck.tejasAfter

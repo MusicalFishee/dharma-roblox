@@ -82,7 +82,7 @@ local function nearestPlayer(pos: Vector3): (Player?, BasePart?, Humanoid?, numb
 		end
 		local root = getRoot(char)
 		local hum = char:FindFirstChildOfClass("Humanoid")
-		if not root or not hum or hum.Health <= 0 then
+		if not root or not hum or hum.Health <= 0 or char:GetAttribute("DharmaDowned") == true then
 			continue
 		end
 		local d = (root.Position - pos).Magnitude

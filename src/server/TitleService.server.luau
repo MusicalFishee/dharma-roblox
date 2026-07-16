@@ -23,6 +23,7 @@ local function snapshotOf(player: Player): Titles.Snapshot
 		trials = state.stats.trialsPassed,
 		duelWins = state.stats.duelWins,
 		raidClears = state.stats.raidClears,
+		revives = state.stats.revives,
 	}
 end
 

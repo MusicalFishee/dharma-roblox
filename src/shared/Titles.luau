@@ -14,6 +14,7 @@ export type Snapshot = {
 	trials: number, -- Kirata Trials passed
 	duelWins: number,
 	raidClears: number, -- Ravanas felled
+	revives: number, -- brothers lifted from the dust
 }
 
 export type TitleDef = {
@@ -40,6 +41,7 @@ Titles.List = {
 	title({ id = "maharathi", name = "Maharathi", requirement = "Reach level 30", kind = "level", threshold = 30, color = { 220, 190, 255 } }),
 	title({ id = "dharmapala", name = "Dharmapala", requirement = "Clear wave 50", kind = "wave", threshold = 50, color = { 255, 200, 40 } }),
 	title({ id = "ravana_bane", name = "Ravana's Bane", requirement = "Fell the Ten-Headed King", kind = "raidClears", threshold = 1, color = { 255, 160, 30 } }),
+	title({ id = "uddhara_hand", name = "Hand of Uddh\u{0101}ra", requirement = "Lift 10 fallen allies", kind = "revives", threshold = 10, color = { 130, 255, 180 } }),
 	title({ id = "world_cleaver", name = "World-Cleaver", requirement = "Slay 1000 demons", kind = "kills", threshold = 1000, color = { 240, 90, 220 } }),
 	title({ id = "thrice_blessed", name = "Thrice-Blessed", requirement = "Pass the Kirata Trial 3 times", kind = "trials", threshold = 3, color = { 255, 235, 160 } }),
 	title({ id = "avatar_of_age", name = "Avatar of the Age", requirement = "Clear wave 100", kind = "wave", threshold = 100, color = { 150, 120, 255 } }),
@@ -70,6 +72,8 @@ local function statFor(kind: string, snap: Snapshot): number
 		return snap.duelWins
 	elseif kind == "raidClears" then
 		return snap.raidClears
+	elseif kind == "revives" then
+		return snap.revives
 	end
 	return 0
 end

@@ -2,6 +2,7 @@
 # One-command verification: type-check every script (incl. Roblox API usage)
 # and run all headless logic tests. Run before every publish.
 set -e
+set -o pipefail
 cd "$(dirname "$0")"
 
 BIN="$HOME/.local/bin"

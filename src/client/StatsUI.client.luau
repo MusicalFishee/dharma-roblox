@@ -23,7 +23,7 @@ screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
 local panel = Instance.new("Frame")
-panel.Size = UDim2.fromOffset(360, 460)
+panel.Size = UDim2.fromOffset(360, 492)
 panel.AnchorPoint = Vector2.new(0.5, 0.5)
 panel.Position = UDim2.fromScale(0.5, 0.5)
 panel.BackgroundColor3 = PANEL_BG
@@ -57,6 +57,7 @@ local ROW_ORDER = {
 	{ key = "bestWave", label = "Deepest wave" },
 	{ key = "duelWins", label = "Duels won" },
 	{ key = "raidClears", label = "Ravanas felled" },
+	{ key = "revives", label = "Allies lifted" },
 	{ key = "deaths", label = "Times fallen" },
 	{ key = "playtime", label = "Time at war" },
 }
@@ -150,6 +151,7 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 	rows.bestWave.value.Text = if data.bestWave > 0 then string.format("Wave %d", data.bestWave) else "—"
 	rows.duelWins.value.Text = tostring(data.duelWins)
 	rows.raidClears.value.Text = tostring(data.raidClears)
+	rows.revives.value.Text = tostring(data.revives)
 	rows.deaths.value.Text = tostring(data.deaths)
 	rows.playtime.value.Text = fmtTime(data.playtimeSeconds)
 end)
