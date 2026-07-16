@@ -122,7 +122,7 @@ function startWave(wave: number)
 	-- The Kirata Trial claims its waves outright (no adds — the god comes alone).
 	if Trial.isTrialWave(wave) then
 		announce({ waveState = "boss", wave = wave, bossName = Trial.Phase1.name, bossTitle = Trial.Phase1.title })
-		TrialBoss.begin(function()
+		TrialBoss.begin(wave, function()
 			if gen == waveGen then
 				onWaveClear(wave)
 			end

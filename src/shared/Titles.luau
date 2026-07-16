@@ -34,6 +34,7 @@ Titles.List = {
 	title({ id = "lord_feller", name = "Lord-Feller", requirement = "Fell 10 asura lords", kind = "bossKills", threshold = 10, color = { 235, 120, 90 } }),
 	title({ id = "rakshasa_slayer", name = "Rakshasa-Slayer", requirement = "Clear wave 25", kind = "wave", threshold = 25, color = { 130, 170, 255 } }),
 	title({ id = "blessed_mahadeva", name = "Blessed of Mahadeva", requirement = "Pass the Kirata Trial", kind = "trials", threshold = 1, color = { 255, 140, 50 } }),
+	title({ id = "tandava_witness", name = "Witness of the Tandava", requirement = "Pass the Trial twice", kind = "trials", threshold = 2, color = { 150, 200, 255 } }),
 	title({ id = "duelist", name = "Duelist", requirement = "Win 10 duels", kind = "duelWins", threshold = 10, color = { 255, 110, 140 } }),
 	title({ id = "maharathi", name = "Maharathi", requirement = "Reach level 30", kind = "level", threshold = 30, color = { 220, 190, 255 } }),
 	title({ id = "dharmapala", name = "Dharmapala", requirement = "Clear wave 50", kind = "wave", threshold = 50, color = { 255, 200, 40 } }),
