@@ -38,8 +38,10 @@ export type PlayerState = {
 	venomUntil: number,
 	curseUntil: number,
 	-- Lifetime records; playtimeMark is the os.clock() of the last playtime bank.
-	stats: { kills: number, bossKills: number, deaths: number, playtimeSeconds: number },
+	stats: { kills: number, bossKills: number, deaths: number, playtimeSeconds: number, trialsPassed: number },
 	playtimeMark: number,
+	-- Equipped title id ("" = bare head).
+	title: string,
 }
 
 local PlayerRegistry = {}
@@ -77,8 +79,9 @@ function PlayerRegistry.get(player: Player): PlayerState
 		dodgeUntil = 0,
 		venomUntil = 0,
 		curseUntil = 0,
-		stats = { kills = 0, bossKills = 0, deaths = 0, playtimeSeconds = 0 },
+		stats = { kills = 0, bossKills = 0, deaths = 0, playtimeSeconds = 0, trialsPassed = 0 },
 		playtimeMark = os.clock(),
+		title = "",
 	}
 	states[player] = state
 	return state

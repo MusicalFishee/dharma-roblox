@@ -5,7 +5,7 @@
 
 local PlayerData = {}
 
-PlayerData.Version = 6
+PlayerData.Version = 7
 
 -- Mirrors Shop.MaxTier (kept dependency-free for Lune; a test guards against drift).
 local MAX_TIER = 10
@@ -43,6 +43,7 @@ export type StatsSave = {
 	bossKills: number,
 	deaths: number,
 	playtimeSeconds: number,
+	trialsPassed: number,
 }
 
 export type DailySlot = {
@@ -80,6 +81,7 @@ export type Data = {
 	enchant: string, -- inscribed mantra id, "" when the weapon is unmarked
 	stats: StatsSave, -- lifetime records (kills, bosses, deaths, playtime)
 	dailies: DailiesSave, -- today's trials + progress (reset when stamp goes stale)
+	title: string, -- equipped title id, "" for a bare head
 }
 
 function PlayerData.default(): Data
@@ -93,8 +95,9 @@ function PlayerData.default(): Data
 		weapon = { id = "", tier = WEAPON_MIN_TIER },
 		shards = 0,
 		enchant = "",
-		stats = { kills = 0, bossKills = 0, deaths = 0, playtimeSeconds = 0 },
+		stats = { kills = 0, bossKills = 0, deaths = 0, playtimeSeconds = 0, trialsPassed = 0 },
 		dailies = { stamp = 0, slots = {} }, -- stamp 0 = stale, forces a fresh roll
+		title = "",
 	}
 end
 
@@ -142,6 +145,10 @@ function PlayerData.validate(raw: any): Data
 			d.stats.bossKills = cleanCount(raw.stats.bossKills)
 			d.stats.deaths = cleanCount(raw.stats.deaths)
 			d.stats.playtimeSeconds = cleanCount(raw.stats.playtimeSeconds)
+			d.stats.trialsPassed = cleanCount(raw.stats.trialsPassed)
+		end
+		if type(raw.title) == "string" and #raw.title <= 40 then
+			d.title = raw.title
 		end
 		if type(raw.dailies) == "table" then
 			d.dailies.stamp = cleanCount(raw.dailies.stamp)
@@ -172,7 +179,8 @@ function PlayerData.serialize(
 	shards: number?,
 	enchant: string?,
 	stats: StatsSave?,
-	dailies: DailiesSave?
+	dailies: DailiesSave?,
+	title: string?
 ): Data
 	local questsCopy: { QuestSlot } = {}
 	if quests then
@@ -204,6 +212,7 @@ function PlayerData.serialize(
 			bossKills = cleanCount(if stats then stats.bossKills else 0),
 			deaths = cleanCount(if stats then stats.deaths else 0),
 			playtimeSeconds = cleanCount(if stats then stats.playtimeSeconds else 0),
+			trialsPassed = cleanCount(if stats then stats.trialsPassed else 0),
 		},
 		dailies = {
 			stamp = cleanCount(if dailies then dailies.stamp else 0),
@@ -223,6 +232,7 @@ function PlayerData.serialize(
 				return out
 			end)(),
 		},
+		title = if type(title) == "string" and #title <= 40 then title else "",
 	}
 end
 

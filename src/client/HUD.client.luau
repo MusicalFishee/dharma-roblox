@@ -360,6 +360,14 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("You take up the %s — %s!", tostring(data.name), tostring(data.title)), YELLOW)
 		return
 	end
+	if data.titleEquipped then
+		if data.name ~= "" then
+			showToast(string.format("You now bear the title  « %s »", tostring(data.name)), YELLOW)
+		else
+			showToast("Title removed", Color3.fromRGB(170, 170, 170))
+		end
+		return
+	end
 
 	-- Vajra Shards (boss-kill mantra currency).
 	if data.shardUpdate then

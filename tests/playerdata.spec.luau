@@ -118,6 +118,14 @@ local drt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, 
 check("dailies round-trip through serialize", drt.dailies.stamp == 7 and drt.dailies.slots[1].id == "daily_parry" and drt.dailies.slots[1].progress == 5)
 check("serialize without dailies -> stale empty", PlayerData.serialize(1, 1).dailies.stamp == 0 and #PlayerData.serialize(1, 1).dailies.slots == 0)
 
+-- Title + trialsPassed (added with the title system).
+check("default title empty, no trials", PlayerData.default().title == "" and PlayerData.default().stats.trialsPassed == 0)
+check("valid title preserved", PlayerData.validate({ title = "dharmapala" }).title == "dharmapala")
+check("junk title rejected", PlayerData.validate({ title = 42 }).title == "" and PlayerData.validate({ title = string.rep("t", 41) }).title == "")
+check("trialsPassed validated", PlayerData.validate({ stats = { trialsPassed = 3 } }).stats.trialsPassed == 3 and PlayerData.validate({ stats = { trialsPassed = -1 } }).stats.trialsPassed == 0)
+local trt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", { kills = 0, bossKills = 0, deaths = 0, playtimeSeconds = 0, trialsPassed = 2 }, nil, "blessed_mahadeva"))
+check("title + trials round-trip through serialize", trt.title == "blessed_mahadeva" and trt.stats.trialsPassed == 2)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

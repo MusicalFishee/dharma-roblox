@@ -288,6 +288,7 @@ local function bless(st: FightState, onClear: () -> ())
 		local pstate = PlayerRegistry.get(p)
 		pstate.curseUntil = 0
 		pstate.venomUntil = 0
+		pstate.stats.trialsPassed += 1 -- unlocks the Blessed of Mahadeva title line
 		pstate.shards += Trial.Reward.shards
 		Net.CombatFeedback:FireClient(p, { shardUpdate = true, gained = Trial.Reward.shards, shards = pstate.shards })
 		ProgressionService.awardXp(p, Trial.Reward.xp)

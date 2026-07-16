@@ -160,6 +160,10 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play("levelUp")
 		return
 	end
+	if data.titleEquipped then
+		play("shopBuy")
+		return
+	end
 	if data.shardUpdate then
 		play("amritPickup")
 		return

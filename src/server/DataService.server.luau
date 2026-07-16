@@ -54,7 +54,9 @@ local function loadPlayer(player: Player)
 		bossKills = data.stats.bossKills,
 		deaths = data.stats.deaths,
 		playtimeSeconds = data.stats.playtimeSeconds,
+		trialsPassed = data.stats.trialsPassed,
 	}
+	state.title = data.title
 	state.playtimeMark = os.clock() -- playtime accrues from the moment the save lands
 	state.bestWave = data.bestWave
 	state.quests = data.quests
@@ -97,12 +99,14 @@ local function savePlayer(player: Player)
 		bossKills = state.stats.bossKills,
 		deaths = state.stats.deaths,
 		playtimeSeconds = state.stats.playtimeSeconds,
+		trialsPassed = state.stats.trialsPassed,
 	}
 	local dailies = state.dailies
+	local titleId = state.title
 
 	retry(function()
 		return store:UpdateAsync(keyFor(player), function(old: any)
-			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave, quests, weapon, shards, enchant, stats, dailies)
+			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave, quests, weapon, shards, enchant, stats, dailies, titleId)
 			-- Never roll back XP or bestWave: keep whichever is higher.
 			-- (Gold is NOT anti-rollbacked — the shop legitimately spends it.)
 			if type(old) == "table" then

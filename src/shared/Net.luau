@@ -32,6 +32,8 @@ local Net = {
 	EnchantRequest = ensureRemote("EnchantRequest"),
 	-- client -> server: stats page requests ({action="info"})
 	StatsRequest = ensureRemote("StatsRequest"),
+	-- client -> server: title actions ({action="list"} or {action="equip", id=...})
+	TitleRequest = ensureRemote("TitleRequest"),
 	-- client -> server: current guard state (blocking / dodging)
 	DefenseState = ensureRemote("DefenseState"),
 	-- server -> client: HUD feedback (combo count, tejas, outcome text)
