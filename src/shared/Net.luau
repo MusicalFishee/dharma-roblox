@@ -38,6 +38,8 @@ local Net = {
 	PvPRequest = ensureRemote("PvPRequest"),
 	-- client -> server: Astra Path actions ({action="info"} or {action="choose", id=...})
 	PathRequest = ensureRemote("PathRequest"),
+	-- client -> server: relic actions ({action="info"} or {action="equip", slot=..., id=...})
+	RelicRequest = ensureRemote("RelicRequest"),
 	-- client -> server: current guard state (blocking / dodging)
 	DefenseState = ensureRemote("DefenseState"),
 	-- server -> client: HUD feedback (combo count, tejas, outcome text)

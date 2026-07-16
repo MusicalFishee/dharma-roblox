@@ -7,6 +7,7 @@ local Net = require(ReplicatedStorage.Shared.Net)
 local Progression = require(ReplicatedStorage.Shared.Progression)
 local Shop = require(ReplicatedStorage.Shared.Shop)
 local Paths = require(ReplicatedStorage.Shared.Paths)
+local Relics = require(ReplicatedStorage.Shared.Relics)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 
 local BASE_WALK_SPEED = 16
@@ -24,7 +25,8 @@ local function applyLevelStats(player: Player, level: number, fullHeal: boolean)
 	end
 	local state = PlayerRegistry.get(player)
 	local passive = Paths.passiveOf(state.path)
-	humanoid.MaxHealth = Progression.maxHealthForLevel(level) + Shop.healthBonus(state.upgrades.health) + passive.healthBonus
+	local relicBonus = Relics.totalBonus(Relics.equippedList(state.relics.equipped))
+	humanoid.MaxHealth = Progression.maxHealthForLevel(level) + Shop.healthBonus(state.upgrades.health) + passive.healthBonus + relicBonus.healthBonus
 	humanoid.WalkSpeed = BASE_WALK_SPEED * passive.speedMult
 	if fullHeal then
 		humanoid.Health = humanoid.MaxHealth

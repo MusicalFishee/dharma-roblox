@@ -5,7 +5,10 @@
 
 local PlayerData = {}
 
-PlayerData.Version = 9
+PlayerData.Version = 10
+
+-- Mirrors Relics.MaxOwned (dependency-free; a test guards against drift).
+local RELICS_MAX_OWNED = 40
 
 -- Mirrors Shop.MaxTier (kept dependency-free for Lune; a test guards against drift).
 local MAX_TIER = 10
@@ -84,7 +87,38 @@ export type Data = {
 	dailies: DailiesSave, -- today's trials + progress (reset when stamp goes stale)
 	title: string, -- equipped title id, "" for a bare head
 	path: string, -- sworn Astra Path id, "" while unsworn
+	relics: RelicsSave, -- the satchel + what's worn in each slot
 }
+
+export type RelicsSave = {
+	owned: { string },
+	equipped: { crown: string, kavacha: string, charm: string },
+}
+
+local function cleanRelics(raw: any): RelicsSave
+	local out: RelicsSave = { owned = {}, equipped = { crown = "", kavacha = "", charm = "" } }
+	if type(raw) ~= "table" then
+		return out
+	end
+	if type(raw.owned) == "table" then
+		local seen: { [string]: boolean } = {}
+		for _, id in raw.owned do
+			if type(id) == "string" and #id > 0 and #id <= 40 and not seen[id] and #out.owned < RELICS_MAX_OWNED then
+				seen[id] = true
+				table.insert(out.owned, id)
+			end
+		end
+	end
+	if type(raw.equipped) == "table" then
+		for _, slot in { "crown", "kavacha", "charm" } do
+			local id = raw.equipped[slot]
+			if type(id) == "string" and #id <= 40 then
+				(out.equipped :: any)[slot] = id
+			end
+		end
+	end
+	return out
+end
 
 function PlayerData.default(): Data
 	return {
@@ -101,6 +135,7 @@ function PlayerData.default(): Data
 		dailies = { stamp = 0, slots = {} }, -- stamp 0 = stale, forces a fresh roll
 		title = "",
 		path = "",
+		relics = { owned = {}, equipped = { crown = "", kavacha = "", charm = "" } },
 	}
 end
 
@@ -157,6 +192,7 @@ function PlayerData.validate(raw: any): Data
 		if type(raw.path) == "string" and #raw.path <= 20 then
 			d.path = raw.path
 		end
+		d.relics = cleanRelics(raw.relics)
 		if type(raw.dailies) == "table" then
 			d.dailies.stamp = cleanCount(raw.dailies.stamp)
 			if type(raw.dailies.slots) == "table" then
@@ -188,7 +224,8 @@ function PlayerData.serialize(
 	stats: StatsSave?,
 	dailies: DailiesSave?,
 	title: string?,
-	path: string?
+	path: string?,
+	relics: RelicsSave?
 ): Data
 	local questsCopy: { QuestSlot } = {}
 	if quests then
@@ -243,6 +280,7 @@ function PlayerData.serialize(
 		},
 		title = if type(title) == "string" and #title <= 40 then title else "",
 		path = if type(path) == "string" and #path <= 20 then path else "",
+		relics = cleanRelics(relics),
 	}
 end
 

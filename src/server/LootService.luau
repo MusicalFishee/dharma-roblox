@@ -9,6 +9,7 @@ local TweenService = game:GetService("TweenService")
 
 local Net = require(ReplicatedStorage.Shared.Net)
 local Loot = require(ReplicatedStorage.Shared.Loot)
+local Relics = require(ReplicatedStorage.Shared.Relics)
 local EnemyTypes = require(ReplicatedStorage.Shared.EnemyTypes)
 local StatusEffects = require(ReplicatedStorage.Shared.StatusEffects)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
@@ -69,9 +70,11 @@ function LootService.dropAt(position: Vector3, archetype: EnemyTypes.EnemyArchet
 	)
 	onFirstTouch(goldOrb, function(player: Player)
 		local state = PlayerRegistry.get(player)
-		state.gold = Loot.clampGold(state.gold + gold)
-		Net.CombatFeedback:FireClient(player, { goldUpdate = true, gained = gold, gold = state.gold })
-		QuestService.onGold(player, gold)
+		-- The Tyrant's Regalia and kin: worn relics fatten every orb you claim.
+		local gained = math.floor(gold * Relics.totalBonus(Relics.equippedList(state.relics.equipped)).goldMult)
+		state.gold = Loot.clampGold(state.gold + gained)
+		Net.CombatFeedback:FireClient(player, { goldUpdate = true, gained = gained, gold = state.gold })
+		QuestService.onGold(player, gained)
 	end)
 
 	-- Occasional Amrit orb: heals on pickup.

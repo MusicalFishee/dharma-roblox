@@ -8,6 +8,7 @@ local Combat = require(ReplicatedStorage.Shared.Combat)
 local ProgressionService = require(script.Parent.ProgressionService)
 require(script.Parent.WeaponService) -- activates the armory (weapon build/weld + choice remote)
 require(script.Parent.PathService) -- activates the Astra Path oath + respec remote
+require(script.Parent.RelicService) -- activates relic drops + the satchel remote
 
 print(string.format(
 	"[Dharma] Server up. Combat loaded — light=%d heavy=%d Astra cost=%d",

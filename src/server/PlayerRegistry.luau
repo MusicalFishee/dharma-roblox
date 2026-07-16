@@ -49,6 +49,8 @@ export type PlayerState = {
 	playtimeMark: number,
 	-- Equipped title id ("" = bare head).
 	title: string,
+	-- Relic satchel + worn pieces (bonuses read via Relics.totalBonus).
+	relics: { owned: { string }, equipped: { crown: string, kavacha: string, charm: string } },
 }
 
 local PlayerRegistry = {}
@@ -94,6 +96,7 @@ function PlayerRegistry.get(player: Player): PlayerState
 		stats = { kills = 0, bossKills = 0, deaths = 0, playtimeSeconds = 0, trialsPassed = 0, duelWins = 0 },
 		playtimeMark = os.clock(),
 		title = "",
+		relics = { owned = {}, equipped = { crown = "", kavacha = "", charm = "" } },
 	}
 	states[player] = state
 	return state

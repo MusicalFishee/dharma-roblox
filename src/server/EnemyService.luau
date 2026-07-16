@@ -18,10 +18,12 @@ local Enchants = require(ReplicatedStorage.Shared.Enchants)
 local Paths = require(ReplicatedStorage.Shared.Paths)
 local Loot = require(ReplicatedStorage.Shared.Loot)
 local StatusEffects = require(ReplicatedStorage.Shared.StatusEffects)
+local Relics = require(ReplicatedStorage.Shared.Relics)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local ProgressionService = require(script.Parent.ProgressionService)
 local LootService = require(script.Parent.LootService)
 local QuestService = require(script.Parent.QuestService)
+local RelicService = require(script.Parent.RelicService)
 
 local ENEMY_TAG = "DharmaEnemy"
 
@@ -155,19 +157,20 @@ local function resolveHitOnPlayer(
 
 	local resolution = Combat.resolveIncomingAttack(damage, state)
 	local ench = Enchants.effects(pstate.enchant)
+	local relicBonus = Relics.totalBonus(Relics.equippedList(pstate.relics.equipped))
 
 	if resolution.damage > 0 then
 		-- Stoneskin Sutra and kin: the defender's mantra soaks part of the blow;
-		-- an active shield ward (Zephyr Veil) soaks its share on top.
+		-- an active shield ward (Zephyr Veil) and worn relics soak their share on top.
 		local ward = if now < pstate.wardUntil then pstate.wardMult else 1
-		playerHum:TakeDamage(resolution.damage * (ench.damageTakenMult or 1) * ward)
+		playerHum:TakeDamage(resolution.damage * (ench.damageTakenMult or 1) * ward * relicBonus.damageTakenMult)
 		local char = player.Character
 		if char and resolution.outcome == "Hit" then
 			Net.AnimEvent:FireAllClients(char, "flinch")
 		end
 	end
 	if resolution.defenderTejasGain > 0 then
-		pstate.tejas = Combat.clampTejas(pstate.tejas + resolution.defenderTejasGain * (ench.tejasMult or 1) * Paths.passiveOf(pstate.path).tejasMult)
+		pstate.tejas = Combat.clampTejas(pstate.tejas + resolution.defenderTejasGain * (ench.tejasMult or 1) * Paths.passiveOf(pstate.path).tejasMult * relicBonus.tejasMult)
 	end
 	if resolution.outcome == "Parry" then
 		QuestService.onParry(player)
@@ -457,7 +460,8 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 					if res.damage > 0 then
 						local vench = Enchants.effects(vstate.enchant)
 						local vward = if os.clock() < vstate.wardUntil then vstate.wardMult else 1
-						hum:TakeDamage(res.damage * (vench.damageTakenMult or 1) * vward)
+						local vrelic = Relics.totalBonus(Relics.equippedList(vstate.relics.equipped))
+						hum:TakeDamage(res.damage * (vench.damageTakenMult or 1) * vward * vrelic.damageTakenMult)
 						Net.AnimEvent:FireAllClients(char, "flinch")
 						-- Shockwave knockback, away from the blast centre.
 						if hrp and hrp:IsA("BasePart") then
@@ -523,6 +527,13 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 
 		if archetype.isBoss then
 			broadcastAll({ bossState = "defeated", bossName = archetype.displayName })
+		end
+
+		-- Relics: a fallen boss lets EVERYONE roll; a fallen elite, its killer.
+		if archetype.isBoss then
+			RelicService.onBossDefeated(archetype.id)
+		elseif archetype.isElite == true and killer then
+			RelicService.onEliteKilled(killer)
 		end
 
 		-- Venomous corpses melt into a toxic pool — stand clear while it looses.

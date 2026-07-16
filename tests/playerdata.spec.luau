@@ -135,6 +135,20 @@ local prt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, 
 check("path round-trips through serialize", prt.path == "varuna")
 check("serialize without path -> unsworn", PlayerData.serialize(1, 1).path == "")
 
+-- Relics (added with the relic system, v10).
+local rdef = PlayerData.default().relics
+check("default satchel empty + bare", #rdef.owned == 0 and rdef.equipped.crown == "" and rdef.equipped.kavacha == "" and rdef.equipped.charm == "")
+local rval = PlayerData.validate({ relics = { owned = { "baka_crown", "baka_crown", 42, "charm_vetala" }, equipped = { crown = "baka_crown", kavacha = 7 } } })
+check("owned dedupes + drops junk", #rval.relics.owned == 2 and rval.relics.owned[1] == "baka_crown" and rval.relics.owned[2] == "charm_vetala")
+check("equipped keeps strings, clears junk", rval.relics.equipped.crown == "baka_crown" and rval.relics.equipped.kavacha == "")
+local overfull = {}
+for i = 1, 60 do
+	table.insert(overfull, "relic" .. i)
+end
+check("owned capped at 40", #PlayerData.validate({ relics = { owned = overfull } }).relics.owned == 40)
+local rrt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", { owned = { "mahisha_crown" }, equipped = { crown = "mahisha_crown", kavacha = "", charm = "" } }))
+check("relics round-trip through serialize", #rrt.relics.owned == 1 and rrt.relics.equipped.crown == "mahisha_crown")
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

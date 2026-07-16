@@ -372,6 +372,17 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(why, Color3.fromRGB(200, 120, 120))
 		return
 	end
+	if data.relicDrop then
+		if data.dupe then
+			showToast(string.format("%s dissolves into gold  (+%d)", tostring(data.name), data.gold), YELLOW)
+		else
+			local rarityColor = if typeof(data.color) == "table"
+				then Color3.fromRGB(data.color[1], data.color[2], data.color[3])
+				else YELLOW
+			showToast(string.format("RELIC:  %s!   (I to equip)", tostring(data.name)), rarityColor)
+		end
+		return
+	end
 	-- Honor duels.
 	if data.pvp then
 		local PINK = Color3.fromRGB(255, 110, 140)
