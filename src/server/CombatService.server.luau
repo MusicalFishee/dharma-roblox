@@ -11,7 +11,10 @@ local Shop = require(ReplicatedStorage.Shared.Shop)
 local Weapons = require(ReplicatedStorage.Shared.Weapons)
 local Enchants = require(ReplicatedStorage.Shared.Enchants)
 local StatusEffects = require(ReplicatedStorage.Shared.StatusEffects)
+local PvP = require(ReplicatedStorage.Shared.PvP)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
+local PvPService = require(script.Parent.PvPService)
+local EnemyService = require(script.Parent.EnemyService)
 
 local Debris = game:GetService("Debris")
 
@@ -135,7 +138,25 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 	Net.AnimEvent:FireAllClients(character, "combo" .. math.clamp(swing.index, 1, 4))
 
 	local targets = findTargets(root)
-	if #targets == 0 then
+
+	-- A live duel foe within reach and arc is also a valid target.
+	local foe = PvPService.duelOpponentOf(player)
+	local foeRoot: BasePart? = nil
+	local foeHum: Humanoid? = nil
+	if foe then
+		local fchar = foe.Character
+		local fr = fchar and getRoot(fchar)
+		local fh = fchar and fchar:FindFirstChildOfClass("Humanoid")
+		if fr and fh and fh.Health > 0 then
+			local offset = fr.Position - root.Position
+			local d = offset.Magnitude
+			if d <= MELEE_REACH and (d <= 0.01 or root.CFrame.LookVector:Dot(offset.Unit) >= MELEE_ARC_DOT) then
+				foeRoot, foeHum = fr, fh
+			end
+		end
+	end
+
+	if #targets == 0 and not foeHum then
 		Net.CombatFeedback:FireClient(player, { outcome = "Whiff", chain = swing.index })
 		return
 	end
@@ -200,6 +221,20 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 			dir = Vector3.new(dir.X, 0, dir.Z)
 			dir = if dir.Magnitude > 0.01 then dir.Unit else root.CFrame.LookVector
 			hrp.AssemblyLinearVelocity = dir * 60 + Vector3.new(0, 30, 0)
+		end
+	end
+
+	-- The duel foe: softened damage through the SAME defense pipeline — they can
+	-- dodge, block, and parry you. Mantras' PvE teeth (burn/execute/lifesteal/proc)
+	-- stay out of duels; this is a contest of skill, not of luck.
+	if foe and foeRoot and foeHum then
+		EnemyService.resolveHitOnPlayer(foe, foeRoot, foeHum, damage * PvP.Config.DamageMult, root.Position, nil)
+		state.tejas = Combat.clampTejas(state.tejas + Combat.Config.TejasPerHitLanded * (ench.tejasMult or 1))
+		if swing.isFinisher then
+			local dir = foeRoot.Position - root.Position
+			dir = Vector3.new(dir.X, 0, dir.Z)
+			dir = if dir.Magnitude > 0.01 then dir.Unit else root.CFrame.LookVector
+			foeRoot.AssemblyLinearVelocity = dir * 60 + Vector3.new(0, 30, 0)
 		end
 	end
 

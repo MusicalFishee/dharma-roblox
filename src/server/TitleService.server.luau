@@ -21,6 +21,7 @@ local function snapshotOf(player: Player): Titles.Snapshot
 		bossKills = state.stats.bossKills,
 		level = Progression.resolve(state.totalXp).level,
 		trials = state.stats.trialsPassed,
+		duelWins = state.stats.duelWins,
 	}
 end
 

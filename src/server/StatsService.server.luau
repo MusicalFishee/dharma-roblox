@@ -36,6 +36,7 @@ Net.StatsRequest.OnServerEvent:Connect(function(player: Player, data: any)
 		kills = state.stats.kills,
 		bossKills = state.stats.bossKills,
 		deaths = state.stats.deaths,
+		duelWins = state.stats.duelWins,
 		bestWave = state.bestWave,
 		playtimeSeconds = playtime,
 	})

@@ -123,6 +123,7 @@ check("default title empty, no trials", PlayerData.default().title == "" and Pla
 check("valid title preserved", PlayerData.validate({ title = "dharmapala" }).title == "dharmapala")
 check("junk title rejected", PlayerData.validate({ title = 42 }).title == "" and PlayerData.validate({ title = string.rep("t", 41) }).title == "")
 check("trialsPassed validated", PlayerData.validate({ stats = { trialsPassed = 3 } }).stats.trialsPassed == 3 and PlayerData.validate({ stats = { trialsPassed = -1 } }).stats.trialsPassed == 0)
+check("duelWins validated + defaulted", PlayerData.validate({ stats = { duelWins = 7 } }).stats.duelWins == 7 and PlayerData.default().stats.duelWins == 0 and PlayerData.validate({ stats = { duelWins = "lots" } }).stats.duelWins == 0)
 local trt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", { kills = 0, bossKills = 0, deaths = 0, playtimeSeconds = 0, trialsPassed = 2 }, nil, "blessed_mahadeva"))
 check("title + trials round-trip through serialize", trt.title == "blessed_mahadeva" and trt.stats.trialsPassed == 2)
 

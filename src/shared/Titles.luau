@@ -12,6 +12,7 @@ export type Snapshot = {
 	bossKills: number,
 	level: number,
 	trials: number, -- Kirata Trials passed
+	duelWins: number,
 }
 
 export type TitleDef = {
@@ -33,6 +34,7 @@ Titles.List = {
 	title({ id = "lord_feller", name = "Lord-Feller", requirement = "Fell 10 asura lords", kind = "bossKills", threshold = 10, color = { 235, 120, 90 } }),
 	title({ id = "rakshasa_slayer", name = "Rakshasa-Slayer", requirement = "Clear wave 25", kind = "wave", threshold = 25, color = { 130, 170, 255 } }),
 	title({ id = "blessed_mahadeva", name = "Blessed of Mahadeva", requirement = "Pass the Kirata Trial", kind = "trials", threshold = 1, color = { 255, 140, 50 } }),
+	title({ id = "duelist", name = "Duelist", requirement = "Win 10 duels", kind = "duelWins", threshold = 10, color = { 255, 110, 140 } }),
 	title({ id = "maharathi", name = "Maharathi", requirement = "Reach level 30", kind = "level", threshold = 30, color = { 220, 190, 255 } }),
 	title({ id = "dharmapala", name = "Dharmapala", requirement = "Clear wave 50", kind = "wave", threshold = 50, color = { 255, 200, 40 } }),
 	title({ id = "world_cleaver", name = "World-Cleaver", requirement = "Slay 1000 demons", kind = "kills", threshold = 1000, color = { 240, 90, 220 } }),
@@ -61,6 +63,8 @@ local function statFor(kind: string, snap: Snapshot): number
 		return snap.level
 	elseif kind == "trials" then
 		return snap.trials
+	elseif kind == "duelWins" then
+		return snap.duelWins
 	end
 	return 0
 end

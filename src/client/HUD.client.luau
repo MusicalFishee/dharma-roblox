@@ -360,6 +360,34 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("You take up the %s — %s!", tostring(data.name), tostring(data.title)), YELLOW)
 		return
 	end
+	-- Honor duels.
+	if data.pvp then
+		local PINK = Color3.fromRGB(255, 110, 140)
+		if data.pvp == "sent" then
+			showToast(string.format("Challenge sent to %s", tostring(data.toName)), PINK)
+		elseif data.pvp == "declined" then
+			showToast(string.format("%s declined your challenge", tostring(data.byName)), Color3.fromRGB(170, 170, 170))
+		elseif data.pvp == "expired" then
+			showToast(string.format("Your challenge to %s expired", tostring(data.toName)), Color3.fromRGB(170, 170, 170))
+		elseif data.pvp == "denied" then
+			local why = if data.reason == "targetBusy" then "They're already spoken for" else "You're already spoken for"
+			showToast(why, Color3.fromRGB(200, 120, 120))
+		elseif data.pvp == "countdown" then
+			showToast(string.format("DUEL BEGINS IN %d…", data.n), PINK)
+		elseif data.pvp == "begin" then
+			showToast(string.format("⚔  FIGHT!  %s awaits your blade", tostring(data.foeName)), PINK)
+		elseif data.pvp == "won" then
+			showToast(string.format("VICTORY!  You bested %s", tostring(data.foeName)), YELLOW)
+		elseif data.pvp == "lost" then
+			showToast(string.format("Defeated by %s — honor them", tostring(data.foeName)), RED)
+		elseif data.pvp == "draw" then
+			showToast("The duel ends in a draw", Color3.fromRGB(170, 170, 170))
+		elseif data.pvp == "announce" then
+			showToast(string.format("⚔  %s has bested %s in a duel!", tostring(data.winner), tostring(data.loser)), PINK)
+		end
+		return
+	end
+
 	if data.titleEquipped then
 		if data.name ~= "" then
 			showToast(string.format("You now bear the title  « %s »", tostring(data.name)), YELLOW)

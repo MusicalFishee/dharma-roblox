@@ -55,6 +55,7 @@ local function loadPlayer(player: Player)
 		deaths = data.stats.deaths,
 		playtimeSeconds = data.stats.playtimeSeconds,
 		trialsPassed = data.stats.trialsPassed,
+		duelWins = data.stats.duelWins,
 	}
 	state.title = data.title
 	state.playtimeMark = os.clock() -- playtime accrues from the moment the save lands
@@ -100,6 +101,7 @@ local function savePlayer(player: Player)
 		deaths = state.stats.deaths,
 		playtimeSeconds = state.stats.playtimeSeconds,
 		trialsPassed = state.stats.trialsPassed,
+		duelWins = state.stats.duelWins,
 	}
 	local dailies = state.dailies
 	local titleId = state.title

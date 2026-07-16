@@ -16,8 +16,11 @@ local Net = require(ReplicatedStorage.Shared.Net)
 local Abilities = require(ReplicatedStorage.Shared.Abilities)
 local Progression = require(ReplicatedStorage.Shared.Progression)
 local StatusEffects = require(ReplicatedStorage.Shared.StatusEffects)
+local PvP = require(ReplicatedStorage.Shared.PvP)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local QuestService = require(script.Parent.QuestService)
+local PvPService = require(script.Parent.PvPService)
+local EnemyService = require(script.Parent.EnemyService)
 
 local ENEMY_TAG = "DharmaEnemy"
 local ASTRA_SPEED = 90
@@ -84,18 +87,36 @@ local function castAgniAstra(player: Player, character: Model, root: BasePart)
 			return
 		end
 		local model = other:FindFirstAncestorOfClass("Model")
-		if not model or model == character or not CollectionService:HasTag(model, ENEMY_TAG) then
+		if not model or model == character then
 			return
 		end
-		local humanoid = model:FindFirstChildOfClass("Humanoid")
-		if not humanoid or humanoid.Health <= 0 then
+
+		-- Enemies burn as always.
+		if CollectionService:HasTag(model, ENEMY_TAG) then
+			local humanoid = model:FindFirstChildOfClass("Humanoid")
+			if not humanoid or humanoid.Health <= 0 then
+				return
+			end
+			spent = true
+			conn:Disconnect()
+			model:SetAttribute("LastAttacker", player.UserId)
+			humanoid:TakeDamage(cfg.power)
+			bolt:Destroy()
 			return
 		end
-		spent = true
-		conn:Disconnect()
-		model:SetAttribute("LastAttacker", player.UserId)
-		humanoid:TakeDamage(cfg.power)
-		bolt:Destroy()
+
+		-- A live duel foe can eat the bolt too (softened, dodgeable, blockable).
+		local foe = PvPService.duelOpponentOf(player)
+		if foe and foe.Character == model then
+			local hum = model:FindFirstChildOfClass("Humanoid")
+			local froot = model:FindFirstChild("HumanoidRootPart")
+			if hum and hum.Health > 0 and froot and froot:IsA("BasePart") then
+				spent = true
+				conn:Disconnect()
+				EnemyService.resolveHitOnPlayer(foe, froot, hum, cfg.power * PvP.Config.DamageMult, bolt.Position, nil)
+				bolt:Destroy()
+			end
+		end
 	end)
 end
 

@@ -34,6 +34,8 @@ local Net = {
 	StatsRequest = ensureRemote("StatsRequest"),
 	-- client -> server: title actions ({action="list"} or {action="equip", id=...})
 	TitleRequest = ensureRemote("TitleRequest"),
+	-- client -> server: duel actions ({action="list"|"challenge"|"accept"|"decline", userId=...})
+	PvPRequest = ensureRemote("PvPRequest"),
 	-- client -> server: current guard state (blocking / dodging)
 	DefenseState = ensureRemote("DefenseState"),
 	-- server -> client: HUD feedback (combo count, tejas, outcome text)

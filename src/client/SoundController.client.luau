@@ -169,6 +169,22 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play("shopBuy")
 		return
 	end
+	if data.pvp == "countdown" then
+		play("guardUp")
+		return
+	end
+	if data.pvp == "begin" then
+		play("bossSpawn")
+		return
+	end
+	if data.pvp == "won" then
+		play("bossDefeated")
+		return
+	end
+	if data.pvp == "lost" then
+		play("playerDown")
+		return
+	end
 	if data.shardUpdate then
 		play("amritPickup")
 		return

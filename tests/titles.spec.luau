@@ -19,7 +19,7 @@ local function check(name: string, cond: boolean)
 end
 
 local function snap(over: { [string]: number }): Titles.Snapshot
-	local s: Titles.Snapshot = { bestWave = 0, kills = 0, bossKills = 0, level = 1, trials = 0 }
+	local s: Titles.Snapshot = { bestWave = 0, kills = 0, bossKills = 0, level = 1, trials = 0, duelWins = 0 }
 	for k, v in over do
 		(s :: any)[k] = v
 	end
@@ -32,7 +32,7 @@ print("Titles")
 check("there are titles worth chasing", #Titles.List >= 6)
 local ids: { [string]: boolean } = {}
 local unique, wellFormed = true, true
-local knownKinds = { wave = true, kills = true, bossKills = true, level = true, trials = true }
+local knownKinds = { wave = true, kills = true, bossKills = true, level = true, trials = true, duelWins = true }
 for _, def in Titles.List do
 	if ids[def.id] then
 		unique = false
@@ -50,7 +50,7 @@ local kindsSeen: { [string]: boolean } = {}
 for _, def in Titles.List do
 	kindsSeen[def.kind] = true
 end
-check("every requirement kind is used", kindsSeen.wave == true and kindsSeen.kills == true and kindsSeen.bossKills == true and kindsSeen.level == true and kindsSeen.trials == true)
+check("every requirement kind is used", kindsSeen.wave == true and kindsSeen.kills == true and kindsSeen.bossKills == true and kindsSeen.level == true and kindsSeen.trials == true and kindsSeen.duelWins == true)
 
 -- Unlock math, one per kind.
 local dharmapala = Titles.get("dharmapala") :: Titles.TitleDef
@@ -64,6 +64,8 @@ local maharathi = Titles.get("maharathi") :: Titles.TitleDef
 check("level title reads level", Titles.isUnlocked(maharathi, snap({ level = 30 })) and not Titles.isUnlocked(maharathi, snap({ level = 29 })))
 local blessed = Titles.get("blessed_mahadeva") :: Titles.TitleDef
 check("trial title needs the trial", Titles.isUnlocked(blessed, snap({ trials = 1 })) and not Titles.isUnlocked(blessed, snap({ bestWave = 100 })))
+local duelist = Titles.get("duelist") :: Titles.TitleDef
+check("duelist counts duel wins", Titles.isUnlocked(duelist, snap({ duelWins = 10 })) and not Titles.isUnlocked(duelist, snap({ duelWins = 9, kills = 9999 })))
 
 -- Equip validation.
 check("bare head is always allowed", Titles.canEquip("", snap({})))
