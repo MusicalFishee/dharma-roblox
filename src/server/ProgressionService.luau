@@ -8,6 +8,7 @@ local Progression = require(ReplicatedStorage.Shared.Progression)
 local Shop = require(ReplicatedStorage.Shared.Shop)
 local Paths = require(ReplicatedStorage.Shared.Paths)
 local Relics = require(ReplicatedStorage.Shared.Relics)
+local Ranks = require(ReplicatedStorage.Shared.Ranks)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 
 local BASE_WALK_SPEED = 16
@@ -26,7 +27,9 @@ local function applyLevelStats(player: Player, level: number, fullHeal: boolean)
 	local state = PlayerRegistry.get(player)
 	local passive = Paths.passiveOf(state.path)
 	local relicBonus = Relics.totalBonus(Relics.equippedList(state.relics.equipped))
-	humanoid.MaxHealth = Progression.maxHealthForLevel(level) + Shop.healthBonus(state.upgrades.health) + passive.healthBonus + relicBonus.healthBonus
+	local rankIndex = Ranks.rankFor(level)
+	local rankBoon = Ranks.boonFor(rankIndex)
+	humanoid.MaxHealth = Progression.maxHealthForLevel(level) + Shop.healthBonus(state.upgrades.health) + passive.healthBonus + relicBonus.healthBonus + rankBoon.healthBonus
 	humanoid.WalkSpeed = BASE_WALK_SPEED * passive.speedMult
 	if fullHeal then
 		humanoid.Health = humanoid.MaxHealth
@@ -78,6 +81,12 @@ function ProgressionService.awardXp(player: Player, amount: number)
 			level = after.level,
 			tejas = state.tejas,
 		})
+		-- Crossing into a new Varna: the ceremony, and the permanent boon with it.
+		local beforeRank = Ranks.rankFor(before.level)
+		local afterRank, afterDef = Ranks.rankFor(after.level)
+		if afterRank > beforeRank then
+			Net.CombatFeedback:FireClient(player, { rankUp = true, name = afterDef.name, line = afterDef.line })
+		end
 	end
 
 	ProgressionService.sync(player)

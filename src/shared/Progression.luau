@@ -4,7 +4,7 @@
 
 local Progression = {}
 
-Progression.MaxLevel = 60
+Progression.MaxLevel = 100
 
 -- XP needed to go FROM `level` to `level + 1`. Rises smoothly so early levels
 -- are fast (hook the player) and later levels are a real grind.

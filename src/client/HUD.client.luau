@@ -8,6 +8,7 @@ local TweenService = game:GetService("TweenService")
 local Net = require(ReplicatedStorage.Shared.Net)
 local Combat = require(ReplicatedStorage.Shared.Combat)
 local Bhoota = require(ReplicatedStorage.Shared.Bhoota)
+local Ranks = require(ReplicatedStorage.Shared.Ranks)
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -388,9 +389,11 @@ local function updateProgress(level: number, xpInto: number, xpForNext: number, 
 	local pct = if isMax then 1 elseif xpForNext > 0 then math.clamp(xpInto / xpForNext, 0, 1) else 0
 	TweenService:Create(xpFill, TweenInfo.new(0.25), { Size = UDim2.new(pct, 0, 1, 0) }):Play()
 	if isMax then
-		levelLabel.Text = string.format("Lv %d  (MAX)", level)
+		local _, maxRank = Ranks.rankFor(level)
+		levelLabel.Text = string.format("Lv %d · %s  (MAX)", level, maxRank.name)
 	else
-		levelLabel.Text = string.format("Lv %d    %d / %d XP", level, math.floor(xpInto), math.floor(xpForNext))
+		local _, curRank = Ranks.rankFor(level)
+		levelLabel.Text = string.format("Lv %d · %s    %d / %d XP", level, curRank.name, math.floor(xpInto), math.floor(xpForNext))
 	end
 end
 
@@ -620,6 +623,10 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 			bits ..= string.format("  +%d ◆", data.shards)
 		end
 		showToast(string.format("AGNIHOTRA — day %d of devotion   (%s)", data.day, bits), SAFFRON)
+		return
+	end
+	if data.rankUp then
+		showToast(string.format("VARNA ASCENDED —  %s, %s", tostring(data.name), tostring(data.line)), YELLOW)
 		return
 	end
 	if data.tutorialDone then

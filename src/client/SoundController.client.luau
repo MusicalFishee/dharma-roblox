@@ -209,6 +209,10 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play("levelUp")
 		return
 	end
+	if data.rankUp then
+		play("thunderCrack")
+		return
+	end
 	if data.waveGrade == "S" then
 		play("thunderCrack")
 		return
