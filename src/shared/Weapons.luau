@@ -104,7 +104,34 @@ end
 -- Clamp a persisted tier into the valid range.
 function Weapons.clampTier(value: any): number
 	if type(value) ~= "number" or value ~= value then
-		return Weapons.MinTier
+		
+-- ---------------------------------------------------------------------------
+-- Signatures: what a weapon DOES, beyond what it shows. One identity each.
+-- ---------------------------------------------------------------------------
+
+export type Signature = {
+	critDamageBonus: number, -- added to the crit multiplier
+	reachBonus: number, -- studs added to melee reach
+	finisherKnockbackMult: number, -- scales the heavy finisher's shove
+	tejasPerHitBonus: number, -- extra Tejas per landed blow
+	line: string, -- shown on the weapon card
+}
+
+local SIGNATURES: { [string]: Signature } = {
+	khanda = { critDamageBonus = 0.25, reachBonus = 0, finisherKnockbackMult = 1, tejasPerHitBonus = 0, line = "Righteous edge: critical strikes cut 25% deeper." },
+	trishula = { critDamageBonus = 0, reachBonus = 3, finisherKnockbackMult = 1, tejasPerHitBonus = 0, line = "Three points: strikes reach 3 studs further." },
+	gada = { critDamageBonus = 0, reachBonus = 0, finisherKnockbackMult = 1.6, tejasPerHitBonus = 0, line = "Mountain's weight: finishers hurl foes 60% harder." },
+	chakram = { critDamageBonus = 0, reachBonus = 0, finisherKnockbackMult = 1, tejasPerHitBonus = 1, line = "The spinning wheel: +1 Tejas on every landed blow." },
+}
+
+local BARE: Signature = { critDamageBonus = 0, reachBonus = 0, finisherKnockbackMult = 1, tejasPerHitBonus = 0, line = "" }
+
+-- The signature for a weapon id; empty hands carry none.
+function Weapons.signatureOf(id: string): Signature
+	return SIGNATURES[id] or BARE
+end
+
+return Weapons.MinTier
 	end
 	return math.clamp(math.floor(value), Weapons.MinTier, Weapons.MaxTier)
 end

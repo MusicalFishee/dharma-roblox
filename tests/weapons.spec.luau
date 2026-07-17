@@ -103,6 +103,32 @@ check("visual for unknown weapon is nil", Weapons.visual("spork", 1) == nil)
 check("clampTier floors into range", Weapons.clampTier(3.9) == 3 and Weapons.clampTier(0) == 1 and Weapons.clampTier(99) == Weapons.MaxTier)
 check("clampTier tolerates junk", Weapons.clampTier("big") == 1 and Weapons.clampTier(0 / 0) == 1)
 
+
+-- Signatures: every weapon plays differently, and no signature is empty.
+local sigOk = true
+local identityCount = 0
+for _, weapon in Weapons.List do
+	local sig = Weapons.signatureOf(weapon.id)
+	if #sig.line == 0 then
+		sigOk = false
+	end
+	local identities = 0
+	if sig.critDamageBonus > 0 then identities += 1 end
+	if sig.reachBonus > 0 then identities += 1 end
+	if sig.finisherKnockbackMult > 1 then identities += 1 end
+	if sig.tejasPerHitBonus > 0 then identities += 1 end
+	if identities ~= 1 then
+		sigOk = false -- exactly ONE identity each: signatures, not stat soup
+	end
+	identityCount += identities
+end
+check("every weapon carries exactly one signature", sigOk and identityCount == #Weapons.List)
+check("empty hands carry no signature", Weapons.signatureOf("").critDamageBonus == 0 and Weapons.signatureOf("").reachBonus == 0 and Weapons.signatureOf("").finisherKnockbackMult == 1 and Weapons.signatureOf("").tejasPerHitBonus == 0)
+check("khanda cuts deeper crits", Weapons.signatureOf("khanda").critDamageBonus == 0.25)
+check("trishula outreaches the rest", Weapons.signatureOf("trishula").reachBonus > 0)
+check("gada hurls hardest", Weapons.signatureOf("gada").finisherKnockbackMult > 1.5)
+check("chakram spins tejas", Weapons.signatureOf("chakram").tejasPerHitBonus == 1)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

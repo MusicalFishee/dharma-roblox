@@ -35,9 +35,10 @@ local function getRoot(model: Model): BasePart?
 end
 
 -- Returns living enemy Humanoids within reach and roughly in front of `fromRoot`.
-local function findTargets(fromRoot: BasePart): { Humanoid }
+local function findTargets(fromRoot: BasePart, reachBonus: number): { Humanoid }
 	local origin = fromRoot.Position
 	local forward = fromRoot.CFrame.LookVector
+	local reach = MELEE_REACH + reachBonus
 
 	local hits: { Humanoid } = {}
 	for _, enemy in CollectionService:GetTagged(ENEMY_TAG) do
@@ -52,7 +53,7 @@ local function findTargets(fromRoot: BasePart): { Humanoid }
 
 		local offset = root.Position - origin
 		local distance = offset.Magnitude
-		if distance > MELEE_REACH then
+		if distance > reach then
 			continue
 		end
 		if distance > 0.01 and forward:Dot(offset.Unit) < MELEE_ARC_DOT then
@@ -128,6 +129,7 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 	end
 
 	local state = PlayerRegistry.get(player)
+	local sig = Weapons.signatureOf(state.weapon.id)
 
 	-- The chain decides light vs heavy and gates cadence / finisher recovery.
 	local swing = state.chain:tryAdvance(os.clock())
@@ -139,7 +141,7 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 	-- Everyone sees the swing (combo1..combo4).
 	Net.AnimEvent:FireAllClients(character, "combo" .. math.clamp(swing.index, 1, 4))
 
-	local targets = findTargets(root)
+	local targets = findTargets(root, sig.reachBonus)
 
 	-- A live duel foe within reach and arc is also a valid target.
 	local foe = PvPService.duelOpponentOf(player)
@@ -180,7 +182,7 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 			* relicBonus.damageMult
 			* empower,
 		isCrit,
-		ench.critMultiplier
+		(ench.critMultiplier or Combat.Config.CritMultiplier) + sig.critDamageBonus
 	)
 
 	local healed = 0
@@ -208,7 +210,7 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 		end
 
 		humanoid:TakeDamage(dealt)
-		state.tejas = Combat.clampTejas(state.tejas + Combat.Config.TejasPerHitLanded * (ench.tejasMult or 1) * passive.tejasMult * relicBonus.tejasMult)
+		state.tejas = Combat.clampTejas(state.tejas + (Combat.Config.TejasPerHitLanded + sig.tejasPerHitBonus) * (ench.tejasMult or 1) * passive.tejasMult * relicBonus.tejasMult)
 
 		if ench.lifesteal then
 			healed += dealt * ench.lifesteal
@@ -229,7 +231,7 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 			local dir = hrp.Position - root.Position
 			dir = Vector3.new(dir.X, 0, dir.Z)
 			dir = if dir.Magnitude > 0.01 then dir.Unit else root.CFrame.LookVector
-			hrp.AssemblyLinearVelocity = dir * 60 + Vector3.new(0, 30, 0)
+			hrp.AssemblyLinearVelocity = dir * 60 * sig.finisherKnockbackMult + Vector3.new(0, 30 * sig.finisherKnockbackMult, 0)
 		end
 	end
 

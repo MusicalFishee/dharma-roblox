@@ -114,6 +114,18 @@ local function makeCard(weapon: any, index: number)
 	flavour.TextWrapped = true
 	flavour.Parent = card
 
+	local sigLine = Instance.new("TextLabel")
+	sigLine.Size = UDim2.new(1, -20, 0, 30)
+	sigLine.Position = UDim2.fromOffset(10, 166)
+	sigLine.BackgroundTransparency = 1
+	sigLine.Font = Enum.Font.GothamMedium
+	sigLine.TextSize = 11
+	sigLine.TextColor3 = Color3.fromRGB(150, 200, 255)
+	sigLine.Text = Weapons.signatureOf(weapon.id).line
+	sigLine.TextWrapped = true
+	sigLine.TextYAlignment = Enum.TextYAlignment.Top
+	sigLine.Parent = card
+
 	local desc = Instance.new("TextLabel")
 	desc.Size = UDim2.new(1, -20, 0, 96)
 	desc.Position = UDim2.fromOffset(10, 68)
