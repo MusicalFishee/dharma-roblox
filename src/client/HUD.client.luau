@@ -622,6 +622,25 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("AGNIHOTRA — day %d of devotion   (%s)", data.day, bits), SAFFRON)
 		return
 	end
+	if data.vira then
+		showToast(string.format("%s!   %d-kill streak  (+Tejas)", tostring(data.name), data.count), MAGENTA)
+		return
+	end
+	if data.waveGrade then
+		local c = if typeof(data.gradeColor) == "table"
+			then Color3.fromRGB(data.gradeColor[1], data.gradeColor[2], data.gradeColor[3])
+			else YELLOW
+		showToast(string.format("RANK %s   (%d slain · %d parried)", tostring(data.waveGrade), data.kills or 0, data.parries or 0), c)
+		return
+	end
+	if data.dosha then
+		showToast(string.format("%s — %s", tostring(data.name), tostring(data.announce)), Color3.fromRGB(190, 120, 255))
+		return
+	end
+	if data.doshaBounty then
+		showToast(string.format("The dosha lifts:  +%d gold  +%d XP", data.gold, data.xp), Color3.fromRGB(190, 120, 255))
+		return
+	end
 	if data.bazaarGranted then
 		local what = if data.kind == "gold" then string.format("◈ %d gold", data.amount) else string.format("◆ %d shards", data.amount)
 		showToast(string.format("The Bazaar delivers:  %s — %s", tostring(data.name), what), YELLOW)

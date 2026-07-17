@@ -8,6 +8,8 @@ local Net = require(ReplicatedStorage.Shared.Net)
 local Waves = require(ReplicatedStorage.Shared.Waves)
 local Survival = require(ReplicatedStorage.Shared.Survival)
 local Milestones = require(ReplicatedStorage.Shared.Milestones)
+local Doshas = require(ReplicatedStorage.Shared.Doshas)
+local Grade = require(ReplicatedStorage.Shared.Grade)
 local Loot = require(ReplicatedStorage.Shared.Loot)
 local Trial = require(ReplicatedStorage.Shared.Trial)
 local TrialBoss = require(script.Parent.TrialBoss)
@@ -33,6 +35,8 @@ local started = false
 local checkpoint = 0 -- deepest boss wave banked; a wiped run reforms just past it
 local waveGen = 0 -- bumps on every (re)start; invalidates stale enemy-death callbacks
 local failing = false -- true from the moment the party wipes until the run reforms
+local waveSpawnCount = 0 -- how many foes this wave fielded (grades judge against it)
+local activeDosha: { wave: number, def: Doshas.DoshaDef }? = nil
 local alivePlayers: { [Player]: boolean } = {}
 
 local function announce(data: { [string]: any })
@@ -41,11 +45,15 @@ local function announce(data: { [string]: any })
 	end
 end
 
--- Fetch the archetype for an id, with an elite roll on top.
+-- Fetch the archetype for an id: elite roll, then this wave's dosha (if marked).
 local function resolveArchetype(id: string)
 	local archetype = EnemyTypes.get(id)
 	if Elites.roll() then
-		return Elites.makeElite(archetype)
+		archetype = Elites.makeElite(archetype)
+	end
+	local dosha = activeDosha
+	if dosha and dosha.wave == currentWave then
+		archetype = Doshas.applyToArchetype(dosha.def, archetype)
 	end
 	return archetype
 end
@@ -62,14 +70,37 @@ local function onWaveClear(wave: number)
 	end
 	local bonus = Waves.bonusXp(wave)
 	for _, p in Players:GetPlayers() do
-		ProgressionService.awardXp(p, bonus)
-		-- Everyone standing when the wave falls records the depth.
+		-- The wave judges your conduct; S-rank pays half again.
 		local state = PlayerRegistry.get(p)
+		local tally = { kills = state.waveKills, parries = state.waveParries, timesHit = state.waveTimesHit, downs = state.waveDowns }
+		local grade = Grade.gradeFor(Grade.score(tally), waveSpawnCount)
+		ProgressionService.awardXp(p, math.floor(bonus * Grade.xpMult(grade)))
+		Net.CombatFeedback:FireClient(p, {
+			waveGrade = grade,
+			gradeColor = Grade.Color[grade],
+			kills = state.waveKills,
+			parries = state.waveParries,
+		})
+		-- Everyone standing when the wave falls records the depth.
 		state.bestWave = math.max(state.bestWave, wave)
 		QuestService.onWaveClear(p)
 		StoryService.onEvent(p) -- a deeper wave may turn an Adhyaya's page
 	end
 	announce({ waveState = "clear", wave = wave, bonusXp = bonus, intermission = Waves.Intermission })
+
+	-- A marked wave pays its bounty when it breaks.
+	local dosha = activeDosha
+	if dosha and dosha.wave == wave then
+		activeDosha = nil
+		local bounty = Doshas.bountyFor(dosha.def, wave)
+		for _, p in Players:GetPlayers() do
+			local state = PlayerRegistry.get(p)
+			state.gold = Loot.clampGold(state.gold + bounty.gold)
+			ProgressionService.awardXp(p, bounty.xp)
+			Net.CombatFeedback:FireClient(p, { goldUpdate = true, gained = 0, gold = state.gold })
+			Net.CombatFeedback:FireClient(p, { doshaBounty = true, name = dosha.def.name, gold = bounty.gold, xp = bounty.xp })
+		end
+	end
 
 	-- Landmark waves pay a bounty and confer a title.
 	local milestone = Milestones.forWave(wave)
@@ -98,6 +129,7 @@ local function spawnBossWave(wave: number, gen: number)
 	local boss = Bosses.forWave(wave, Waves.BossInterval)
 	local adds = Waves.compose(math.max(1, math.floor(wave / 3)), EnemyTypes.List :: any)
 	remaining = 1 + #adds
+	waveSpawnCount = remaining
 	announce({ waveState = "boss", wave = wave, bossName = boss.displayName, bossTitle = boss.title })
 
 	local function onOneDead(_killer: Player?)
@@ -131,6 +163,28 @@ function startWave(wave: number)
 	ZoneService.applyForWave(wave)
 	BhootaService.setBattleActive(true)
 
+	-- Fresh conduct ledgers for the new wave.
+	for _, p in Players:GetPlayers() do
+		local state = PlayerRegistry.get(p)
+		state.waveKills = 0
+		state.waveParries = 0
+		state.waveTimesHit = 0
+		state.waveDowns = 0
+	end
+	waveSpawnCount = 10 -- nominal for bespoke encounters (trial/raid); real waves overwrite
+
+	-- The mark of the age: waves ending in 7 arrive afflicted.
+	activeDosha = nil
+	if Doshas.isDoshaWave(wave) then
+		local def = Doshas.roll(wave, function()
+			return math.random()
+		end)
+		if def then
+			activeDosha = { wave = wave, def = def }
+			announce({ dosha = true, name = def.name, announce = def.announce })
+		end
+	end
+
 	-- Festival roll: never on the spectacle nights (boss / trial / raid).
 	UtsavaService.onWaveStart(wave, Trial.isTrialWave(wave) or Ravana.isRaidWave(wave) or Waves.isBossWave(wave))
 
@@ -162,6 +216,7 @@ function startWave(wave: number)
 	end
 	local ids = Waves.compose(wave, EnemyTypes.List :: any)
 	remaining = #ids
+	waveSpawnCount = remaining
 	announce({ waveState = "start", wave = wave, enemiesLeft = remaining })
 
 	local total = #ids

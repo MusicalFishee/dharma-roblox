@@ -16,6 +16,7 @@ local EnemyTypes = require(ReplicatedStorage.Shared.EnemyTypes)
 local BossSpecials = require(ReplicatedStorage.Shared.BossSpecials)
 local Enchants = require(ReplicatedStorage.Shared.Enchants)
 local Paths = require(ReplicatedStorage.Shared.Paths)
+local Vira = require(ReplicatedStorage.Shared.Vira)
 local Loot = require(ReplicatedStorage.Shared.Loot)
 local StatusEffects = require(ReplicatedStorage.Shared.StatusEffects)
 local Relics = require(ReplicatedStorage.Shared.Relics)
@@ -177,7 +178,10 @@ local function resolveHitOnPlayer(
 		pstate.tejas = Combat.clampTejas(pstate.tejas + resolution.defenderTejasGain * (ench.tejasMult or 1) * Paths.passiveOf(pstate.path).tejasMult * relicBonus.tejasMult)
 	end
 	if resolution.outcome == "Parry" then
+		pstate.waveParries += 1
 		QuestService.onParry(player)
+	elseif resolution.outcome == "Hit" then
+		pstate.waveTimesHit += 1
 	end
 
 	-- A clean HIT delivers the striker's affliction; any defense wards it off.
@@ -504,6 +508,17 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 				local kstate = PlayerRegistry.get(killer)
 				-- Lifetime records.
 				kstate.stats.kills += 1
+				kstate.waveKills += 1
+				-- Vīra: chained kills chant your rank and surge your Tejas.
+				local streakNow = os.clock()
+				local streak = Vira.register(kstate.viraCount, kstate.viraLastAt, streakNow)
+				kstate.viraCount = streak.count
+				kstate.viraLastAt = streakNow
+				local rank = Vira.rankAt(streak.count)
+				if rank then
+					kstate.tejas = Combat.clampTejas(kstate.tejas + rank.tejas)
+					Net.CombatFeedback:FireClient(killer, { vira = true, name = rank.name, count = rank.count, tejas = kstate.tejas })
+				end
 				if archetype.isBoss then
 					kstate.stats.bossKills += 1
 				end

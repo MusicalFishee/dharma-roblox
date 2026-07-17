@@ -201,6 +201,22 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play("shopBuy")
 		return
 	end
+	if data.vira then
+		play("critHit")
+		return
+	end
+	if data.waveGrade == "S" then
+		play("thunderCrack")
+		return
+	end
+	if data.dosha then
+		play("bossSpawn")
+		return
+	end
+	if data.doshaBounty then
+		play("goldPickup")
+		return
+	end
 	if data.siddhiUnlocked then
 		play("thunderCrack")
 		return

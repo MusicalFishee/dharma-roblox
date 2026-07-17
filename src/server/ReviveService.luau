@@ -135,6 +135,7 @@ local function goDown(player: Player, character: Model, humanoid: Humanoid)
 	downGen += 1
 	local gen = downGen
 	humanoid.Health = 1
+	PlayerRegistry.get(player).waveDowns += 1
 
 	local root = character:FindFirstChild("HumanoidRootPart")
 	local prompt = Instance.new("ProximityPrompt")

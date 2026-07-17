@@ -57,6 +57,16 @@ export type PlayerState = {
 	mastery: { agni: number, vayu: number, varuna: number, indra: number },
 	-- Agnihotra login streak (granted once per UTC day on load).
 	streak: { stamp: number, count: number },
+	-- Vīra kill streak (count + os.clock of the last killing blow).
+	viraCount: number,
+	viraLastAt: number,
+	-- This wave's conduct ledger (reset every wave start; graded on clear).
+	waveKills: number,
+	waveParries: number,
+	waveTimesHit: number,
+	waveDowns: number,
+	-- Adhyaya 0 finished (persisted; the lesson never repeats).
+	tutorialDone: boolean,
 }
 
 local PlayerRegistry = {}
@@ -106,6 +116,13 @@ function PlayerRegistry.get(player: Player): PlayerState
 		storyChapter = 0,
 		mastery = { agni = 0, vayu = 0, varuna = 0, indra = 0 },
 		streak = { stamp = 0, count = 0 },
+		viraCount = 0,
+		viraLastAt = 0,
+		waveKills = 0,
+		waveParries = 0,
+		waveTimesHit = 0,
+		waveDowns = 0,
+		tutorialDone = false,
 	}
 	states[player] = state
 	return state

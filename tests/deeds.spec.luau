@@ -1,0 +1,75 @@
+--!strict
+-- Headless tests for the Kirti ledger: deed integrity, tier math, progress.
+
+local process = require("@lune/process")
+local Deeds = require("../src/shared/Deeds")
+
+local passed, failed = 0, 0
+local failures: { string } = {}
+local function check(name: string, cond: boolean)
+	if cond then
+		passed += 1
+		print("  ok   " .. name)
+	else
+		failed += 1
+		table.insert(failures, name)
+		print("  FAIL " .. name)
+	end
+end
+
+local function snap(over: { [string]: number }): Deeds.Snapshot
+	local s: Deeds.Snapshot = { kills = 0, bossKills = 0, bestWave = 0, duelWins = 0, raidClears = 0, revives = 0, trials = 0, level = 1, playtimeSeconds = 0, deaths = 0 }
+	for k, v in over do
+		(s :: any)[k] = v
+	end
+	return s
+end
+
+print("Deeds")
+
+-- Ledger integrity.
+check("the ledger is ten deeds deep", #Deeds.List == 10)
+check("three tiers, three colors", #Deeds.TierNames == 3 and #Deeds.TierColor == 3)
+local defsOk = true
+local ids: { [string]: boolean } = {}
+for _, def in Deeds.List do
+	if ids[def.id] or #def.name == 0 or #def.line == 0 or #def.thresholds ~= 3 then
+		defsOk = false
+	end
+	ids[def.id] = true
+	if not (def.thresholds[1] < def.thresholds[2] and def.thresholds[2] < def.thresholds[3]) then
+		defsOk = false
+	end
+	local field = if def.kind == "playtime" then "playtimeSeconds" else def.kind
+	if Deeds.statFor(def.kind, snap({ [field] = 999999 })) == 0 then
+		defsOk = false -- a deed reading an unknown stat can never be earned
+	end
+end
+check("deeds are well-formed with ascending tiers and real stats", defsOk)
+
+-- Tier math.
+local slayer = Deeds.List[1]
+check("unmarked below the first rung", Deeds.tierFor(slayer, 99) == 0)
+check("kansya at the first rung", Deeds.tierFor(slayer, 100) == 1)
+check("rajata holds mid-ladder", Deeds.tierFor(slayer, 4999) == 2)
+check("svarna at the summit and beyond", Deeds.tierFor(slayer, 5000) == 3 and Deeds.tierFor(slayer, 999999) == 3)
+
+-- Progress.
+local p = Deeds.progress(slayer, snap({ kills = 150 }))
+check("progress reads the right stat", p.value == 150 and p.tier == 1)
+check("progress names the next rung", p.nextThreshold == 1000)
+local maxed = Deeds.progress(slayer, snap({ kills = 5000 }))
+check("svarna has no next rung", maxed.nextThreshold == nil)
+
+-- The headline count.
+check("a fresh ledger is unmarked", Deeds.totalTiers(snap({})) == 0)
+local hero = snap({ kills = 5000, bossKills = 200, bestWave = 100, duelWins = 50, raidClears = 25, revives = 50, trials = 10, level = 60, playtimeSeconds = 72000, deaths = 200 })
+check("a full life fills the ledger", Deeds.totalTiers(hero) == Deeds.MaxTiers)
+check("the max is ten gold deeds", Deeds.MaxTiers == 30)
+check("even deaths are honored (the atman remembers)", Deeds.tierFor(Deeds.List[10], 10) == 1)
+
+print(string.format("\n%d passed, %d failed", passed, failed))
+if failed > 0 then
+	print("FAILURES: " .. table.concat(failures, ", "))
+	process.exit(1)
+end
