@@ -162,6 +162,14 @@ local turt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0,
 check("lesson flag round-trips through serialize", turt.tutorialDone == true)
 check("serialize without the flag -> unlearned", PlayerData.serialize(1, 1).tutorialDone == false)
 
+-- Vibhuti marks (v17).
+check("default brow and air are bare", PlayerData.default().vibhuti.tilak == "" and PlayerData.default().vibhuti.aura == "")
+local vbv = PlayerData.validate({ vibhuti = { tilak = "tilak_tripundra", aura = 42 } })
+check("worn marks validate per-slot", vbv.vibhuti.tilak == "tilak_tripundra" and vbv.vibhuti.aura == "")
+check("oversized marks are bared", PlayerData.validate({ vibhuti = { tilak = string.rep("m", 41) } }).vibhuti.tilak == "")
+local vbrt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", nil, 0, nil, nil, false, { tilak = "tilak_bhasma", aura = "aura_ember" }))
+check("marks round-trip through serialize", vbrt.vibhuti.tilak == "tilak_bhasma" and vbrt.vibhuti.aura == "aura_ember")
+
 -- Relics (added with the relic system, v10).
 local rdef = PlayerData.default().relics
 check("default satchel empty + bare", #rdef.owned == 0 and rdef.equipped.crown == "" and rdef.equipped.kavacha == "" and rdef.equipped.charm == "")

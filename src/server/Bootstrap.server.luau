@@ -14,6 +14,7 @@ require(script.Parent.UtsavaService) -- activates festival events (deer/storm/va
 require(script.Parent.BhootaService) -- activates the bhoota wander (mid-wave deaths)
 require(script.Parent.VaraService) -- activates the boon draft (offers + picks)
 require(script.Parent.RitesService) -- activates the yajna flame + shapatha oaths
+require(script.Parent.VibhutiService) -- activates sacred marks + emotes
 require(script.Parent.StoryService) -- activates Agastya's journal remote
 
 print(string.format(

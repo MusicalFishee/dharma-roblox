@@ -70,6 +70,8 @@ export type PlayerState = {
 	-- The run's Vara draft (held boon ids + the pending offer). NEVER persisted.
 	vara: { string },
 	varaOffer: { string },
+	-- Worn sacred marks (persisted; cosmetic only, by law).
+	vibhuti: { tilak: string, aura: string },
 }
 
 local PlayerRegistry = {}
@@ -128,6 +130,7 @@ function PlayerRegistry.get(player: Player): PlayerState
 		tutorialDone = false,
 		vara = {},
 		varaOffer = {},
+		vibhuti = { tilak = "", aura = "" },
 	}
 	states[player] = state
 	return state

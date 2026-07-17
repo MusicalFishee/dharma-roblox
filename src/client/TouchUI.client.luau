@@ -114,6 +114,10 @@ local entries: { Entry } = {
 	{ label = "Rites", gui = "DharmaRites", open = function()
 		Net.RitesRequest:FireServer({ action = "info" })
 	end },
+	{ label = "Marks", gui = "DharmaVibhuti", open = function()
+		Net.VibhutiRequest:FireServer({ action = "info" })
+		Net.StatsRequest:FireServer({ action = "info" })
+	end },
 	{ label = "Bazaar", gui = "DharmaBazaar" },
 }
 

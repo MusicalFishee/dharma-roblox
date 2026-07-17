@@ -44,6 +44,8 @@ local Net = {
 	VaraRequest = ensureRemote("VaraRequest"),
 	-- client -> server: rites ({action="info"|"offer"|"swear", id=...})
 	RitesRequest = ensureRemote("RitesRequest"),
+	-- client -> server: sacred marks + emotes ({action="info"|"equip"|"emote", ...})
+	VibhutiRequest = ensureRemote("VibhutiRequest"),
 	-- client -> server: story journal requests ({action="info"})
 	StoryRequest = ensureRemote("StoryRequest"),
 	-- client -> server: current guard state (blocking / dodging)

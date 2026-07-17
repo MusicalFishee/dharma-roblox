@@ -44,7 +44,7 @@ for name, t in AnimationDefs.Tracks do
 		end
 	end
 end
-check("has all 11 tracks", trackCount == 11)
+check("has all 14 tracks (11 combat + 3 emotes)", trackCount == 14)
 check("every track well-formed (sorted, in-range, 3-angle poses)", allValid)
 
 -- Combat coverage: one track per combo hit + abilities + reactions.

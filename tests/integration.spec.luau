@@ -77,6 +77,7 @@ local broadcastAnims = {
 	"enemySwing", -- EnemyService strikes
 	"dash", -- DefenseState dodge + ability X
 	"throw", "heal", "ult", -- abilities Z / C / V (+ boss windup reuses ult)
+	"emote_namaste", "emote_warcry", "emote_meditate", -- VibhutiService emotes
 }
 local animsOk = true
 for _, name in broadcastAnims do

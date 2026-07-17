@@ -5,7 +5,7 @@
 
 local PlayerData = {}
 
-PlayerData.Version = 16
+PlayerData.Version = 17
 
 -- Mirrors Relics.MaxOwned (dependency-free; a test guards against drift).
 local RELICS_MAX_OWNED = 40
@@ -94,6 +94,12 @@ export type Data = {
 	mastery: MasterySave, -- per-path siddhi mastery XP (never decreases)
 	streak: StreakSave, -- Agnihotra login streak (day stamp + consecutive count)
 	tutorialDone: boolean, -- Adhyaya 0 finished (the lesson never repeats)
+	vibhuti: VibhutiSave, -- worn sacred marks (tilak + aura ids, "" = bare)
+}
+
+export type VibhutiSave = {
+	tilak: string,
+	aura: string,
 }
 
 export type StreakSave = {
@@ -171,6 +177,7 @@ function PlayerData.default(): Data
 		mastery = { agni = 0, vayu = 0, varuna = 0, indra = 0 },
 		streak = { stamp = 0, count = 0 },
 		tutorialDone = false,
+		vibhuti = { tilak = "", aura = "" },
 	}
 end
 
@@ -236,6 +243,14 @@ function PlayerData.validate(raw: any): Data
 			d.streak.count = cleanCount(raw.streak.count)
 		end
 		d.tutorialDone = raw.tutorialDone == true
+		if type(raw.vibhuti) == "table" then
+			if type(raw.vibhuti.tilak) == "string" and #raw.vibhuti.tilak <= 40 then
+				d.vibhuti.tilak = raw.vibhuti.tilak
+			end
+			if type(raw.vibhuti.aura) == "string" and #raw.vibhuti.aura <= 40 then
+				d.vibhuti.aura = raw.vibhuti.aura
+			end
+		end
 		if type(raw.story) == "number" and raw.story == raw.story and raw.story > 0 then
 			d.story = math.min(math.floor(raw.story), 50)
 		end
@@ -275,7 +290,8 @@ function PlayerData.serialize(
 	story: number?,
 	mastery: MasterySave?,
 	streak: StreakSave?,
-	tutorialDone: boolean?
+	tutorialDone: boolean?,
+	vibhuti: VibhutiSave?
 ): Data
 	local questsCopy: { QuestSlot } = {}
 	if quests then
@@ -339,6 +355,10 @@ function PlayerData.serialize(
 			count = cleanCount(if streak then streak.count else 0),
 		},
 		tutorialDone = tutorialDone == true,
+		vibhuti = {
+			tilak = if vibhuti and type(vibhuti.tilak) == "string" and #vibhuti.tilak <= 40 then vibhuti.tilak else "",
+			aura = if vibhuti and type(vibhuti.aura) == "string" and #vibhuti.aura <= 40 then vibhuti.aura else "",
+		},
 		story = if type(story) == "number" and story == story and story > 0 then math.min(math.floor(story), 50) else 0,
 	}
 end

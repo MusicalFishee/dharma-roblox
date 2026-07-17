@@ -68,6 +68,9 @@ SoundDefs.AnimSounds = {
 	enemySwing = "enemySwing",
 	flinch = "punchLand",
 	blockstart = "guardUp",
+	emote_namaste = "questDone",
+	emote_warcry = "bossSpawn",
+	emote_meditate = "guardUp",
 } :: { [string]: string }
 
 -- HUD feedback (CombatFeedback outcome / flags) -> sfx name. 2D, local.

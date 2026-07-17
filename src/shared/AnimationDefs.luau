@@ -184,6 +184,52 @@ AnimationDefs.Tracks = {
 			Waist = { 6, 0, 0 },
 		} },
 	}, true),
+	-- ---- Emotes ----
+	emote_namaste = track("emote_namaste", 2.2, {
+		{ time = 0, pose = {} },
+		{ time = 0.4, pose = {
+			RightShoulder = { 95, 0, -60 },
+			LeftShoulder = { 95, 0, 60 },
+			RightElbow = { 70, 0, 0 },
+			LeftElbow = { 70, 0, 0 },
+			Neck = { 18, 0, 0 },
+		} },
+		{ time = 1.8, pose = {
+			RightShoulder = { 95, 0, -60 },
+			LeftShoulder = { 95, 0, 60 },
+			RightElbow = { 70, 0, 0 },
+			LeftElbow = { 70, 0, 0 },
+			Neck = { 18, 0, 0 },
+		} },
+		{ time = 2.2, pose = {} },
+	}),
+	emote_warcry = track("emote_warcry", 1.6, {
+		{ time = 0, pose = {} },
+		{ time = 0.25, pose = {
+			Waist = { -12, 0, 0 },
+			RightShoulder = { 170, 0, -15 },
+			LeftShoulder = { 170, 0, 15 },
+			Neck = { -20, 0, 0 },
+		} },
+		{ time = 1.2, pose = {
+			Waist = { -12, 0, 0 },
+			RightShoulder = { 170, 0, -15 },
+			LeftShoulder = { 170, 0, 15 },
+			Neck = { -20, 0, 0 },
+		} },
+		{ time = 1.6, pose = {} },
+	}),
+	emote_meditate = track("emote_meditate", 1.0, {
+		{ time = 0, pose = {} },
+		{ time = 0.6, pose = {
+			RightHip = { 80, 0, 25 },
+			LeftHip = { 80, 0, -25 },
+			RightShoulder = { 40, 0, -30 },
+			LeftShoulder = { 40, 0, 30 },
+			Neck = { 15, 0, 0 },
+			Waist = { 8, 0, 0 },
+		} },
+	}, true),
 } :: { [string]: Track }
 
 -- Interpolates the track's pose at time `t` (clamped to [0, duration]).
