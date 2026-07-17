@@ -17,6 +17,7 @@ local BossSpecials = require(ReplicatedStorage.Shared.BossSpecials)
 local Enchants = require(ReplicatedStorage.Shared.Enchants)
 local Paths = require(ReplicatedStorage.Shared.Paths)
 local Vira = require(ReplicatedStorage.Shared.Vira)
+local Vara = require(ReplicatedStorage.Shared.Vara)
 local Loot = require(ReplicatedStorage.Shared.Loot)
 local StatusEffects = require(ReplicatedStorage.Shared.StatusEffects)
 local Relics = require(ReplicatedStorage.Shared.Relics)
@@ -163,19 +164,20 @@ local function resolveHitOnPlayer(
 	local resolution = Combat.resolveIncomingAttack(damage, state)
 	local ench = Enchants.effects(pstate.enchant)
 	local relicBonus = Relics.totalBonus(Relics.equippedList(pstate.relics.equipped))
+	local varaFx = Vara.totalEffects(pstate.vara)
 
 	if resolution.damage > 0 then
 		-- Stoneskin Sutra and kin: the defender's mantra soaks part of the blow;
 		-- an active shield ward (Zephyr Veil) and worn relics soak their share on top.
 		local ward = if now < pstate.wardUntil then pstate.wardMult else 1
-		playerHum:TakeDamage(resolution.damage * (ench.damageTakenMult or 1) * ward * relicBonus.damageTakenMult)
+		playerHum:TakeDamage(resolution.damage * (ench.damageTakenMult or 1) * ward * relicBonus.damageTakenMult * varaFx.damageTakenMult)
 		local char = player.Character
 		if char and resolution.outcome == "Hit" then
 			Net.AnimEvent:FireAllClients(char, "flinch")
 		end
 	end
 	if resolution.defenderTejasGain > 0 then
-		pstate.tejas = Combat.clampTejas(pstate.tejas + resolution.defenderTejasGain * (ench.tejasMult or 1) * Paths.passiveOf(pstate.path).tejasMult * relicBonus.tejasMult)
+		pstate.tejas = Combat.clampTejas(pstate.tejas + resolution.defenderTejasGain * (ench.tejasMult or 1) * Paths.passiveOf(pstate.path).tejasMult * relicBonus.tejasMult * varaFx.tejasMult)
 	end
 	if resolution.outcome == "Parry" then
 		pstate.waveParries += 1
@@ -469,7 +471,7 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 						local vench = Enchants.effects(vstate.enchant)
 						local vward = if os.clock() < vstate.wardUntil then vstate.wardMult else 1
 						local vrelic = Relics.totalBonus(Relics.equippedList(vstate.relics.equipped))
-						hum:TakeDamage(res.damage * (vench.damageTakenMult or 1) * vward * vrelic.damageTakenMult)
+						hum:TakeDamage(res.damage * (vench.damageTakenMult or 1) * vward * vrelic.damageTakenMult * Vara.totalEffects(vstate.vara).damageTakenMult)
 						Net.AnimEvent:FireAllClients(char, "flinch")
 						-- Shockwave knockback, away from the blast centre.
 						if hrp and hrp:IsA("BasePart") then

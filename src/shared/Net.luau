@@ -40,6 +40,8 @@ local Net = {
 	PathRequest = ensureRemote("PathRequest"),
 	-- client -> server: relic actions ({action="info"} or {action="equip", slot=..., id=...})
 	RelicRequest = ensureRemote("RelicRequest"),
+	-- client -> server: boon draft pick ({action="pick", id=...})
+	VaraRequest = ensureRemote("VaraRequest"),
 	-- client -> server: story journal requests ({action="info"})
 	StoryRequest = ensureRemote("StoryRequest"),
 	-- client -> server: current guard state (blocking / dodging)

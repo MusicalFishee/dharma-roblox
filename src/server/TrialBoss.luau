@@ -20,6 +20,7 @@ local Trial = require(ReplicatedStorage.Shared.Trial)
 local BossSpecials = require(ReplicatedStorage.Shared.BossSpecials)
 local Enchants = require(ReplicatedStorage.Shared.Enchants)
 local Relics = require(ReplicatedStorage.Shared.Relics)
+local Vara = require(ReplicatedStorage.Shared.Vara)
 local Loot = require(ReplicatedStorage.Shared.Loot)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local ProgressionService = require(script.Parent.ProgressionService)
@@ -250,7 +251,7 @@ local function stompRing(st: FightState, radius: number, damage: number, telegra
 			local vench = Enchants.effects(vstate.enchant)
 			local vward = if os.clock() < vstate.wardUntil then vstate.wardMult else 1
 			local vrelic = Relics.totalBonus(Relics.equippedList(vstate.relics.equipped))
-			hum:TakeDamage(res.damage * (vench.damageTakenMult or 1) * vward * vrelic.damageTakenMult)
+			hum:TakeDamage(res.damage * (vench.damageTakenMult or 1) * vward * vrelic.damageTakenMult * Vara.totalEffects(vstate.vara).damageTakenMult)
 			Net.AnimEvent:FireAllClients(char, "flinch")
 			if hrp then
 				local away = Vector3.new(hrp.Position.X - cx, 0, hrp.Position.Z - cz)

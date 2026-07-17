@@ -20,6 +20,7 @@ local Net = require(ReplicatedStorage.Shared.Net)
 local Abilities = require(ReplicatedStorage.Shared.Abilities)
 local Paths = require(ReplicatedStorage.Shared.Paths)
 local Siddhis = require(ReplicatedStorage.Shared.Siddhis)
+local Vara = require(ReplicatedStorage.Shared.Vara)
 local Progression = require(ReplicatedStorage.Shared.Progression)
 local StatusEffects = require(ReplicatedStorage.Shared.StatusEffects)
 local PvP = require(ReplicatedStorage.Shared.PvP)
@@ -56,7 +57,8 @@ end
 
 -- Path passive + active empower ward, applied to all ability damage.
 local function damageMultFor(state: any): number
-	local mult = Paths.passiveOf(state.path).damageMult
+	local varaFx = Vara.totalEffects(state.vara)
+	local mult = Paths.passiveOf(state.path).damageMult * varaFx.damageMult * varaFx.abilityDamageMult
 	if os.clock() < state.empowerUntil then
 		mult *= state.empowerMult
 	end
@@ -216,8 +218,8 @@ local function castHeal(player: Player, root: BasePart, hum: Humanoid, def: Abil
 		state.venomUntil = 0
 		state.curseUntil = 0
 	end
-	-- A curse thins even Varuna's waters (unless just cleansed).
-	local heal = StatusEffects.effectiveHeal(hum.MaxHealth * (def.power + bonusFraction), os.clock() < state.curseUntil)
+	-- A curse thins even Varuna's waters (unless just cleansed); Sthira deepens them.
+	local heal = StatusEffects.effectiveHeal(hum.MaxHealth * (def.power + bonusFraction) * Vara.totalEffects(state.vara).healMult, os.clock() < state.curseUntil)
 	hum.Health = math.min(hum.MaxHealth, hum.Health + heal)
 
 	-- Rising glow in the ability's color.

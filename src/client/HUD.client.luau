@@ -625,6 +625,14 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("AGNIHOTRA — day %d of devotion   (%s)", data.day, bits), SAFFRON)
 		return
 	end
+	if data.varaPicked then
+		showToast(string.format("VARA:  %s — %s   (%d held)", tostring(data.name), tostring(data.line), data.held or 0), Color3.fromRGB(130, 255, 180))
+		return
+	end
+	if data.varaScattered then
+		showToast("The boons scatter with the broken line…", Color3.fromRGB(170, 170, 170))
+		return
+	end
 	if data.rankUp then
 		showToast(string.format("VARNA ASCENDED —  %s, %s", tostring(data.name), tostring(data.line)), YELLOW)
 		return

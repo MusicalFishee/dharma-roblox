@@ -213,6 +213,14 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play("thunderCrack")
 		return
 	end
+	if data.varaOffer then
+		play("questDone")
+		return
+	end
+	if data.varaPicked then
+		play("levelUp")
+		return
+	end
 	if data.waveGrade == "S" then
 		play("thunderCrack")
 		return

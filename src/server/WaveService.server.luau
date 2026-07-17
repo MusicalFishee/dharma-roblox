@@ -22,6 +22,7 @@ local EnemyService = require(script.Parent.EnemyService)
 local ZoneService = require(script.Parent.ZoneService)
 local UtsavaService = require(script.Parent.UtsavaService)
 local BhootaService = require(script.Parent.BhootaService)
+local VaraService = require(script.Parent.VaraService)
 local ProgressionService = require(script.Parent.ProgressionService)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local QuestService = require(script.Parent.QuestService)
@@ -87,6 +88,11 @@ local function onWaveClear(wave: number)
 		StoryService.onEvent(p) -- a deeper wave may turn an Adhyaya's page
 	end
 	announce({ waveState = "clear", wave = wave, bonusXp = bonus, intermission = Waves.Intermission })
+
+	-- A slain boss leaves boons on its corpse (the god's trial blesses instead).
+	if Waves.isBossWave(wave) and not Trial.isTrialWave(wave) then
+		VaraService.offerAll()
+	end
 
 	-- A marked wave pays its bounty when it breaks.
 	local dosha = activeDosha
@@ -247,6 +253,8 @@ function failRun()
 	failing = true
 	waveGen += 1 -- every in-flight enemy-death callback from the doomed wave is now void
 	local failedWave = currentWave
+	-- The wipe scatters every boon the run had granted.
+	VaraService.scatterAll()
 	-- The reform restores everyone; wandering spirits come back to flesh with it.
 	BhootaService.setBattleActive(false)
 	for _, p in BhootaService.releaseAll() do

@@ -67,6 +67,9 @@ export type PlayerState = {
 	waveDowns: number,
 	-- Adhyaya 0 finished (persisted; the lesson never repeats).
 	tutorialDone: boolean,
+	-- The run's Vara draft (held boon ids + the pending offer). NEVER persisted.
+	vara: { string },
+	varaOffer: { string },
 }
 
 local PlayerRegistry = {}
@@ -123,6 +126,8 @@ function PlayerRegistry.get(player: Player): PlayerState
 		waveTimesHit = 0,
 		waveDowns = 0,
 		tutorialDone = false,
+		vara = {},
+		varaOffer = {},
 	}
 	states[player] = state
 	return state

@@ -11,6 +11,7 @@ local Shop = require(ReplicatedStorage.Shared.Shop)
 local Weapons = require(ReplicatedStorage.Shared.Weapons)
 local Paths = require(ReplicatedStorage.Shared.Paths)
 local Relics = require(ReplicatedStorage.Shared.Relics)
+local Vara = require(ReplicatedStorage.Shared.Vara)
 local Enchants = require(ReplicatedStorage.Shared.Enchants)
 local StatusEffects = require(ReplicatedStorage.Shared.StatusEffects)
 local PvP = require(ReplicatedStorage.Shared.PvP)
@@ -170,7 +171,8 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 	local ench = Enchants.effects(state.enchant)
 	local passive = Paths.passiveOf(state.path)
 	local relicBonus = Relics.totalBonus(Relics.equippedList(state.relics.equipped))
-	local isCrit = Combat.rollCrit(nil, (ench.critChanceBonus or 0) + relicBonus.critChance)
+	local varaFx = Vara.totalEffects(state.vara)
+	local isCrit = Combat.rollCrit(nil, (ench.critChanceBonus or 0) + relicBonus.critChance + varaFx.critChance)
 	-- Static Ward and kin: an active empower scales everything dealt while it lasts.
 	local empower = if os.clock() < state.empowerUntil then state.empowerMult else 1
 	local damage = Combat.critDamage(
@@ -180,6 +182,7 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 			* Weapons.damageMult(state.weapon.id, state.weapon.tier)
 			* passive.damageMult
 			* relicBonus.damageMult
+			* varaFx.damageMult
 			* empower,
 		isCrit,
 		(ench.critMultiplier or Combat.Config.CritMultiplier) + sig.critDamageBonus
@@ -210,10 +213,13 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 		end
 
 		humanoid:TakeDamage(dealt)
-		state.tejas = Combat.clampTejas(state.tejas + (Combat.Config.TejasPerHitLanded + sig.tejasPerHitBonus) * (ench.tejasMult or 1) * passive.tejasMult * relicBonus.tejasMult)
+		state.tejas = Combat.clampTejas(state.tejas + (Combat.Config.TejasPerHitLanded + sig.tejasPerHitBonus) * (ench.tejasMult or 1) * passive.tejasMult * relicBonus.tejasMult * varaFx.tejasMult)
 
 		if ench.lifesteal then
 			healed += dealt * ench.lifesteal
+		end
+		if varaFx.lifesteal > 0 then
+			healed += dealt * varaFx.lifesteal -- Rakta: the boon drinks alongside the mantra
 		end
 		if ench.burnDamage and humanoid.Health > 0 and enemyModel and enemyModel:IsA("Model") then
 			igniteEnemy(enemyModel, humanoid, ench.burnDamage, ench.burnSeconds or 3)
@@ -294,6 +300,7 @@ Net.DefenseState.OnServerEvent:Connect(function(player: Player, data: any)
 		state.dodgeUntil = os.clock()
 			+ Combat.Config.ParryWindowSeconds * (1 + (ench.dodgeBonus or 0))
 			+ Paths.passiveOf(state.path).dodgeBonusSeconds
+			+ Vara.totalEffects(state.vara).dodgeBonusSeconds
 		if char then
 			Net.AnimEvent:FireAllClients(char, "dash")
 		end
