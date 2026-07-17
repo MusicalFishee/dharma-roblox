@@ -217,6 +217,10 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play("questDone")
 		return
 	end
+	if data.reaction then
+		play("thunderCrack")
+		return
+	end
 	if data.varaPicked then
 		play("levelUp")
 		return

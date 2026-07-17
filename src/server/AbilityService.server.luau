@@ -21,6 +21,7 @@ local Abilities = require(ReplicatedStorage.Shared.Abilities)
 local Paths = require(ReplicatedStorage.Shared.Paths)
 local Siddhis = require(ReplicatedStorage.Shared.Siddhis)
 local Vara = require(ReplicatedStorage.Shared.Vara)
+local Reactions = require(ReplicatedStorage.Shared.Reactions)
 local Progression = require(ReplicatedStorage.Shared.Progression)
 local StatusEffects = require(ReplicatedStorage.Shared.StatusEffects)
 local PvP = require(ReplicatedStorage.Shared.PvP)
@@ -63,6 +64,110 @@ local function damageMultFor(state: any): number
 		mult *= state.empowerMult
 	end
 	return mult
+end
+
+-- ---------------------------------------------------------------------------
+-- Astra Reactions: a damaging Astra marks its victim with its element; a
+-- different element on a live mark detonates. Marks live on the ENEMY, so
+-- two players can combo each other's casts.
+-- ---------------------------------------------------------------------------
+local function applyElement(player: Player, model: Model, humanoid: Humanoid, abilityId: string)
+	local element = Reactions.elementOf(abilityId)
+	if not element then
+		return
+	end
+	local now = os.clock()
+	local mark = model:GetAttribute("ElemMark")
+	local markUntil = model:GetAttribute("ElemMarkUntil")
+	if typeof(mark) == "string" and typeof(markUntil) == "number" then
+		local def = Reactions.tryReact(mark, markUntil, now, element)
+		if def then
+			model:SetAttribute("ElemMark", nil)
+			model:SetAttribute("ElemMarkUntil", nil)
+			model:SetAttribute("LastAttacker", player.UserId)
+			humanoid:TakeDamage(def.bonusDamage)
+
+			local eroot = model:FindFirstChild("HumanoidRootPart")
+			if eroot and eroot:IsA("BasePart") then
+				-- The detonation flash.
+				local burst = Instance.new("Part")
+				burst.Shape = Enum.PartType.Ball
+				burst.Size = Vector3.new(3, 3, 3)
+				burst.Position = eroot.Position
+				burst.Color = Color3.fromRGB(255, 240, 200)
+				burst.Material = Enum.Material.Neon
+				burst.Transparency = 0.2
+				burst.Anchored = true
+				burst.CanCollide = false
+				burst.CanQuery = false
+				burst.Parent = workspace
+				TweenService:Create(burst, TweenInfo.new(0.4), { Size = Vector3.new(9, 9, 9), Transparency = 1 }):Play()
+				Debris:AddItem(burst, 0.45)
+			end
+
+			if def.flourish == "ignite" then
+				if model:GetAttribute("Burning") ~= true then
+					model:SetAttribute("Burning", true)
+					if eroot and eroot:IsA("BasePart") then
+						local flame = Instance.new("Fire")
+						flame.Size = 5
+						flame.Heat = 9
+						flame.Color = Color3.fromRGB(255, 120, 30)
+						flame.Parent = eroot
+						Debris:AddItem(flame, 4)
+					end
+					task.spawn(function()
+						for _ = 1, 4 do
+							task.wait(1)
+							if humanoid.Health <= 0 or not model.Parent then
+								break
+							end
+							humanoid:TakeDamage(def.magnitude / 4)
+						end
+						model:SetAttribute("Burning", nil)
+					end)
+				end
+			elseif def.flourish == "slow" then
+				if model:GetAttribute("ElemSlowed") ~= true then
+					model:SetAttribute("ElemSlowed", true)
+					local prior = humanoid.WalkSpeed
+					humanoid.WalkSpeed = prior * def.magnitude
+					task.delay(4, function()
+						if humanoid.Parent and humanoid.Health > 0 then
+							humanoid.WalkSpeed = prior
+						end
+						model:SetAttribute("ElemSlowed", nil)
+					end)
+				end
+			elseif def.flourish == "knockback" then
+				if eroot and eroot:IsA("BasePart") then
+					eroot.AssemblyLinearVelocity = Vector3.new(0, def.magnitude * 0.6, 0)
+						+ eroot.CFrame.LookVector * -def.magnitude
+				end
+			elseif def.flourish == "tejas" then
+				local state = PlayerRegistry.get(player)
+				state.tejas = math.min(state.tejas + def.magnitude, 999)
+			elseif def.flourish == "chain" then
+				if eroot and eroot:IsA("BasePart") then
+					for _, other in CollectionService:GetTagged(ENEMY_TAG) do
+						if other:IsA("Model") and other ~= model then
+							local oh = other:FindFirstChildOfClass("Humanoid")
+							local orx = other:FindFirstChild("HumanoidRootPart")
+							if oh and oh.Health > 0 and orx and orx:IsA("BasePart") and (orx.Position - eroot.Position).Magnitude <= 12 then
+								other:SetAttribute("LastAttacker", player.UserId)
+								oh:TakeDamage(def.magnitude)
+							end
+						end
+					end
+				end
+			end
+
+			Net.CombatFeedback:FireClient(player, { reaction = true, name = def.name, damage = def.bonusDamage })
+			return
+		end
+	end
+	model:SetAttribute("ElemMark", element)
+	model:SetAttribute("ElemMarkUntil", now + Reactions.Window)
 end
 
 -- ---------------------------------------------------------------------------
@@ -136,6 +241,7 @@ local function castProjectile(player: Player, character: Model, root: BasePart, 
 				struck[model] = true
 				model:SetAttribute("LastAttacker", player.UserId)
 				humanoid:TakeDamage(damage)
+				applyElement(player, model, humanoid, def.id)
 				pierceLeft -= 1
 				if pierceLeft <= 0 then
 					spent = true
@@ -302,6 +408,7 @@ local function castNova(player: Player, root: BasePart, def: Abilities.AbilityDe
 		struck += 1
 		enemy:SetAttribute("LastAttacker", player.UserId)
 		humanoid:TakeDamage(damage)
+		applyElement(player, enemy, humanoid, def.id)
 
 		if knockback > 0 then
 			local flat = Vector3.new(offset.X, 0, offset.Z)
@@ -361,6 +468,7 @@ local function castSmite(player: Player, root: BasePart, hum: Humanoid, def: Abi
 		struck += 1
 		enemy:SetAttribute("LastAttacker", player.UserId)
 		humanoid:TakeDamage(damage)
+		applyElement(player, enemy, humanoid, def.id)
 
 		-- A bolt from the sky onto the enemy, in the ability's color.
 		local top = eroot.Position + Vector3.new(0, 60, 0)

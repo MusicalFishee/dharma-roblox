@@ -625,6 +625,10 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("AGNIHOTRA — day %d of devotion   (%s)", data.day, bits), SAFFRON)
 		return
 	end
+	if data.reaction then
+		showToast(string.format("%s!   +%d", tostring(data.name), data.damage or 0), MAGENTA)
+		return
+	end
 	if data.weaponLocked then
 		showToast(string.format("%s is not yet earned — %s", tostring(data.name), tostring(data.label)), Color3.fromRGB(200, 120, 120))
 		return
