@@ -17,6 +17,7 @@ local EnemyTypes = require(ReplicatedStorage.Shared.EnemyTypes)
 local StatusEffects = require(ReplicatedStorage.Shared.StatusEffects)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local QuestService = require(script.Parent.QuestService)
+local RitesService = require(script.Parent.RitesService)
 
 local ORB_LIFETIME = 25
 
@@ -78,7 +79,7 @@ function LootService.dropAt(position: Vector3, archetype: EnemyTypes.EnemyArchet
 		local state = PlayerRegistry.get(player)
 		-- Worn relics and held rank both fatten every orb you claim.
 		local rankIndex = Ranks.rankFor(Progression.resolve(state.totalXp).level)
-		local gained = math.floor(gold * Relics.totalBonus(Relics.equippedList(state.relics.equipped)).goldMult * Ranks.boonFor(rankIndex).goldMult * Vara.totalEffects(state.vara).goldMult)
+		local gained = math.floor(gold * Relics.totalBonus(Relics.equippedList(state.relics.equipped)).goldMult * Ranks.boonFor(rankIndex).goldMult * Vara.totalEffects(state.vara).goldMult * RitesService.mults().goldMult)
 		state.gold = Loot.clampGold(state.gold + gained)
 		Net.CombatFeedback:FireClient(player, { goldUpdate = true, gained = gained, gold = state.gold })
 		QuestService.onGold(player, gained)

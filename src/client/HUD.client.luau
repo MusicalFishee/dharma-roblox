@@ -625,6 +625,35 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("AGNIHOTRA — day %d of devotion   (%s)", data.day, bits), SAFFRON)
 		return
 	end
+	if data.yajnaLit then
+		showToast(string.format("%s feeds the flame:  %s", tostring(data.byName), tostring(data.line)), SAFFRON)
+		return
+	end
+	if data.yajnaExtinguished then
+		showToast("The sacred fire goes out with the line…", Color3.fromRGB(170, 170, 170))
+		return
+	end
+	if data.oathSworn then
+		showToast(string.format("%s swears the %s!  %s", tostring(data.byName), tostring(data.name), tostring(data.line)), RED)
+		return
+	end
+	if data.oathBegins then
+		showToast(string.format("THE %s BINDS THIS WAVE", string.upper(tostring(data.name))), RED)
+		return
+	end
+	if data.oathBounty then
+		showToast(string.format("The oath is kept:  +%d gold  +%d XP", data.gold, data.xp), YELLOW)
+		return
+	end
+	if data.ritesDenied then
+		local why = if data.reason == "gold" then "The flame refuses an empty hand"
+			elseif data.reason == "lit" then "That flame already burns"
+			elseif data.reason == "battle" then "Oaths are sworn between waves, not during"
+			elseif data.reason == "sworn" then "An oath already binds the next wave"
+			else "The rite refuses you"
+		showToast(why, Color3.fromRGB(200, 120, 120))
+		return
+	end
 	if data.reaction then
 		showToast(string.format("%s!   +%d", tostring(data.name), data.damage or 0), MAGENTA)
 		return

@@ -42,6 +42,8 @@ local Net = {
 	RelicRequest = ensureRemote("RelicRequest"),
 	-- client -> server: boon draft pick ({action="pick", id=...})
 	VaraRequest = ensureRemote("VaraRequest"),
+	-- client -> server: rites ({action="info"|"offer"|"swear", id=...})
+	RitesRequest = ensureRemote("RitesRequest"),
 	-- client -> server: story journal requests ({action="info"})
 	StoryRequest = ensureRemote("StoryRequest"),
 	-- client -> server: current guard state (blocking / dodging)

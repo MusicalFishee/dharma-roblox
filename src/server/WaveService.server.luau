@@ -23,6 +23,8 @@ local ZoneService = require(script.Parent.ZoneService)
 local UtsavaService = require(script.Parent.UtsavaService)
 local BhootaService = require(script.Parent.BhootaService)
 local VaraService = require(script.Parent.VaraService)
+local RitesService = require(script.Parent.RitesService)
+local Shapatha = require(ReplicatedStorage.Shared.Shapatha)
 local ProgressionService = require(script.Parent.ProgressionService)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local QuestService = require(script.Parent.QuestService)
@@ -38,6 +40,7 @@ local waveGen = 0 -- bumps on every (re)start; invalidates stale enemy-death cal
 local failing = false -- true from the moment the party wipes until the run reforms
 local waveSpawnCount = 0 -- how many foes this wave fielded (grades judge against it)
 local activeDosha: { wave: number, def: Doshas.DoshaDef }? = nil
+local activeOath: { wave: number, def: Shapatha.OathDef }? = nil
 local alivePlayers: { [Player]: boolean } = {}
 
 local function announce(data: { [string]: any })
@@ -56,6 +59,10 @@ local function resolveArchetype(id: string)
 	if dosha and dosha.wave == currentWave then
 		archetype = Doshas.applyToArchetype(dosha.def, archetype)
 	end
+	local oathState = activeOath
+	if oathState and oathState.wave == currentWave then
+		archetype = Shapatha.applyToArchetype(oathState.def, archetype)
+	end
 	return archetype
 end
 
@@ -66,6 +73,21 @@ local function onWaveClear(wave: number)
 	checkpoint = Survival.checkpointFor(wave, checkpoint, Waves.BossInterval)
 	-- Punarjanma: the wave breaks, and every wandering bhoota returns to flesh.
 	BhootaService.setBattleActive(false)
+	RitesService.setBattleActive(false)
+
+	-- A kept oath pays its multiplied bounty to everyone standing.
+	local oathState = activeOath
+	if oathState and oathState.wave == wave then
+		activeOath = nil
+		local bounty = Shapatha.bountyFor(oathState.def, wave)
+		for _, p in Players:GetPlayers() do
+			local pstate = PlayerRegistry.get(p)
+			pstate.gold = Loot.clampGold(pstate.gold + bounty.gold)
+			ProgressionService.awardXp(p, bounty.xp)
+			Net.CombatFeedback:FireClient(p, { goldUpdate = true, gained = 0, gold = pstate.gold })
+			Net.CombatFeedback:FireClient(p, { oathBounty = true, name = oathState.def.name, gold = bounty.gold, xp = bounty.xp })
+		end
+	end
 	for _, p in BhootaService.releaseAll() do
 		alivePlayers[p] = true
 	end
@@ -168,6 +190,15 @@ function startWave(wave: number)
 	currentWave = wave
 	ZoneService.applyForWave(wave)
 	BhootaService.setBattleActive(true)
+	RitesService.setBattleActive(true)
+
+	-- A sworn oath binds the wave now beginning.
+	activeOath = nil
+	local oathDef = RitesService.takePendingOath()
+	if oathDef then
+		activeOath = { wave = wave, def = oathDef }
+		announce({ oathBegins = true, name = oathDef.name })
+	end
 
 	-- Fresh conduct ledgers for the new wave.
 	for _, p in Players:GetPlayers() do
@@ -253,8 +284,11 @@ function failRun()
 	failing = true
 	waveGen += 1 -- every in-flight enemy-death callback from the doomed wave is now void
 	local failedWave = currentWave
-	-- The wipe scatters every boon the run had granted.
+	-- The wipe scatters every boon, extinguishes the fire, and voids the oath.
 	VaraService.scatterAll()
+	RitesService.extinguish()
+	RitesService.setBattleActive(false)
+	activeOath = nil
 	-- The reform restores everyone; wandering spirits come back to flesh with it.
 	BhootaService.setBattleActive(false)
 	for _, p in BhootaService.releaseAll() do

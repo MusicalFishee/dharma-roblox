@@ -29,6 +29,7 @@ local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local QuestService = require(script.Parent.QuestService)
 local PvPService = require(script.Parent.PvPService)
 local EnemyService = require(script.Parent.EnemyService)
+local RitesService = require(script.Parent.RitesService)
 
 local ENEMY_TAG = "DharmaEnemy"
 
@@ -59,7 +60,7 @@ end
 -- Path passive + active empower ward, applied to all ability damage.
 local function damageMultFor(state: any): number
 	local varaFx = Vara.totalEffects(state.vara)
-	local mult = Paths.passiveOf(state.path).damageMult * varaFx.damageMult * varaFx.abilityDamageMult
+	local mult = Paths.passiveOf(state.path).damageMult * varaFx.damageMult * varaFx.abilityDamageMult * RitesService.mults().damageMult
 	if os.clock() < state.empowerUntil then
 		mult *= state.empowerMult
 	end

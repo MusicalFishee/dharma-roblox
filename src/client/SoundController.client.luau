@@ -221,6 +221,18 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play("thunderCrack")
 		return
 	end
+	if data.yajnaLit then
+		play("levelUp")
+		return
+	end
+	if data.oathSworn or data.oathBegins then
+		play("bossSpawn")
+		return
+	end
+	if data.oathBounty then
+		play("goldPickup")
+		return
+	end
 	if data.varaPicked then
 		play("levelUp")
 		return

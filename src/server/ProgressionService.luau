@@ -11,6 +11,7 @@ local Relics = require(ReplicatedStorage.Shared.Relics)
 local Ranks = require(ReplicatedStorage.Shared.Ranks)
 local Vara = require(ReplicatedStorage.Shared.Vara)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
+local RitesService = require(script.Parent.RitesService)
 
 local BASE_WALK_SPEED = 16
 
@@ -70,8 +71,8 @@ function ProgressionService.awardXp(player: Player, amount: number)
 		return
 	end
 	local state = PlayerRegistry.get(player)
-	-- Jñāna: the boon deepens every drop of XP while it stands.
-	amount = math.floor(amount * Vara.totalEffects(state.vara).xpMult)
+	-- Jñāna's boon and the ghee-fed flame both deepen every drop of XP.
+	amount = math.floor(amount * Vara.totalEffects(state.vara).xpMult * RitesService.mults().xpMult)
 	local before = Progression.resolve(state.totalXp)
 	state.totalXp += amount
 	local after = Progression.resolve(state.totalXp)

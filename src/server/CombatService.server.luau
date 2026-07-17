@@ -18,6 +18,7 @@ local PvP = require(ReplicatedStorage.Shared.PvP)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local PvPService = require(script.Parent.PvPService)
 local EnemyService = require(script.Parent.EnemyService)
+local RitesService = require(script.Parent.RitesService)
 
 local Debris = game:GetService("Debris")
 
@@ -183,6 +184,7 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 			* passive.damageMult
 			* relicBonus.damageMult
 			* varaFx.damageMult
+			* RitesService.mults().damageMult
 			* empower,
 		isCrit,
 		(ench.critMultiplier or Combat.Config.CritMultiplier) + sig.critDamageBonus
