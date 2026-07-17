@@ -625,6 +625,20 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("AGNIHOTRA — day %d of devotion   (%s)", data.day, bits), SAFFRON)
 		return
 	end
+	if data.dhyanaEnter then
+		showToast("DHYANA — the grove holds you. Jump to rise.", Color3.fromRGB(200, 220, 255))
+		return
+	end
+	if data.dhyanaTick then
+		local sangha = if (data.friends or 0) > 0 then string.format("  ·  sangha ×%d", data.friends) else ""
+		local shard = if (data.shards or 0) > 0 then "  ·  +1 ◆" else ""
+		showToast(string.format("Dhyana — minute %d  (+%d gold%s%s)", data.minutes, data.gold, sangha, shard), Color3.fromRGB(200, 220, 255))
+		return
+	end
+	if data.dhyanaExit then
+		showToast(string.format("You rise — %d minutes of stillness kept.", data.minutes or 0), Color3.fromRGB(200, 220, 255))
+		return
+	end
 	if data.yajnaLit then
 		showToast(string.format("%s feeds the flame:  %s", tostring(data.byName), tostring(data.line)), SAFFRON)
 		return

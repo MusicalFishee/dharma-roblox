@@ -77,8 +77,8 @@ local function nearestPlayer(pos: Vector3): (Player?, BasePart?, Humanoid?, numb
 		if not root or not hum or hum.Health <= 0 then
 			continue
 		end
-		if char:GetAttribute("DharmaDowned") == true or char:GetAttribute("DharmaBhoota") == true then
-			continue -- the fallen are beneath the horde's notice
+		if char:GetAttribute("DharmaDowned") == true or char:GetAttribute("DharmaBhoota") == true or char:GetAttribute("DharmaDhyana") == true then
+			continue -- the fallen and the still are beneath the horde's notice
 		end
 		local d = (root.Position - pos).Magnitude
 		if d < bestDist then

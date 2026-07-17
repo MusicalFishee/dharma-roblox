@@ -551,7 +551,7 @@ Net.AbilityRequest.OnServerEvent:Connect(function(player: Player, slotArg: any)
 	if not character or not root or not hum or hum.Health <= 0 then
 		return
 	end
-	if character:GetAttribute("DharmaDowned") == true or character:GetAttribute("DharmaBhoota") == true then
+	if character:GetAttribute("DharmaDowned") == true or character:GetAttribute("DharmaBhoota") == true or character:GetAttribute("DharmaDhyana") == true then
 		return -- the downed crawl; they do not cast
 	end
 

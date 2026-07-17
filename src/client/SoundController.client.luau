@@ -225,6 +225,10 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play("levelUp")
 		return
 	end
+	if data.dhyanaEnter then
+		play("guardUp")
+		return
+	end
 	if data.oathSworn or data.oathBegins then
 		play("bossSpawn")
 		return

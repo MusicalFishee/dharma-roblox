@@ -119,7 +119,7 @@ local function runGoldenDeer(def: Utsava.EventDef)
 			local bestDist = math.huge
 			for _, p in Players:GetPlayers() do
 				local char = p.Character
-				if char and (char:GetAttribute("DharmaBhoota") == true or char:GetAttribute("DharmaDowned") == true) then
+				if char and (char:GetAttribute("DharmaBhoota") == true or char:GetAttribute("DharmaDowned") == true or char:GetAttribute("DharmaDhyana") == true) then
 					continue -- the deer fears neither spirits nor the fallen
 				end
 				local hrp = char and char:FindFirstChild("HumanoidRootPart")
