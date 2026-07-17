@@ -117,13 +117,48 @@ for _, weapon in Weapons.List do
 	if sig.reachBonus > 0 then identities += 1 end
 	if sig.finisherKnockbackMult > 1 then identities += 1 end
 	if sig.tejasPerHitBonus > 0 then identities += 1 end
+	if sig.critChanceBonus > 0 then identities += 1 end
+	if sig.finisherDamageMult > 1 then identities += 1 end
+	if sig.dodgeBonusSeconds > 0 then identities += 1 end
+	if sig.damageTakenMult < 1 then identities += 1 end
+	if sig.lifesteal > 0 then identities += 1 end
 	if identities ~= 1 then
 		sigOk = false -- exactly ONE identity each: signatures, not stat soup
 	end
 	identityCount += identities
 end
 check("every weapon carries exactly one signature", sigOk and identityCount == #Weapons.List)
-check("empty hands carry no signature", Weapons.signatureOf("").critDamageBonus == 0 and Weapons.signatureOf("").reachBonus == 0 and Weapons.signatureOf("").finisherKnockbackMult == 1 and Weapons.signatureOf("").tejasPerHitBonus == 0)
+local bare = Weapons.signatureOf("")
+check("empty hands carry no signature", bare.critDamageBonus == 0 and bare.reachBonus == 0 and bare.finisherKnockbackMult == 1 and bare.tejasPerHitBonus == 0 and bare.critChanceBonus == 0 and bare.finisherDamageMult == 1 and bare.dodgeBonusSeconds == 0 and bare.damageTakenMult == 1 and bare.lifesteal == 0)
+
+-- The armory: four starters, five earned by deed.
+local function usnap(over: { [string]: number }): Weapons.UnlockSnapshot
+	local out: Weapons.UnlockSnapshot = { kills = 0, bossKills = 0, trials = 0, revives = 0, raidClears = 0 }
+	for k, v in over do
+		(out :: any)[k] = v
+	end
+	return out
+end
+check("the roster is nine strong", #Weapons.List == 9)
+check("exactly four starters", #Weapons.starters() == 4)
+local unlockKinds = { kills = true, bossKills = true, trials = true, revives = true, raidClears = true }
+local unlocksOk = true
+for _, def in Weapons.List do
+	if def.unlock then
+		if not unlockKinds[def.unlock.kind] or def.unlock.threshold <= 0 or #def.unlock.label == 0 then
+			unlocksOk = false
+		end
+	end
+end
+check("every earned weapon names a real deed", unlocksOk)
+check("starters are always unlocked", Weapons.isUnlocked("khanda", usnap({})) and Weapons.isUnlocked("chakram", usnap({})))
+check("the katar waits for its five hundred", not Weapons.isUnlocked("katar", usnap({ kills = 499 })) and Weapons.isUnlocked("katar", usnap({ kills = 500 })))
+check("the parashu waits on the lords", not Weapons.isUnlocked("parashu", usnap({ bossKills = 24 })) and Weapons.isUnlocked("parashu", usnap({ bossKills = 25 })))
+check("the urumi answers the trial", Weapons.isUnlocked("urumi", usnap({ trials = 1 })))
+check("the danda honors the lifter", Weapons.isUnlocked("danda", usnap({ revives = 10 })) and not Weapons.isUnlocked("danda", usnap({ kills = 99999 })))
+check("the moon-blade demands the king", not Weapons.isUnlocked("chandrahasa", usnap({})) and Weapons.isUnlocked("chandrahasa", usnap({ raidClears = 1 })))
+check("junk ids are never unlocked", not Weapons.isUnlocked("excalibur", usnap({ kills = 999999 })))
+check("earned blades climb the same tier ladder", Weapons.damageMult("parashu", 5) > Weapons.damageMult("parashu", 1))
 check("khanda cuts deeper crits", Weapons.signatureOf("khanda").critDamageBonus == 0.25)
 check("trishula outreaches the rest", Weapons.signatureOf("trishula").reachBonus > 0)
 check("gada hurls hardest", Weapons.signatureOf("gada").finisherKnockbackMult > 1.5)

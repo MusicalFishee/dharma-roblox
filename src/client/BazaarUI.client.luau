@@ -17,7 +17,7 @@ local GOLD = Color3.fromRGB(255, 200, 40)
 local SHARD = Color3.fromRGB(180, 120, 255)
 local PANEL_BG = Color3.fromRGB(18, 15, 22)
 local ROW_BG = Color3.fromRGB(30, 25, 38)
-local MUTED = Color3.fromRGB(200, 195, 205)
+local _MUTED = Color3.fromRGB(200, 195, 205)
 local DIM = Color3.fromRGB(120, 115, 130)
 
 local screenGui = Instance.new("ScreenGui")

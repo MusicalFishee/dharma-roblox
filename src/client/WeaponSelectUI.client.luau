@@ -67,7 +67,8 @@ subtitle.Parent = panel
 local CARD_W = 180
 local CARD_H = 250
 local GAP = 16
-local count = #Weapons.List
+local starters = Weapons.starters()
+local count = #starters
 local totalW = count * CARD_W + (count - 1) * GAP
 local startX = math.floor((820 - totalW) / 2)
 
@@ -170,7 +171,7 @@ local function makeCard(weapon: any, index: number)
 	end)
 end
 
-for i, weapon in Weapons.List do
+for i, weapon in starters do
 	makeCard(weapon, i)
 end
 

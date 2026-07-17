@@ -18,6 +18,7 @@ local Enchants = require(ReplicatedStorage.Shared.Enchants)
 local Paths = require(ReplicatedStorage.Shared.Paths)
 local Vira = require(ReplicatedStorage.Shared.Vira)
 local Vara = require(ReplicatedStorage.Shared.Vara)
+local Weapons = require(ReplicatedStorage.Shared.Weapons)
 local Loot = require(ReplicatedStorage.Shared.Loot)
 local StatusEffects = require(ReplicatedStorage.Shared.StatusEffects)
 local Relics = require(ReplicatedStorage.Shared.Relics)
@@ -170,7 +171,7 @@ local function resolveHitOnPlayer(
 		-- Stoneskin Sutra and kin: the defender's mantra soaks part of the blow;
 		-- an active shield ward (Zephyr Veil) and worn relics soak their share on top.
 		local ward = if now < pstate.wardUntil then pstate.wardMult else 1
-		playerHum:TakeDamage(resolution.damage * (ench.damageTakenMult or 1) * ward * relicBonus.damageTakenMult * varaFx.damageTakenMult)
+		playerHum:TakeDamage(resolution.damage * (ench.damageTakenMult or 1) * ward * relicBonus.damageTakenMult * varaFx.damageTakenMult * Weapons.signatureOf(pstate.weapon.id).damageTakenMult)
 		local char = player.Character
 		if char and resolution.outcome == "Hit" then
 			Net.AnimEvent:FireAllClients(char, "flinch")
@@ -471,7 +472,7 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 						local vench = Enchants.effects(vstate.enchant)
 						local vward = if os.clock() < vstate.wardUntil then vstate.wardMult else 1
 						local vrelic = Relics.totalBonus(Relics.equippedList(vstate.relics.equipped))
-						hum:TakeDamage(res.damage * (vench.damageTakenMult or 1) * vward * vrelic.damageTakenMult * Vara.totalEffects(vstate.vara).damageTakenMult)
+						hum:TakeDamage(res.damage * (vench.damageTakenMult or 1) * vward * vrelic.damageTakenMult * Vara.totalEffects(vstate.vara).damageTakenMult * Weapons.signatureOf(vstate.weapon.id).damageTakenMult)
 						Net.AnimEvent:FireAllClients(char, "flinch")
 						-- Shockwave knockback, away from the blast centre.
 						if hrp and hrp:IsA("BasePart") then

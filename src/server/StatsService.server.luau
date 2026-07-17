@@ -27,6 +27,7 @@ Net.StatsRequest.OnServerEvent:Connect(function(player: Player, data: any)
 		totalXp = state.totalXp,
 		gold = state.gold,
 		shards = state.shards,
+		weaponId = state.weapon.id,
 		weaponName = Weapons.tierName(state.weapon.id, state.weapon.tier),
 		weaponTier = state.weapon.tier,
 		weaponMax = Weapons.MaxTier,

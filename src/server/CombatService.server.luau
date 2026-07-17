@@ -172,7 +172,7 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 	local passive = Paths.passiveOf(state.path)
 	local relicBonus = Relics.totalBonus(Relics.equippedList(state.relics.equipped))
 	local varaFx = Vara.totalEffects(state.vara)
-	local isCrit = Combat.rollCrit(nil, (ench.critChanceBonus or 0) + relicBonus.critChance + varaFx.critChance)
+	local isCrit = Combat.rollCrit(nil, (ench.critChanceBonus or 0) + relicBonus.critChance + varaFx.critChance + sig.critChanceBonus)
 	-- Static Ward and kin: an active empower scales everything dealt while it lasts.
 	local empower = if os.clock() < state.empowerUntil then state.empowerMult else 1
 	local damage = Combat.critDamage(
@@ -187,6 +187,9 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 		isCrit,
 		(ench.critMultiplier or Combat.Config.CritMultiplier) + sig.critDamageBonus
 	)
+	if swing.isFinisher then
+		damage = math.floor(damage * sig.finisherDamageMult) -- Parashu's answer
+	end
 
 	local healed = 0
 	local anyExecuted = false
@@ -220,6 +223,9 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 		end
 		if varaFx.lifesteal > 0 then
 			healed += dealt * varaFx.lifesteal -- Rakta: the boon drinks alongside the mantra
+		end
+		if sig.lifesteal > 0 then
+			healed += dealt * sig.lifesteal -- Chandrahasa drinks too
 		end
 		if ench.burnDamage and humanoid.Health > 0 and enemyModel and enemyModel:IsA("Model") then
 			igniteEnemy(enemyModel, humanoid, ench.burnDamage, ench.burnSeconds or 3)
@@ -301,6 +307,7 @@ Net.DefenseState.OnServerEvent:Connect(function(player: Player, data: any)
 			+ Combat.Config.ParryWindowSeconds * (1 + (ench.dodgeBonus or 0))
 			+ Paths.passiveOf(state.path).dodgeBonusSeconds
 			+ Vara.totalEffects(state.vara).dodgeBonusSeconds
+			+ Weapons.signatureOf(state.weapon.id).dodgeBonusSeconds
 		if char then
 			Net.AnimEvent:FireAllClients(char, "dash")
 		end

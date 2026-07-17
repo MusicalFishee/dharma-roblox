@@ -129,6 +129,16 @@ local function buildWeapon(id: string, tier: number): Model?
 		local disc = decor("Disc", Vector3.new(0.16, 2.5 * s, 2.5 * s), CFrame.new(0, 1.7 * s, 0), bladeColor, mat)
 		disc.Shape = Enum.PartType.Cylinder
 		addGlow(disc, v.glow, glowColor)
+	elseif v.shape == "axe" then
+		decor("Shaft", Vector3.new(0.3, 3.0 * s, 0.3), CFrame.new(0, 1.3 * s, 0), HANDLE_COLOR, Enum.Material.Wood)
+		local head = decor("Head", Vector3.new(1.4 * s, 1.0 * s, 0.2), CFrame.new(0.55 * s, 2.6 * s, 0), bladeColor, mat)
+		decor("Beard", Vector3.new(0.5 * s, 0.5 * s, 0.18), CFrame.new(0.95 * s, 2.1 * s, 0), bladeColor, mat)
+		addGlow(head, v.glow, glowColor)
+	elseif v.shape == "staff" then
+		local shaft = decor("Shaft", Vector3.new(0.28, 4.4 * s, 0.28), CFrame.new(0, 1.6 * s, 0), bladeColor, mat)
+		decor("CapTop", Vector3.new(0.45 * s, 0.45 * s, 0.45 * s), CFrame.new(0, 3.85 * s, 0), bladeColor, mat)
+		decor("CapLow", Vector3.new(0.4 * s, 0.4 * s, 0.4 * s), CFrame.new(0, -0.6, 0), bladeColor, mat)
+		addGlow(shaft, v.glow, glowColor)
 	end
 
 	return model
@@ -216,21 +226,35 @@ function WeaponService.refresh(player: Player, allowPrompt: boolean?)
 	})
 end
 
--- The one-time weapon choice. Locked once made.
+-- Choose or SWITCH a weapon. The first oath is a starter's choice; earned
+-- weapons can be wielded any time after (the smith's tier travels with you —
+-- the craft is yours, not the blade's). The server re-checks every unlock.
 Net.WeaponRequest.OnServerEvent:Connect(function(player: Player, data: any)
 	if typeof(data) ~= "table" or data.action ~= "select" then
 		return
 	end
 	local state = PlayerRegistry.get(player)
-	if Weapons.isValidId(state.weapon.id) then
-		return -- already wielding a real weapon; the choice is permanent
+	if not state.dataReady then
+		return -- never race the save
 	end
 	local id = tostring(data.id)
 	local weapon = Weapons.get(id)
-	if not weapon then
+	if not weapon or id == state.weapon.id then
 		return
 	end
-	state.weapon = { id = id, tier = Weapons.MinTier }
+	local snap: Weapons.UnlockSnapshot = {
+		kills = state.stats.kills,
+		bossKills = state.stats.bossKills,
+		trials = state.stats.trialsPassed,
+		revives = state.stats.revives,
+		raidClears = state.stats.raidClears,
+	}
+	if not Weapons.isUnlocked(id, snap) then
+		Net.CombatFeedback:FireClient(player, { weaponLocked = true, name = weapon.displayName, label = if weapon.unlock then weapon.unlock.label else "" })
+		return
+	end
+	local hadWeapon = Weapons.isValidId(state.weapon.id)
+	state.weapon = { id = id, tier = if hadWeapon then state.weapon.tier else Weapons.MinTier }
 	WeaponService.refresh(player, false)
 	Net.CombatFeedback:FireClient(player, {
 		weaponChosen = true,
