@@ -79,47 +79,8 @@ end
 local drawerOpen = false
 local drawerButtons: { TextButton } = {}
 
-type Entry = { label: string, gui: string, open: (() -> ())? }
-local entries: { Entry } = {
-	{ label = "Shop", gui = "DharmaShop", open = function()
-		Net.ShopRequest:FireServer({ action = "info" })
-	end },
-	{ label = "Altar", gui = "DharmaAltar", open = function()
-		Net.EnchantRequest:FireServer({ action = "info" })
-	end },
-	{ label = "Paths", gui = "DharmaPathSelect", open = function()
-		Net.PathRequest:FireServer({ action = "info" })
-	end },
-	{ label = "Relics", gui = "DharmaRelics", open = function()
-		Net.RelicRequest:FireServer({ action = "info" })
-	end },
-	{ label = "Armory", gui = "DharmaArmory", open = function()
-		Net.StatsRequest:FireServer({ action = "info" })
-	end },
-	{ label = "Stats", gui = "DharmaStats", open = function()
-		Net.StatsRequest:FireServer({ action = "info" })
-	end },
-	{ label = "Kirti", gui = "DharmaKirti", open = function()
-		Net.StatsRequest:FireServer({ action = "info" })
-	end },
-	{ label = "Titles", gui = "DharmaTitles", open = function()
-		Net.TitleRequest:FireServer({ action = "list" })
-	end },
-	{ label = "Duels", gui = "DharmaPvP", open = function()
-		Net.PvPRequest:FireServer({ action = "list" })
-	end },
-	{ label = "Story", gui = "DharmaStory", open = function()
-		Net.StoryRequest:FireServer({ action = "info" })
-	end },
-	{ label = "Rites", gui = "DharmaRites", open = function()
-		Net.RitesRequest:FireServer({ action = "info" })
-	end },
-	{ label = "Marks", gui = "DharmaVibhuti", open = function()
-		Net.VibhutiRequest:FireServer({ action = "info" })
-		Net.StatsRequest:FireServer({ action = "info" })
-	end },
-	{ label = "Bazaar", gui = "DharmaBazaar" },
-}
+local PanelDirectory = require(ReplicatedStorage.Shared.PanelDirectory)
+local entries = PanelDirectory.Entries
 
 local menu = Instance.new("TextButton")
 menu.Size = UDim2.fromOffset(52, 52)
@@ -155,8 +116,11 @@ for i, entry in entries do
 		local gui = playerGui:FindFirstChild(entry.gui)
 		if gui and gui:IsA("ScreenGui") then
 			gui.Enabled = not gui.Enabled
-			if gui.Enabled and entry.open then
-				entry.open()
+			if gui.Enabled and entry.remote then
+				local remote = (Net :: any)[entry.remote]
+				if remote then
+					remote:FireServer({ action = entry.payloadAction })
+				end
 			end
 		end
 		drawerOpen = false
