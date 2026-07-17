@@ -46,6 +46,8 @@ local Net = {
 	RitesRequest = ensureRemote("RitesRequest"),
 	-- client -> server: sacred marks + emotes ({action="info"|"equip"|"emote", ...})
 	VibhutiRequest = ensureRemote("VibhutiRequest"),
+	-- client -> server: the device class being played on ({method="keyboard"|"gamepad"|"touch"})
+	InputReport = ensureRemote("InputReport"),
 	-- client -> server: story journal requests ({action="info"})
 	StoryRequest = ensureRemote("StoryRequest"),
 	-- client -> server: current guard state (blocking / dodging)

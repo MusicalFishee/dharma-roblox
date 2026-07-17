@@ -8,6 +8,7 @@ local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 
 local Net = require(ReplicatedStorage.Shared.Net)
+local InputBadge = require(ReplicatedStorage.Shared.InputBadge)
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -164,7 +165,8 @@ local function rebuildRoster(data: any)
 		name.TextSize = 14
 		name.TextXAlignment = Enum.TextXAlignment.Left
 		name.TextColor3 = Color3.fromRGB(235, 235, 235)
-		name.Text = tostring(p.name)
+		local glyph = InputBadge.glyphFor(tostring(p.input or ""))
+		name.Text = if #glyph > 0 then string.format("%s  %s", glyph, tostring(p.name)) else tostring(p.name)
 		name.Parent = row
 
 		local btn = Instance.new("TextButton")

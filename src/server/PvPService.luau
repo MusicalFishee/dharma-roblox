@@ -8,6 +8,7 @@ local Players = game:GetService("Players")
 
 local Net = require(ReplicatedStorage.Shared.Net)
 local PvP = require(ReplicatedStorage.Shared.PvP)
+local InputBadge = require(ReplicatedStorage.Shared.InputBadge)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 
 local PvPService = {}
@@ -65,15 +66,56 @@ local function roster(player: Player): { [string]: any }
 	local list = {}
 	for _, p in Players:GetPlayers() do
 		if p ~= player then
-			table.insert(list, { userId = p.UserId, name = p.DisplayName, busy = isBusy(p) })
+			table.insert(list, { userId = p.UserId, name = p.DisplayName, busy = isBusy(p), input = PlayerRegistry.get(p).inputMethod })
 		end
 	end
 	return { pvp = "roster", players = list, busy = isBusy(player) }
 end
 
+-- The tiny Rivals-style badge: one glyph over each duelist while the duel
+-- lives, gone the moment it ends. Glimpsed once; the battlefield stays king.
+local function removeBadge(player: Player)
+	local char = player.Character
+	local head = char and char:FindFirstChild("Head")
+	local badge = head and head:FindFirstChild("DuelInputBadge")
+	if badge then
+		badge:Destroy()
+	end
+end
+
+local function attachBadge(player: Player)
+	removeBadge(player)
+	local char = player.Character
+	local head = char and char:FindFirstChild("Head")
+	if not head then
+		return
+	end
+	local glyph = InputBadge.glyphFor(PlayerRegistry.get(player).inputMethod)
+	if #glyph == 0 then
+		return
+	end
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "DuelInputBadge"
+	billboard.Size = UDim2.fromOffset(26, 20)
+	billboard.StudsOffset = Vector3.new(0, 4.4, 0)
+	billboard.AlwaysOnTop = true
+	billboard.Parent = head
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.fromScale(1, 1)
+	label.BackgroundTransparency = 1
+	label.Font = Enum.Font.Gotham
+	label.TextSize = 14
+	label.TextTransparency = 0.15
+	label.TextColor3 = Color3.fromRGB(230, 230, 240)
+	label.Text = glyph
+	label.Parent = billboard
+end
+
 local function endDuel(a: Player, b: Player)
 	duels[a] = nil
 	duels[b] = nil
+	removeBadge(a)
+	removeBadge(b)
 end
 
 -- Somebody won. Pay respects, pay the stat, tell the world.
@@ -127,6 +169,8 @@ local function beginDuel(a: Player, b: Player)
 		db.live = true
 		send(a, { pvp = "begin", foeName = b.DisplayName })
 		send(b, { pvp = "begin", foeName = a.DisplayName })
+		attachBadge(a)
+		attachBadge(b)
 		watchForFall(a)
 		watchForFall(b)
 	end)
@@ -217,6 +261,16 @@ Players.PlayerRemoving:Connect(function(player)
 		else
 			endDuel(player, duel.foe)
 		end
+	end
+end)
+
+Net.InputReport.OnServerEvent:Connect(function(player: Player, data: any)
+	if typeof(data) ~= "table" then
+		return
+	end
+	local method = tostring(data.method)
+	if InputBadge.valid(method) then
+		PlayerRegistry.get(player).inputMethod = method
 	end
 end)
 

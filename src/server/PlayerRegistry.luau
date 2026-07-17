@@ -72,6 +72,8 @@ export type PlayerState = {
 	varaOffer: { string },
 	-- Worn sacred marks (persisted; cosmetic only, by law).
 	vibhuti: { tilak: string, aura: string },
+	-- The device class this player last reported ("keyboard" | "gamepad" | "touch").
+	inputMethod: string,
 }
 
 local PlayerRegistry = {}
@@ -131,6 +133,7 @@ function PlayerRegistry.get(player: Player): PlayerState
 		vara = {},
 		varaOffer = {},
 		vibhuti = { tilak = "", aura = "" },
+		inputMethod = "keyboard",
 	}
 	states[player] = state
 	return state
