@@ -55,6 +55,8 @@ export type PlayerState = {
 	storyChapter: number,
 	-- Per-path siddhi mastery XP (fed by AbilityService, never decreases).
 	mastery: { agni: number, vayu: number, varuna: number, indra: number },
+	-- Agnihotra login streak (granted once per UTC day on load).
+	streak: { stamp: number, count: number },
 }
 
 local PlayerRegistry = {}
@@ -103,6 +105,7 @@ function PlayerRegistry.get(player: Player): PlayerState
 		relics = { owned = {}, equipped = { crown = "", kavacha = "", charm = "" } },
 		storyChapter = 0,
 		mastery = { agni = 0, vayu = 0, varuna = 0, indra = 0 },
+		streak = { stamp = 0, count = 0 },
 	}
 	states[player] = state
 	return state

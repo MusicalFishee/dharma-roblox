@@ -146,6 +146,14 @@ local mrt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, 
 check("mastery round-trips through serialize", mrt.mastery.agni == 777 and mrt.mastery.varuna == 3)
 check("serialize without mastery -> zeros", PlayerData.serialize(1, 1).mastery.indra == 0)
 
+-- Agnihotra streak (added with the Bazaar, v15).
+check("default streak unlit", PlayerData.default().streak.stamp == 0 and PlayerData.default().streak.count == 0)
+local stv = PlayerData.validate({ streak = { stamp = 20651, count = 4 } })
+check("valid streak preserved", stv.streak.stamp == 20651 and stv.streak.count == 4)
+check("junk streak cleaned", PlayerData.validate({ streak = { stamp = -3, count = "forever" } }).streak.stamp == 0 and PlayerData.validate({ streak = "eternal" }).streak.count == 0)
+local strt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", nil, 0, nil, { stamp = 20000, count = 7 }))
+check("streak round-trips through serialize", strt.streak.stamp == 20000 and strt.streak.count == 7)
+
 -- Relics (added with the relic system, v10).
 local rdef = PlayerData.default().relics
 check("default satchel empty + bare", #rdef.owned == 0 and rdef.equipped.crown == "" and rdef.equipped.kavacha == "" and rdef.equipped.charm == "")

@@ -614,6 +614,19 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(Bhoota.Lines.reborn, Color3.fromRGB(130, 255, 180))
 		return
 	end
+	if data.agnihotra then
+		local bits = string.format("+%d gold", data.gold)
+		if data.shards and data.shards > 0 then
+			bits ..= string.format("  +%d ◆", data.shards)
+		end
+		showToast(string.format("AGNIHOTRA — day %d of devotion   (%s)", data.day, bits), SAFFRON)
+		return
+	end
+	if data.bazaarGranted then
+		local what = if data.kind == "gold" then string.format("◈ %d gold", data.amount) else string.format("◆ %d shards", data.amount)
+		showToast(string.format("The Bazaar delivers:  %s — %s", tostring(data.name), what), YELLOW)
+		return
+	end
 	if data.downed then
 		showDowned(tonumber(data.seconds) or 20)
 		return

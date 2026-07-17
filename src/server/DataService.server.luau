@@ -9,6 +9,8 @@ local Players = game:GetService("Players")
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local PlayerData = require(ReplicatedStorage.Shared.PlayerData)
+local Streak = require(ReplicatedStorage.Shared.Streak)
+local Loot = require(ReplicatedStorage.Shared.Loot)
 local Net = require(ReplicatedStorage.Shared.Net)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local ProgressionService = require(script.Parent.ProgressionService)
@@ -65,6 +67,7 @@ local function loadPlayer(player: Player)
 	state.relics = data.relics
 	state.storyChapter = data.story
 	state.mastery = { agni = data.mastery.agni, vayu = data.mastery.vayu, varuna = data.mastery.varuna, indra = data.mastery.indra }
+	state.streak = { stamp = data.streak.stamp, count = data.streak.count }
 	state.playtimeMark = os.clock() -- playtime accrues from the moment the save lands
 	state.bestWave = data.bestWave
 	state.quests = data.quests
@@ -82,6 +85,30 @@ local function loadPlayer(player: Player)
 	Net.CombatFeedback:FireClient(player, { goldUpdate = true, gained = 0, gold = state.gold })
 	QuestService.ensureFilled(player)
 	QuestService.ensureDailies(player)
+
+	-- Agnihotra: the daily offering, granted once per UTC day (only on real loads —
+	-- a failed load never mints rewards it can't keep).
+	if ok then
+		local today = Streak.dayStamp(os.time())
+		local advance = Streak.advance(state.streak.stamp, state.streak.count, today)
+		state.streak.stamp = today
+		state.streak.count = advance.count
+		if advance.claimed then
+			local offering = Streak.rewardFor(advance.count)
+			state.gold = Loot.clampGold(state.gold + offering.gold)
+			state.shards += offering.shards
+			Net.CombatFeedback:FireClient(player, { goldUpdate = true, gained = 0, gold = state.gold })
+			if offering.shards > 0 then
+				Net.CombatFeedback:FireClient(player, { shardUpdate = true, gained = offering.shards, shards = state.shards })
+			end
+			Net.CombatFeedback:FireClient(player, {
+				agnihotra = true,
+				day = advance.count,
+				gold = offering.gold,
+				shards = offering.shards,
+			})
+		end
+	end
 	StoryService.ensure(player)
 end
 
@@ -119,10 +146,11 @@ local function savePlayer(player: Player)
 	local relics = state.relics
 	local story = state.storyChapter
 	local mastery = { agni = state.mastery.agni, vayu = state.mastery.vayu, varuna = state.mastery.varuna, indra = state.mastery.indra }
+	local streak = { stamp = state.streak.stamp, count = state.streak.count }
 
 	retry(function()
 		return store:UpdateAsync(keyFor(player), function(old: any)
-			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave, quests, weapon, shards, enchant, stats, dailies, titleId, pathId, relics, story, mastery)
+			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave, quests, weapon, shards, enchant, stats, dailies, titleId, pathId, relics, story, mastery, streak)
 			-- Never roll back XP or bestWave: keep whichever is higher.
 			-- (Gold is NOT anti-rollbacked — the shop legitimately spends it.)
 			if type(old) == "table" then

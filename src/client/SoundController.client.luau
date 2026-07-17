@@ -193,6 +193,14 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play("levelUp")
 		return
 	end
+	if data.agnihotra then
+		play("levelUp")
+		return
+	end
+	if data.bazaarGranted then
+		play("shopBuy")
+		return
+	end
 	if data.siddhiUnlocked then
 		play("thunderCrack")
 		return

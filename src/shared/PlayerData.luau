@@ -5,7 +5,7 @@
 
 local PlayerData = {}
 
-PlayerData.Version = 14
+PlayerData.Version = 15
 
 -- Mirrors Relics.MaxOwned (dependency-free; a test guards against drift).
 local RELICS_MAX_OWNED = 40
@@ -92,6 +92,12 @@ export type Data = {
 	relics: RelicsSave, -- the satchel + what's worn in each slot
 	story: number, -- Adhyayas completed (0 = the tale hasn't begun)
 	mastery: MasterySave, -- per-path siddhi mastery XP (never decreases)
+	streak: StreakSave, -- Agnihotra login streak (day stamp + consecutive count)
+}
+
+export type StreakSave = {
+	stamp: number,
+	count: number,
 }
 
 export type MasterySave = {
@@ -162,6 +168,7 @@ function PlayerData.default(): Data
 		relics = { owned = {}, equipped = { crown = "", kavacha = "", charm = "" } },
 		story = 0,
 		mastery = { agni = 0, vayu = 0, varuna = 0, indra = 0 },
+		streak = { stamp = 0, count = 0 },
 	}
 end
 
@@ -222,6 +229,10 @@ function PlayerData.validate(raw: any): Data
 		end
 		d.relics = cleanRelics(raw.relics)
 		d.mastery = cleanMastery(raw.mastery)
+		if type(raw.streak) == "table" then
+			d.streak.stamp = cleanCount(raw.streak.stamp)
+			d.streak.count = cleanCount(raw.streak.count)
+		end
 		if type(raw.story) == "number" and raw.story == raw.story and raw.story > 0 then
 			d.story = math.min(math.floor(raw.story), 50)
 		end
@@ -259,7 +270,8 @@ function PlayerData.serialize(
 	path: string?,
 	relics: RelicsSave?,
 	story: number?,
-	mastery: MasterySave?
+	mastery: MasterySave?,
+	streak: StreakSave?
 ): Data
 	local questsCopy: { QuestSlot } = {}
 	if quests then
@@ -318,6 +330,10 @@ function PlayerData.serialize(
 		path = if type(path) == "string" and #path <= 20 then path else "",
 		relics = cleanRelics(relics),
 		mastery = cleanMastery(mastery),
+		streak = {
+			stamp = cleanCount(if streak then streak.stamp else 0),
+			count = cleanCount(if streak then streak.count else 0),
+		},
 		story = if type(story) == "number" and story == story and story > 0 then math.min(math.floor(story), 50) else 0,
 	}
 end
