@@ -71,6 +71,10 @@ check("day 7 is full devotion", Streak.rewardFor(7).gold == 700 and Streak.rewar
 check("the reward caps but never shrinks", Streak.rewardFor(30).gold == Streak.rewardFor(Streak.Cap).gold and Streak.rewardFor(30).shards == 3)
 check("rewards rise with devotion", Streak.rewardFor(2).gold > Streak.rewardFor(1).gold)
 
+local Loot = require("../src/shared/Loot")
+check("no bundle can overflow the gold clamp", Loot.clampGold((Products.byKey("gold_large") :: Products.ProductDef).amount) == (Products.byKey("gold_large") :: Products.ProductDef).amount)
+check("the bazaar never undercuts daily devotion", (Products.byKey("gold_small") :: Products.ProductDef).amount > Streak.rewardFor(Streak.Cap).gold)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

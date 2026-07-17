@@ -205,6 +205,10 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play("critHit")
 		return
 	end
+	if data.tutorialDone then
+		play("levelUp")
+		return
+	end
 	if data.waveGrade == "S" then
 		play("thunderCrack")
 		return

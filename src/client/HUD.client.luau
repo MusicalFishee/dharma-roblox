@@ -622,6 +622,10 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("AGNIHOTRA — day %d of devotion   (%s)", data.day, bits), SAFFRON)
 		return
 	end
+	if data.tutorialDone then
+		showToast(string.format("THE FIRST LESSON IS LEARNED   (+%d gold)", data.gold or 0), YELLOW)
+		return
+	end
 	if data.vira then
 		showToast(string.format("%s!   %d-kill streak  (+Tejas)", tostring(data.name), data.count), MAGENTA)
 		return

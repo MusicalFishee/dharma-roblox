@@ -53,6 +53,23 @@ for _, g in { "S", "A", "B", "C" } do
 end
 check("every grade has a color", colorsOk)
 
+
+-- Support play is honored: a parry-heavy guardian can still mark well.
+local guardian = Grade.score(tally(2, 4, 1, 0))
+check("a shield-brother can reach A", Grade.gradeFor(guardian, 8) == "A")
+check("a parry-master earns the S outright", Grade.gradeFor(Grade.score(tally(2, 6, 1, 0)), 8) == "S")
+check("more kills never lower the mark", Grade.score(tally(6, 0, 0, 0)) > Grade.score(tally(5, 0, 0, 0)))
+check("the S boundary is exact", Grade.gradeFor(math.ceil(8 * Grade.KillPoints * 1.15), 8) == "S")
+check("C is the floor, never worse", Grade.gradeFor(0, 8) == "C")
+
+local tableAgrees = true
+for _, g in { "S", "A", "B", "C" } do
+	if Grade.xpMult(g) ~= Grade.XpMult[g] then
+		tableAgrees = false
+	end
+end
+check("the multiplier table and the function agree", tableAgrees)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

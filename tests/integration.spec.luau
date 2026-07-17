@@ -150,6 +150,63 @@ check("blast outcomes are a subset of melee outcomes (shared HUD/sounds)", blast
 check("first zone change is deeper than the first boss wave", Zones.List[2].threshold > Waves.BossInterval)
 check("zone thresholds are boss waves (transition = spectacle)", Zones.List[2].threshold % Waves.BossInterval == 0 and Zones.List[3].threshold % Waves.BossInterval == 0)
 
+
+-- 9. The century systems agree with the rest of the game.
+local Vira = require("../src/shared/Vira")
+local Grade = require("../src/shared/Grade")
+local Doshas = require("../src/shared/Doshas")
+local Deeds = require("../src/shared/Deeds")
+local Tutorial = require("../src/shared/Tutorial")
+local CombatShared = require("../src/shared/Combat")
+
+-- Vīra surges can never overflow the Tejas bar's own clamp contract.
+local surgesOk = true
+for _, rank in Vira.Ranks do
+	if rank.tejas > CombatShared.Config.TejasMax then
+		surgesOk = false
+	end
+end
+check("vira surges fit inside the tejas bar", surgesOk)
+
+-- Every grade the judge can emit has a color and a multiplier.
+local gradesOk = true
+for _, tallyCase in { { kills = 20, parries = 5, timesHit = 0, downs = 0 }, { kills = 7, parries = 1, timesHit = 3, downs = 0 }, { kills = 5, parries = 1, timesHit = 2, downs = 0 }, { kills = 0, parries = 0, timesHit = 9, downs = 2 } } do
+	local g = Grade.gradeFor(Grade.score(tallyCase), 8)
+	if not Grade.Color[g] or Grade.xpMult(g) < 1 then
+		gradesOk = false
+	end
+end
+check("every reachable grade has a color and pays", gradesOk)
+
+-- Dosha waves never land on any bespoke encounter, across two hundred waves.
+local cadenceOk = true
+for wave = 1, 200 do
+	if Doshas.isDoshaWave(wave) and (Waves.isBossWave(wave) or wave % 25 == 0) then
+		cadenceOk = false
+	end
+end
+check("doshas keep clear of every spectacle night", cadenceOk)
+
+-- Tutorial steps speak only events the quest pipeline actually relays.
+local relayed = { kill = true, parry = true, ability = true, gold = true, waveClear = true }
+local eventsOk = true
+for _, s2 in Tutorial.Steps do
+	if not relayed[s2.event] then
+		eventsOk = false
+	end
+end
+check("the lesson listens only to relayed events", eventsOk)
+
+-- Every deed reads a stat the snapshot actually carries.
+local snapFields = { kills = true, bossKills = true, bestWave = true, duelWins = true, raidClears = true, revives = true, trials = true, level = true, playtime = true, deaths = true }
+local deedsOk = true
+for _, def in Deeds.List do
+	if not snapFields[def.kind] then
+		deedsOk = false
+	end
+end
+check("every deed reads a real stat", deedsOk)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

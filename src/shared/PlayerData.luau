@@ -5,7 +5,7 @@
 
 local PlayerData = {}
 
-PlayerData.Version = 15
+PlayerData.Version = 16
 
 -- Mirrors Relics.MaxOwned (dependency-free; a test guards against drift).
 local RELICS_MAX_OWNED = 40
@@ -93,6 +93,7 @@ export type Data = {
 	story: number, -- Adhyayas completed (0 = the tale hasn't begun)
 	mastery: MasterySave, -- per-path siddhi mastery XP (never decreases)
 	streak: StreakSave, -- Agnihotra login streak (day stamp + consecutive count)
+	tutorialDone: boolean, -- Adhyaya 0 finished (the lesson never repeats)
 }
 
 export type StreakSave = {
@@ -169,6 +170,7 @@ function PlayerData.default(): Data
 		story = 0,
 		mastery = { agni = 0, vayu = 0, varuna = 0, indra = 0 },
 		streak = { stamp = 0, count = 0 },
+		tutorialDone = false,
 	}
 end
 
@@ -233,6 +235,7 @@ function PlayerData.validate(raw: any): Data
 			d.streak.stamp = cleanCount(raw.streak.stamp)
 			d.streak.count = cleanCount(raw.streak.count)
 		end
+		d.tutorialDone = raw.tutorialDone == true
 		if type(raw.story) == "number" and raw.story == raw.story and raw.story > 0 then
 			d.story = math.min(math.floor(raw.story), 50)
 		end
@@ -271,7 +274,8 @@ function PlayerData.serialize(
 	relics: RelicsSave?,
 	story: number?,
 	mastery: MasterySave?,
-	streak: StreakSave?
+	streak: StreakSave?,
+	tutorialDone: boolean?
 ): Data
 	local questsCopy: { QuestSlot } = {}
 	if quests then
@@ -334,6 +338,7 @@ function PlayerData.serialize(
 			stamp = cleanCount(if streak then streak.stamp else 0),
 			count = cleanCount(if streak then streak.count else 0),
 		},
+		tutorialDone = tutorialDone == true,
 		story = if type(story) == "number" and story == story and story > 0 then math.min(math.floor(story), 50) else 0,
 	}
 end

@@ -54,6 +54,33 @@ check("a finished lesson stays finished", past.done and not past.completedStep)
 
 check("stepAt finds and misses", Tutorial.stepAt(1) ~= nil and Tutorial.stepAt(99) == nil)
 
+
+-- A full playthrough: feed exactly the right events, graduate exactly once.
+local stepIndex, progress = 1, 0
+local graduations = 0
+for _, s in Tutorial.Steps do
+	for _ = 1, s.count do
+		local adv = Tutorial.advance(stepIndex, progress, s.event)
+		stepIndex, progress = adv.stepIndex, adv.progress
+		if adv.done then
+			graduations += 1
+		end
+	end
+end
+check("the exact lesson graduates exactly once", graduations == 1 and stepIndex == #Tutorial.Steps + 1)
+check("wrong events never regress progress", Tutorial.advance(2, 1, "gold").progress == 1)
+check("the lesson is short enough to finish in two waves", (function()
+	local total = 0
+	for _, s in Tutorial.Steps do
+		total += s.count
+	end
+	return total <= 10
+end)())
+
+local Paths = require("../src/shared/Paths")
+check("the lesson's blessing never trivializes the economy", Tutorial.Reward.gold < Paths.RespecCost)
+check("agastya's intro and outro are different words", Tutorial.Lines.intro ~= Tutorial.Lines.outro)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

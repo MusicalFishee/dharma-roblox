@@ -154,6 +154,14 @@ check("junk streak cleaned", PlayerData.validate({ streak = { stamp = -3, count 
 local strt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", nil, 0, nil, { stamp = 20000, count = 7 }))
 check("streak round-trips through serialize", strt.streak.stamp == 20000 and strt.streak.count == 7)
 
+-- Adhyaya 0 flag (v16).
+check("default lesson unlearned", PlayerData.default().tutorialDone == false)
+check("finished lesson preserved", PlayerData.validate({ tutorialDone = true }).tutorialDone == true)
+check("junk lesson flag -> unlearned", PlayerData.validate({ tutorialDone = "yes" }).tutorialDone == false and PlayerData.validate({ tutorialDone = 1 }).tutorialDone == false)
+local turt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", nil, 0, nil, nil, true))
+check("lesson flag round-trips through serialize", turt.tutorialDone == true)
+check("serialize without the flag -> unlearned", PlayerData.serialize(1, 1).tutorialDone == false)
+
 -- Relics (added with the relic system, v10).
 local rdef = PlayerData.default().relics
 check("default satchel empty + bare", #rdef.owned == 0 and rdef.equipped.crown == "" and rdef.equipped.kavacha == "" and rdef.equipped.charm == "")

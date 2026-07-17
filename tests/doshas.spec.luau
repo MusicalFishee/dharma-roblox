@@ -90,6 +90,17 @@ local deep = Doshas.bountyFor(Doshas.Defs.amavasya, 47)
 check("bounty pays gold and xp", shallow.gold > 0 and shallow.xp > 0)
 check("deeper marks pay more", deep.gold > shallow.gold and deep.xp > shallow.xp)
 
+
+-- The veil must not strip an archetype of its nature.
+local archer = EnemyTypes.get("Maricha")
+local veiled = Doshas.applyToArchetype(Doshas.Defs.maya, archer)
+check("a scaled archer keeps its bow", veiled.ranged == archer.ranged and veiled.id == archer.id)
+check("a scaled foe keeps its bounty", veiled.xpReward == archer.xpReward)
+local rollA = Doshas.roll(17, seq({ 0.4 }))
+local rollB = Doshas.roll(17, seq({ 0.4 }))
+check("the same fate falls twice alike", rollA ~= nil and rollB ~= nil and rollA.id == rollB.id)
+check("scaled health always floors to whole points", Doshas.applyToArchetype(Doshas.Defs.maya, EnemyTypes.get("Asura")).maxHealth % 1 == 0)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

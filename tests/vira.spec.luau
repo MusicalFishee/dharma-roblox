@@ -51,6 +51,33 @@ check("no rank between rungs", Vira.rankAt(6) == nil and Vira.rankAt(19) == nil)
 check("the summit rank exists", Vira.rankAt(35) ~= nil)
 check("no rank at zero", Vira.rankAt(0) == nil)
 
+
+-- Walking a real streak announces each rank exactly once.
+local announces = 0
+local count, lastAt = 0, 0
+for i = 1, 40 do
+	local now = i * 2 -- always inside the window
+	local reg = Vira.register(count, lastAt, now)
+	count, lastAt = reg.count, now
+	if Vira.rankAt(count) then
+		announces += 1
+	end
+end
+check("a 40-kill chain announces every rank once", announces == #Vira.Ranks)
+local nameSeen: { [string]: boolean } = {}
+local namesUnique = true
+for _, rank in Vira.Ranks do
+	if nameSeen[rank.name] then
+		namesUnique = false
+	end
+	nameSeen[rank.name] = true
+end
+check("rank names are distinct", namesUnique)
+check("the very first kill is never 'cooled'", not Vira.register(0, -999, 0).cooled)
+check("cooling truly resets the ladder", Vira.rankAt(Vira.register(35, 0, 100).count) == nil)
+
+check("a chained kill always climbs by exactly one", Vira.register(7, 100, 101).count == 8)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

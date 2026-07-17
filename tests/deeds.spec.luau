@@ -68,6 +68,29 @@ check("a full life fills the ledger", Deeds.totalTiers(hero) == Deeds.MaxTiers)
 check("the max is ten gold deeds", Deeds.MaxTiers == 30)
 check("even deaths are honored (the atman remembers)", Deeds.tierFor(Deeds.List[10], 10) == 1)
 
+
+-- Boundaries and colors.
+check("the exact threshold earns the tier", Deeds.tierFor(Deeds.List[1], Deeds.List[1].thresholds[2]) == 2)
+local colorsOk = true
+for _, c in Deeds.TierColor do
+	for _, v in c do
+		if type(v) ~= "number" or v < 0 or v > 255 then
+			colorsOk = false
+		end
+	end
+end
+check("tier colors are honest rgb", colorsOk)
+check("half a life fills half-ish a ledger", Deeds.totalTiers(snap({ kills = 1000, bossKills = 50, bestWave = 50, level = 30 })) == 8)
+check("an hour of war marks the devoted", Deeds.tierFor(Deeds.List[9], 3600) == 1)
+
+local reachable = true
+for _, def in Deeds.List do
+	if def.thresholds[3] > 100000 then
+		reachable = false -- svarna must be a life's work, not a lifetime's impossibility
+	end
+end
+check("every svarna is humanly reachable", reachable)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

@@ -16,6 +16,7 @@ local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local ProgressionService = require(script.Parent.ProgressionService)
 local QuestService = require(script.Parent.QuestService)
 local StoryService = require(script.Parent.StoryService)
+local TutorialService = require(script.Parent.TutorialService)
 
 local store = DataStoreService:GetDataStore("DharmaPlayerData_v1")
 local AUTOSAVE_INTERVAL = 90
@@ -68,6 +69,7 @@ local function loadPlayer(player: Player)
 	state.storyChapter = data.story
 	state.mastery = { agni = data.mastery.agni, vayu = data.mastery.vayu, varuna = data.mastery.varuna, indra = data.mastery.indra }
 	state.streak = { stamp = data.streak.stamp, count = data.streak.count }
+	state.tutorialDone = data.tutorialDone
 	state.playtimeMark = os.clock() -- playtime accrues from the moment the save lands
 	state.bestWave = data.bestWave
 	state.quests = data.quests
@@ -110,6 +112,7 @@ local function loadPlayer(player: Player)
 		end
 	end
 	StoryService.ensure(player)
+	TutorialService.ensure(player)
 end
 
 local function savePlayer(player: Player)
@@ -147,10 +150,11 @@ local function savePlayer(player: Player)
 	local story = state.storyChapter
 	local mastery = { agni = state.mastery.agni, vayu = state.mastery.vayu, varuna = state.mastery.varuna, indra = state.mastery.indra }
 	local streak = { stamp = state.streak.stamp, count = state.streak.count }
+	local tutorialDone = state.tutorialDone
 
 	retry(function()
 		return store:UpdateAsync(keyFor(player), function(old: any)
-			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave, quests, weapon, shards, enchant, stats, dailies, titleId, pathId, relics, story, mastery, streak)
+			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave, quests, weapon, shards, enchant, stats, dailies, titleId, pathId, relics, story, mastery, streak, tutorialDone)
 			-- Never roll back XP or bestWave: keep whichever is higher.
 			-- (Gold is NOT anti-rollbacked — the shop legitimately spends it.)
 			if type(old) == "table" then
