@@ -16,8 +16,8 @@ local ProgressionService = {}
 
 local function applyLevelStats(player: Player, level: number, fullHeal: boolean)
 	local char = player.Character
-	if not char then
-		return
+	if not char or char:GetAttribute("DharmaBhoota") == true then
+		return -- stats belong to flesh; Punarjanma reapplies them
 	end
 	local humanoid = char:FindFirstChildOfClass("Humanoid")
 	if not humanoid then

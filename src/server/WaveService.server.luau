@@ -19,6 +19,7 @@ local Elites = require(ReplicatedStorage.Shared.Elites)
 local EnemyService = require(script.Parent.EnemyService)
 local ZoneService = require(script.Parent.ZoneService)
 local UtsavaService = require(script.Parent.UtsavaService)
+local BhootaService = require(script.Parent.BhootaService)
 local ProgressionService = require(script.Parent.ProgressionService)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local QuestService = require(script.Parent.QuestService)
@@ -54,6 +55,11 @@ local failRun: () -> ()
 
 local function onWaveClear(wave: number)
 	checkpoint = Survival.checkpointFor(wave, checkpoint, Waves.BossInterval)
+	-- Punarjanma: the wave breaks, and every wandering bhoota returns to flesh.
+	BhootaService.setBattleActive(false)
+	for _, p in BhootaService.releaseAll() do
+		alivePlayers[p] = true
+	end
 	local bonus = Waves.bonusXp(wave)
 	for _, p in Players:GetPlayers() do
 		ProgressionService.awardXp(p, bonus)
@@ -123,6 +129,7 @@ function startWave(wave: number)
 	local gen = waveGen
 	currentWave = wave
 	ZoneService.applyForWave(wave)
+	BhootaService.setBattleActive(true)
 
 	-- Festival roll: never on the spectacle nights (boss / trial / raid).
 	UtsavaService.onWaveStart(wave, Trial.isTrialWave(wave) or Ravana.isRaidWave(wave) or Waves.isBossWave(wave))
@@ -185,6 +192,11 @@ function failRun()
 	failing = true
 	waveGen += 1 -- every in-flight enemy-death callback from the doomed wave is now void
 	local failedWave = currentWave
+	-- The reform restores everyone; wandering spirits come back to flesh with it.
+	BhootaService.setBattleActive(false)
+	for _, p in BhootaService.releaseAll() do
+		alivePlayers[p] = true
+	end
 	EnemyService.clearAll()
 	TrialBoss.clear() -- a wiped trial dissolves too (no blessing, no reward)
 	RavanaRaid.clear() -- and the king keeps his heads
@@ -232,7 +244,8 @@ end
 
 local function hookPlayer(player: Player)
 	local function onChar(char: Model)
-		alivePlayers[player] = true
+		-- A body that spawns into the wander is not a fighter yet.
+		alivePlayers[player] = not (BhootaService.shouldGhost(player) or BhootaService.isGhost(player))
 		task.spawn(function()
 			local hum = char:WaitForChild("Humanoid", 10)
 			if hum and hum:IsA("Humanoid") then

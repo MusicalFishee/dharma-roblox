@@ -19,6 +19,7 @@ local Revive = require(ReplicatedStorage.Shared.Revive)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local ProgressionService = require(script.Parent.ProgressionService)
 local PvPService = require(script.Parent.PvPService)
+local BhootaService = require(script.Parent.BhootaService)
 
 local DOWNED_ATTR = "DharmaDowned"
 
@@ -48,13 +49,16 @@ function ReviveService.isDowned(player: Player): boolean
 	return downed[player] ~= nil
 end
 
--- A player who can still fight: alive, spawned, and not down themselves.
+-- A player who can still fight: alive, spawned, in the flesh, and not down.
 local function isStanding(player: Player): boolean
 	if downed[player] then
 		return false
 	end
 	local char = player.Character
-	local hum = char and char:FindFirstChildOfClass("Humanoid")
+	if not char or char:GetAttribute("DharmaBhoota") == true then
+		return false -- a bhoota has no strength to lend
+	end
+	local hum = char:FindFirstChildOfClass("Humanoid")
 	return hum ~= nil and hum.Health > 0
 end
 
@@ -76,6 +80,7 @@ local function finalDeath(player: Player)
 	downed[player] = nil
 	st.prompt:Destroy()
 	st.character:SetAttribute(DOWNED_ATTR, nil)
+	BhootaService.markFallen(player) -- mid-battle, the next spawn is a wander
 	pcall(function()
 		st.humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
 	end)
@@ -111,8 +116,15 @@ local function lift(player: Player, lifter: Player?, healthOverride: number?)
 end
 
 local function goDown(player: Player, character: Model, humanoid: Humanoid)
+	-- A bhoota's vessel cannot fall again (a reset just refills the mist).
+	if character:GetAttribute("DharmaBhoota") == true then
+		humanoid.Health = humanoid.MaxHealth
+		return
+	end
+
 	-- A live duel keeps its stakes: falling there is a real death, instantly.
 	if PvPService.duelOpponentOf(player) then
+		BhootaService.markFallen(player)
 		pcall(function()
 			humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
 		end)

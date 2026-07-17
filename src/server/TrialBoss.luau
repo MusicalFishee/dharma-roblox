@@ -89,7 +89,7 @@ local function nearestPlayer(pos: Vector3): (Player?, BasePart?, Humanoid?, numb
 		end
 		local root = getRoot(char)
 		local hum = char:FindFirstChildOfClass("Humanoid")
-		if not root or not hum or hum.Health <= 0 or char:GetAttribute("DharmaDowned") == true then
+		if not root or not hum or hum.Health <= 0 or char:GetAttribute("DharmaDowned") == true or char:GetAttribute("DharmaBhoota") == true then
 			continue
 		end
 		local d = (root.Position - pos).Magnitude
@@ -241,7 +241,7 @@ local function stompRing(st: FightState, radius: number, damage: number, telegra
 		local char = victim.Character
 		local hum = char and char:FindFirstChildOfClass("Humanoid")
 		local hrp = char and getRoot(char)
-		if not char or not hum or hum.Health <= 0 or char:GetAttribute("DharmaDowned") == true then
+		if not char or not hum or hum.Health <= 0 or char:GetAttribute("DharmaDowned") == true or char:GetAttribute("DharmaBhoota") == true then
 			continue
 		end
 		local vstate = PlayerRegistry.get(victim)

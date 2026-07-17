@@ -185,6 +185,14 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play("levelUp")
 		return
 	end
+	if data.bhoota then
+		play("playerDown")
+		return
+	end
+	if data.punarjanma then
+		play("levelUp")
+		return
+	end
 	if data.siddhiUnlocked then
 		play("thunderCrack")
 		return

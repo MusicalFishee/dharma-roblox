@@ -54,6 +54,9 @@ local function onFirstTouch(orb: Part, claim: (Player) -> ())
 		if not player then
 			return
 		end
+		if char and char:GetAttribute("DharmaBhoota") == true then
+			return -- mist cannot hold gold; the orb waits for the living
+		end
 		taken = true
 		claim(player)
 		orb:Destroy()

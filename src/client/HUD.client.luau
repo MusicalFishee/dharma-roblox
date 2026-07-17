@@ -7,6 +7,7 @@ local TweenService = game:GetService("TweenService")
 
 local Net = require(ReplicatedStorage.Shared.Net)
 local Combat = require(ReplicatedStorage.Shared.Combat)
+local Bhoota = require(ReplicatedStorage.Shared.Bhoota)
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -262,7 +263,7 @@ downTitle.Font = Enum.Font.GothamBlack
 downTitle.TextSize = 20
 downTitle.TextColor3 = Color3.fromRGB(240, 90, 80)
 downTitle.ZIndex = 41
-downTitle.Text = "YOU ARE DOWN"
+downTitle.Text = Bhoota.Lines.downedTitle
 downTitle.Parent = downFrame
 
 local downSub = Instance.new("TextLabel")
@@ -284,7 +285,7 @@ local function showDowned(seconds: number)
 	task.spawn(function()
 		local left = seconds
 		while left > 0 and token == downToken do
-			downSub.Text = string.format("Crawl to your brothers — a lift saves you   (%ds)", math.ceil(left))
+			downSub.Text = string.format(Bhoota.Lines.downedSub, math.ceil(left))
 			task.wait(0.25)
 			left -= 0.25
 		end
@@ -297,6 +298,42 @@ local function hideDowned()
 	downToken += 1
 	downFrame.Visible = false
 end
+
+-- Bhoota banner (shown while you wander; Punarjanma clears it).
+local bhootaFrame = Instance.new("Frame")
+bhootaFrame.Size = UDim2.fromOffset(460, 64)
+bhootaFrame.AnchorPoint = Vector2.new(0.5, 1)
+bhootaFrame.Position = UDim2.new(0.5, 0, 1, -110)
+bhootaFrame.BackgroundColor3 = Color3.fromRGB(14, 20, 34)
+bhootaFrame.BackgroundTransparency = 0.25
+bhootaFrame.Visible = false
+bhootaFrame.ZIndex = 40
+bhootaFrame.Parent = screenGui
+local bhootaCorner = Instance.new("UICorner")
+bhootaCorner.CornerRadius = UDim.new(0, 12)
+bhootaCorner.Parent = bhootaFrame
+
+local bhootaTitle = Instance.new("TextLabel")
+bhootaTitle.Size = UDim2.new(1, -20, 0, 30)
+bhootaTitle.Position = UDim2.fromOffset(10, 6)
+bhootaTitle.BackgroundTransparency = 1
+bhootaTitle.Font = Enum.Font.GothamBlack
+bhootaTitle.TextSize = 20
+bhootaTitle.TextColor3 = Color3.fromRGB(170, 210, 255)
+bhootaTitle.ZIndex = 41
+bhootaTitle.Text = Bhoota.Lines.ghostTitle
+bhootaTitle.Parent = bhootaFrame
+
+local bhootaSub = Instance.new("TextLabel")
+bhootaSub.Size = UDim2.new(1, -20, 0, 20)
+bhootaSub.Position = UDim2.fromOffset(10, 36)
+bhootaSub.BackgroundTransparency = 1
+bhootaSub.Font = Enum.Font.GothamMedium
+bhootaSub.TextSize = 13
+bhootaSub.TextColor3 = Color3.fromRGB(200, 215, 235)
+bhootaSub.ZIndex = 41
+bhootaSub.Text = Bhoota.Lines.ghostSub
+bhootaSub.Parent = bhootaFrame
 
 local wipeToken = 0
 local function showWipe(failedWave: number, restartWave: number, delay: number)
@@ -563,7 +600,18 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 
 	-- You personally fell (in co-op, teammates may still stand).
 	if data.youFell then
-		showToast("You fell — regrouping…", RED)
+		showToast(Bhoota.Lines.fell, Color3.fromRGB(200, 190, 230))
+		return
+	end
+	if data.bhoota then
+		hideDowned()
+		bhootaFrame.Visible = true
+		showToast(Bhoota.Lines.ghostToast, Color3.fromRGB(170, 210, 255))
+		return
+	end
+	if data.punarjanma then
+		bhootaFrame.Visible = false
+		showToast(Bhoota.Lines.reborn, Color3.fromRGB(130, 255, 180))
 		return
 	end
 	if data.downed then

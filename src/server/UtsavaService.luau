@@ -119,6 +119,9 @@ local function runGoldenDeer(def: Utsava.EventDef)
 			local bestDist = math.huge
 			for _, p in Players:GetPlayers() do
 				local char = p.Character
+				if char and (char:GetAttribute("DharmaBhoota") == true or char:GetAttribute("DharmaDowned") == true) then
+					continue -- the deer fears neither spirits nor the fallen
+				end
 				local hrp = char and char:FindFirstChild("HumanoidRootPart")
 				if hrp and hrp:IsA("BasePart") then
 					local d = (hrp.Position - root.Position).Magnitude
@@ -209,6 +212,9 @@ local function runShardStorm(_def: Utsava.EventDef)
 				if not player then
 					return
 				end
+				if char and char:GetAttribute("DharmaBhoota") == true then
+					return -- shards slip through spirit hands
+				end
 				taken = true
 				local state = PlayerRegistry.get(player)
 				state.shards += Utsava.Storm.shardsPerOrb
@@ -266,6 +272,10 @@ local function runMerchant(def: Utsava.EventDef)
 
 	local served: { [Player]: boolean } = {}
 	prompt.Triggered:Connect(function(buyer: Player)
+		local bchar = buyer.Character
+		if bchar and bchar:GetAttribute("DharmaBhoota") == true then
+			return -- the vaidya trades with the living
+		end
 		if served[buyer] then
 			Net.CombatFeedback:FireClient(buyer, { utsava = "merchantDenied", reason = "served" })
 			return
