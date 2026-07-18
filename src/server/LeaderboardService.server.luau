@@ -8,6 +8,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Leaderboard = require(ReplicatedStorage.Shared.Leaderboard)
+local Vrata = require(ReplicatedStorage.Shared.Vrata)
 local Progression = require(ReplicatedStorage.Shared.Progression)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 
@@ -31,7 +32,7 @@ local boards: { BoardUI } = {}
 
 local function buildBoard(def: Leaderboard.BoardDef, index: number): BoardUI
 	-- A stone slab facing the spawn, angled at the arena edge.
-	local angle = math.rad(if index == 1 then -35 else 35)
+	local angle = math.rad(if index == 1 then -35 elseif index == 2 then 35 else 0)
 	local pos = Vector3.new(math.sin(angle) * BOARD_DISTANCE, 14, -math.cos(angle) * BOARD_DISTANCE)
 
 	local slab = Instance.new("Part")
@@ -113,6 +114,12 @@ local function scoreFor(player: Player, boardId: string): number
 		return Progression.resolve(state.totalXp).level
 	elseif boardId == "wave" then
 		return state.bestWave
+	elseif boardId == "weeklyWave" then
+		-- A stale week's depth is last season's ghost; it scores nothing now.
+		if state.weeklyBest.stamp ~= Vrata.weekStamp(os.time()) then
+			return 0
+		end
+		return state.weeklyBest.wave
 	end
 	return -1
 end
@@ -120,7 +127,7 @@ end
 local function pushScores()
 	for _, def in Leaderboard.Boards do
 		local ok, store = pcall(function()
-			return DataStoreService:GetOrderedDataStore(def.storeName)
+			return DataStoreService:GetOrderedDataStore(Leaderboard.storeNameFor(def, Vrata.weekStamp(os.time())))
 		end)
 		if not ok then
 			continue

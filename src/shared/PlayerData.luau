@@ -5,7 +5,7 @@
 
 local PlayerData = {}
 
-PlayerData.Version = 18
+PlayerData.Version = 19
 
 -- Mirrors Relics.MaxOwned (dependency-free; a test guards against drift).
 local RELICS_MAX_OWNED = 40
@@ -96,6 +96,12 @@ export type Data = {
 	tutorialDone: boolean, -- Adhyaya 0 finished (the lesson never repeats)
 	vibhuti: VibhutiSave, -- worn sacred marks (tilak + aura ids, "" = bare)
 	vrata: VrataSave, -- the weekly vow (stamp + progress; stale weeks reset)
+	weekly: WeeklySave, -- this week's deepest wave (stale weeks reset)
+}
+
+export type WeeklySave = {
+	stamp: number,
+	wave: number,
 }
 
 export type VrataSave = {
@@ -186,6 +192,7 @@ function PlayerData.default(): Data
 		tutorialDone = false,
 		vibhuti = { tilak = "", aura = "" },
 		vrata = { stamp = 0, progress = 0, kept = false },
+		weekly = { stamp = 0, wave = 0 },
 	}
 end
 
@@ -264,6 +271,10 @@ function PlayerData.validate(raw: any): Data
 			d.vrata.progress = cleanCount(raw.vrata.progress)
 			d.vrata.kept = raw.vrata.kept == true
 		end
+		if type(raw.weekly) == "table" then
+			d.weekly.stamp = cleanCount(raw.weekly.stamp)
+			d.weekly.wave = cleanCount(raw.weekly.wave)
+		end
 		if type(raw.story) == "number" and raw.story == raw.story and raw.story > 0 then
 			d.story = math.min(math.floor(raw.story), 50)
 		end
@@ -305,7 +316,8 @@ function PlayerData.serialize(
 	streak: StreakSave?,
 	tutorialDone: boolean?,
 	vibhuti: VibhutiSave?,
-	vrata: VrataSave?
+	vrata: VrataSave?,
+	weekly: WeeklySave?
 ): Data
 	local questsCopy: { QuestSlot } = {}
 	if quests then
@@ -377,6 +389,10 @@ function PlayerData.serialize(
 			stamp = cleanCount(if vrata then vrata.stamp else 0),
 			progress = cleanCount(if vrata then vrata.progress else 0),
 			kept = if vrata then vrata.kept == true else false,
+		},
+		weekly = {
+			stamp = cleanCount(if weekly then weekly.stamp else 0),
+			wave = cleanCount(if weekly then weekly.wave else 0),
 		},
 		story = if type(story) == "number" and story == story and story > 0 then math.min(math.floor(story), 50) else 0,
 	}

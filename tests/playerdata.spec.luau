@@ -177,6 +177,12 @@ check("vow validates per-field", vrv.vrata.stamp == 2951 and vrv.vrata.progress 
 local vrrt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", nil, 0, nil, nil, false, nil, { stamp = 2951, progress = 45, kept = true }))
 check("vow round-trips through serialize", vrrt.vrata.stamp == 2951 and vrrt.vrata.progress == 45 and vrrt.vrata.kept == true)
 
+-- The weekly deepest (v19).
+check("default weekly is unstamped", PlayerData.default().weekly.stamp == 0 and PlayerData.default().weekly.wave == 0)
+check("weekly validates per-field", PlayerData.validate({ weekly = { stamp = 2951, wave = 34 } }).weekly.wave == 34 and PlayerData.validate({ weekly = { stamp = -1, wave = "deep" } }).weekly.wave == 0)
+local wkrt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", nil, 0, nil, nil, false, nil, nil, { stamp = 2951, wave = 61 }))
+check("weekly round-trips through serialize", wkrt.weekly.stamp == 2951 and wkrt.weekly.wave == 61)
+
 -- Relics (added with the relic system, v10).
 local rdef = PlayerData.default().relics
 check("default satchel empty + bare", #rdef.owned == 0 and rdef.equipped.crown == "" and rdef.equipped.kavacha == "" and rdef.equipped.charm == "")

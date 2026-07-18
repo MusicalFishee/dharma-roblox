@@ -20,7 +20,7 @@ end
 print("Leaderboard")
 
 -- Board defs.
-check("two boards (level + wave)", #Leaderboard.Boards == 2)
+check("the lifetime boards still stand (level + wave)", Leaderboard.Boards[1].id == "level" and Leaderboard.Boards[2].id == "wave")
 local idsSeen: { [string]: boolean } = {}
 local storesSeen: { [string]: boolean } = {}
 local defsValid = true
@@ -50,6 +50,20 @@ local waveBoard = Leaderboard.Boards[2]
 check("level values format as Lv N", Leaderboard.formatValue(levelBoard, 12) == "Lv 12")
 check("wave values format as Wave N", Leaderboard.formatValue(waveBoard, 8) == "Wave 8")
 check("rows format rank, name, value", Leaderboard.formatRow(levelBoard, 1, "Vajra", 12) == "1.  Vajra  —  Lv 12")
+
+
+-- The weekly board: week-stamped stores, fresh every Monday.
+local weeklyDef = nil
+for _, def in Leaderboard.Boards do
+	if def.id == "weeklyWave" then
+		weeklyDef = def
+	end
+end
+check("the weekly board stands among the slabs", weeklyDef ~= nil and (weeklyDef :: any).weekly == true)
+check("three boards at the arena's edge", #Leaderboard.Boards == 3)
+check("weekly stores carry the week's stamp", Leaderboard.storeNameFor(weeklyDef :: any, 2951) == "DharmaWeeklyWave_v1_wk2951")
+check("different weeks, different stores", Leaderboard.storeNameFor(weeklyDef :: any, 2951) ~= Leaderboard.storeNameFor(weeklyDef :: any, 2952))
+check("lifetime boards ignore the week", Leaderboard.storeNameFor(Leaderboard.Boards[1], 2951) == Leaderboard.Boards[1].storeName)
 
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then

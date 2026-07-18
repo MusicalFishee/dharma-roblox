@@ -78,6 +78,8 @@ export type PlayerState = {
 	riposteUntil: number,
 	-- The weekly vow (stamp + progress; VrataService resets stale weeks).
 	vrata2: { stamp: number, progress: number, kept: boolean },
+	-- This week's deepest wave (WaveService resets stale stamps on clear).
+	weeklyBest: { stamp: number, wave: number },
 }
 
 local PlayerRegistry = {}
@@ -140,6 +142,7 @@ function PlayerRegistry.get(player: Player): PlayerState
 		inputMethod = "keyboard",
 		riposteUntil = 0,
 		vrata2 = { stamp = 0, progress = 0, kept = false },
+		weeklyBest = { stamp = 0, wave = 0 },
 	}
 	states[player] = state
 	return state

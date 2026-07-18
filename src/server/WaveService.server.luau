@@ -26,6 +26,7 @@ local BhootaService = require(script.Parent.BhootaService)
 local VaraService = require(script.Parent.VaraService)
 local RitesService = require(script.Parent.RitesService)
 local Shapatha = require(ReplicatedStorage.Shared.Shapatha)
+local Vrata = require(ReplicatedStorage.Shared.Vrata)
 local ProgressionService = require(script.Parent.ProgressionService)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local QuestService = require(script.Parent.QuestService)
@@ -123,8 +124,13 @@ local function onWaveClear(wave: number)
 			kills = state.waveKills,
 			parries = state.waveParries,
 		})
-		-- Everyone standing when the wave falls records the depth.
+		-- Everyone standing when the wave falls records the depth (and the week's).
 		state.bestWave = math.max(state.bestWave, wave)
+		local nowWeek = Vrata.weekStamp(os.time())
+		if state.weeklyBest.stamp ~= nowWeek then
+			state.weeklyBest = { stamp = nowWeek, wave = 0 }
+		end
+		state.weeklyBest.wave = math.max(state.weeklyBest.wave, wave)
 		QuestService.onWaveClear(p)
 		StoryService.onEvent(p) -- a deeper wave may turn an Adhyaya's page
 	end

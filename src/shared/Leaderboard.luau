@@ -10,6 +10,7 @@ export type BoardDef = {
 	title: string,
 	-- Turns a raw score into its display form ("Lv 12" / "Wave 8").
 	prefix: string,
+	weekly: boolean?, -- weekly boards live in week-stamped stores (fresh each Monday)
 }
 
 Leaderboard.Boards = {
@@ -25,10 +26,26 @@ Leaderboard.Boards = {
 		title = "DEEPEST WAVE",
 		prefix = "Wave",
 	},
+	{
+		id = "weeklyWave",
+		storeName = "DharmaWeeklyWave_v1",
+		title = "THIS WEEK'S DEEPEST",
+		prefix = "Wave",
+		weekly = true,
+	},
 } :: { BoardDef }
 
 Leaderboard.TopN = 10
 Leaderboard.ScoreMax = 1e6
+
+-- The store a board writes to right now: weekly boards get a week-stamped
+-- name (a fresh, empty store every Monday — old seasons simply rot in peace).
+function Leaderboard.storeNameFor(def: BoardDef, weekStamp: number): string
+	if def.weekly then
+		return def.storeName .. "_wk" .. weekStamp
+	end
+	return def.storeName
+end
 
 -- OrderedDataStores only accept non-negative integers; make any input safe.
 function Leaderboard.sanitizeScore(value: any): number
