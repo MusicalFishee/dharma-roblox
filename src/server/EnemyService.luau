@@ -18,6 +18,7 @@ local BossSpecials = require(ReplicatedStorage.Shared.BossSpecials)
 local Enchants = require(ReplicatedStorage.Shared.Enchants)
 local Paths = require(ReplicatedStorage.Shared.Paths)
 local Vira = require(ReplicatedStorage.Shared.Vira)
+local Affixes = require(ReplicatedStorage.Shared.Affixes)
 local Vara = require(ReplicatedStorage.Shared.Vara)
 local Weapons = require(ReplicatedStorage.Shared.Weapons)
 local Loot = require(ReplicatedStorage.Shared.Loot)
@@ -213,6 +214,24 @@ end
 -- Exposed so bespoke encounters (the Kirata Trial) share the exact same defense rules.
 EnemyService.resolveHitOnPlayer = resolveHitOnPlayer
 
+-- SHIELDED affix: returns true if this blow clinks off the ward (a charge is
+-- spent; the glow shatters with the last one). Astra REACTIONS pierce shields
+-- by simply never calling this.
+function EnemyService.absorbShield(model: Model): boolean
+	local charges = model:GetAttribute("AffixShield")
+	if typeof(charges) ~= "number" or charges <= 0 then
+		return false
+	end
+	model:SetAttribute("AffixShield", charges - 1)
+	if charges - 1 <= 0 then
+		local glow = model:FindFirstChild("AffixGlow")
+		if glow then
+			glow:Destroy()
+		end
+	end
+	return true
+end
+
 local function enemyStrikes(enemy: EnemyState, player: Player, playerRoot: BasePart, playerHum: Humanoid)
 	-- Everyone sees the wind-up haymaker.
 	Net.AnimEvent:FireAllClients(enemy.model, "enemySwing")
@@ -342,6 +361,10 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 	humanoid.Health = archetype.maxHealth
 	humanoid.WalkSpeed = archetype.walkSpeed
 	humanoid.DisplayName = archetype.displayName
+	local affixDef = if (archetype :: any).affix then Affixes.get((archetype :: any).affix) else nil
+	if affixDef then
+		humanoid.DisplayName = affixDef.name .. " " .. archetype.displayName
+	end
 
 	pcall(function()
 		model:ScaleTo(archetype.scale)
@@ -350,6 +373,22 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 	model:PivotTo(CFrame.new(position))
 	model.Name = archetype.displayName
 	model:SetAttribute("IsBoss", archetype.isBoss == true) -- read by CombatService (executes never claim bosses)
+	if affixDef then
+		model:SetAttribute("Affix", affixDef.id)
+		if affixDef.shieldCharges then
+			model:SetAttribute("AffixShield", affixDef.shieldCharges)
+		end
+		local mark = Instance.new("Highlight")
+		mark.Name = "AffixGlow"
+		mark.FillColor = Color3.fromRGB(affixDef.glow[1], affixDef.glow[2], affixDef.glow[3])
+		mark.FillTransparency = 0.8
+		mark.OutlineColor = Color3.fromRGB(affixDef.glow[1], affixDef.glow[2], affixDef.glow[3])
+		mark.OutlineTransparency = 0.1
+		mark.Parent = model
+	end
+	if (archetype :: any).isTwinChild then
+		model:SetAttribute("TwinChild", true)
+	end
 	model.Parent = workspace
 	CollectionService:AddTag(model, ENEMY_TAG)
 
@@ -556,6 +595,41 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 
 		if archetype.isBoss then
 			broadcastAll({ bossState = "defeated", bossName = archetype.displayName })
+		end
+
+		-- TWINNED: the fallen splits into two lesser copies. Uncounted by the
+		-- wave (onDeath nil) — piñatas, not gatekeepers.
+		if model:GetAttribute("Affix") == "twinned" and model:GetAttribute("TwinChild") ~= true then
+			local twinBase = Affixes.twinOf(archetype)
+			for offset = -1, 1, 2 do
+				local pos = root.Position + Vector3.new(offset * 3, 2, 0)
+				task.spawn(function()
+					EnemyService.spawn(twinBase, pos, nil)
+				end)
+			end
+		end
+
+		-- VENGEFUL: nearby marked kin enrage when this one falls (once each).
+		for otherModel, st in enemies do
+			if
+				otherModel ~= model
+				and otherModel:GetAttribute("Affix") == "vengeful"
+				and otherModel:GetAttribute("Enraged") ~= true
+				and st.root
+				and (st.root.Position - root.Position).Magnitude <= 20
+			then
+				otherModel:SetAttribute("Enraged", true)
+				local vdef = Affixes.Defs.vengeful
+				local enraged = table.clone(st.archetype)
+				enraged.attackDamage = math.floor(st.archetype.attackDamage * (vdef.enrageDamageMult or 1))
+				st.archetype = enraged
+				st.humanoid.WalkSpeed = st.humanoid.WalkSpeed * (vdef.enrageSpeedMult or 1)
+				local fury = Instance.new("Fire")
+				fury.Size = 4
+				fury.Heat = 8
+				fury.Color = Color3.fromRGB(235, 70, 60)
+				fury.Parent = st.root
+			end
 		end
 
 		-- Relics: a fallen boss lets EVERYONE roll; a fallen elite, its killer.

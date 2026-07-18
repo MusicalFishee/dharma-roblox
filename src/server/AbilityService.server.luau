@@ -242,7 +242,7 @@ local function castProjectile(player: Player, character: Model, root: BasePart, 
 				end
 				struck[model] = true
 				model:SetAttribute("LastAttacker", player.UserId)
-				humanoid:TakeDamage(damage)
+				humanoid:TakeDamage(if EnemyService.absorbShield(model) then 1 else damage)
 				applyElement(player, model, humanoid, def.id)
 				pierceLeft -= 1
 				if pierceLeft <= 0 then
@@ -409,7 +409,7 @@ local function castNova(player: Player, root: BasePart, def: Abilities.AbilityDe
 
 		struck += 1
 		enemy:SetAttribute("LastAttacker", player.UserId)
-		humanoid:TakeDamage(damage)
+		humanoid:TakeDamage(if EnemyService.absorbShield(enemy) then 1 else damage)
 		applyElement(player, enemy, humanoid, def.id)
 
 		if knockback > 0 then
@@ -469,7 +469,7 @@ local function castSmite(player: Player, root: BasePart, hum: Humanoid, def: Abi
 
 		struck += 1
 		enemy:SetAttribute("LastAttacker", player.UserId)
-		humanoid:TakeDamage(damage)
+		humanoid:TakeDamage(if EnemyService.absorbShield(enemy) then 1 else damage)
 		applyElement(player, enemy, humanoid, def.id)
 
 		-- A bolt from the sky onto the enemy, in the ability's color.

@@ -18,6 +18,7 @@ local RavanaRaid = require(script.Parent.RavanaRaid)
 local EnemyTypes = require(ReplicatedStorage.Shared.EnemyTypes)
 local Bosses = require(ReplicatedStorage.Shared.Bosses)
 local Elites = require(ReplicatedStorage.Shared.Elites)
+local Affixes = require(ReplicatedStorage.Shared.Affixes)
 local EnemyService = require(script.Parent.EnemyService)
 local ZoneService = require(script.Parent.ZoneService)
 local UtsavaService = require(script.Parent.UtsavaService)
@@ -68,6 +69,12 @@ local function resolveArchetype(id: string)
 	local oathState = activeOath
 	if oathState and oathState.wave == currentWave then
 		archetype = Shapatha.applyToArchetype(oathState.def, archetype)
+	end
+	local affixId = Affixes.roll(currentWave, archetype.isBoss == true, function()
+		return math.random()
+	end)
+	if affixId then
+		archetype = Affixes.tag(archetype, affixId)
 	end
 	return archetype
 end

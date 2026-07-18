@@ -222,6 +222,9 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 			end
 		end
 
+		if enemyModel and enemyModel:IsA("Model") and EnemyService.absorbShield(enemyModel) then
+			dealt = 1 -- the ward clinks
+		end
 		humanoid:TakeDamage(dealt)
 		state.tejas = Combat.clampTejas(state.tejas + (Combat.Config.TejasPerHitLanded + sig.tejasPerHitBonus) * (ench.tejasMult or 1) * passive.tejasMult * relicBonus.tejasMult * varaFx.tejasMult, Progression.maxTejasForLevel(level))
 
