@@ -37,8 +37,12 @@ local ENEMY_TAG = "DharmaEnemy"
 -- Per-player, per-slot last-cast times (cooldowns).
 local lastCast: { [Player]: { [string]: number } } = {}
 
+-- Per-player, per-slot charge starts (the drawn bow's server-side clock).
+local charging: { [Player]: { [string]: number } } = {}
+
 Players.PlayerRemoving:Connect(function(player)
 	lastCast[player] = nil
+	charging[player] = nil
 end)
 
 local function getCharacterParts(player: Player): (Model?, BasePart?, Humanoid?)
@@ -502,9 +506,39 @@ end
 -- Dispatch
 -- ---------------------------------------------------------------------------
 Net.AbilityRequest.OnServerEvent:Connect(function(player: Player, slotArg: any)
-	local slot = tostring(slotArg)
+	-- A plain string is a tap (touch/gamepad). A table is the drawn bow:
+	-- chargeStart on key-down, release on key-up. The server holds the clock.
+	local slot: string
+	local action = "cast"
+	if typeof(slotArg) == "table" then
+		slot = tostring((slotArg :: any).slot)
+		action = tostring((slotArg :: any).action)
+	else
+		slot = tostring(slotArg)
+	end
 	if slot ~= "Z" and slot ~= "X" and slot ~= "C" and slot ~= "V" then
 		return
+	end
+
+	if action == "chargeStart" then
+		local c = charging[player]
+		if not c then
+			c = {}
+			charging[player] = c
+		end
+		c[slot] = os.clock()
+		return
+	end
+
+	local heldSeconds = 0
+	if action == "release" then
+		local c = charging[player]
+		local startedAt = if c then c[slot] else nil
+		if not c or not startedAt then
+			return -- a release with no draw (typing, stale input) casts nothing
+		end
+		heldSeconds = os.clock() - startedAt
+		c[slot] = nil
 	end
 
 	local state = PlayerRegistry.get(player)
@@ -586,7 +620,9 @@ Net.AbilityRequest.OnServerEvent:Connect(function(player: Player, slotArg: any)
 	local animBySlot = { Z = "throw", X = "dash", C = "heal", V = "ult" }
 	Net.AnimEvent:FireAllClients(character, animBySlot[slot])
 
-	local mult = damageMultFor(state) * eff.damageMult
+	local chargeMult = if Abilities.isChargeable(def.kind) then Abilities.chargeMult(heldSeconds) else 1
+	local chargeTier = if Abilities.isChargeable(def.kind) then Abilities.chargeTier(heldSeconds) else 0
+	local mult = damageMultFor(state) * eff.damageMult * chargeMult
 	if def.kind == "projectile" then
 		castProjectile(player, character, root, def, mult, eff.pierce[abilityId] or 0, eff.fork[abilityId] or 0)
 	elseif def.kind == "dash" then
@@ -607,6 +643,7 @@ Net.AbilityRequest.OnServerEvent:Connect(function(player: Player, slotArg: any)
 		abilityName = def.name,
 		tejas = state.tejas,
 		struck = extra.struck,
+		charged = chargeTier,
 	})
 end)
 

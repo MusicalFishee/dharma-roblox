@@ -46,6 +46,16 @@ check("exact tejas is enough", exact.ok and exact.tejasAfter == 0)
 local afterCd = Abilities.tryCast("X", 50, 0, 3.01)
 check("cast allowed once cooldown elapses", afterCd.ok)
 
+-- The drawn bow: charge math (the server holds the clock).
+local C = Abilities.Charge
+check("a tap is never amplified", Abilities.chargeMult(0) == 1 and Abilities.chargeMult(C.MinHold - 0.01) == 1)
+check("the draw deepens the blow", Abilities.chargeMult(1) > 1 and Abilities.chargeMult(1.5) > Abilities.chargeMult(1))
+check("a full draw doubles", Abilities.chargeMult(C.MaxSeconds) == C.MaxMult)
+check("holding past full changes nothing", Abilities.chargeMult(99) == C.MaxMult)
+check("tiers: tap, charged, overcharged", Abilities.chargeTier(0.1) == 0 and Abilities.chargeTier(C.MaxSeconds / 2) == 1 and Abilities.chargeTier(C.MaxSeconds) == 2)
+check("charge speaks only to damage", Abilities.isChargeable("projectile") and Abilities.isChargeable("nova") and Abilities.isChargeable("smite"))
+check("dashes, heals, wards refuse the draw", not Abilities.isChargeable("dash") and not Abilities.isChargeable("heal") and not Abilities.isChargeable("ward"))
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

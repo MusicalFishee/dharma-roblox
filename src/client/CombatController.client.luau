@@ -27,7 +27,7 @@ UserInputService.InputBegan:Connect(function(input: InputObject, gameProcessed: 
 
 	local ability = abilityKeys[input.KeyCode]
 	if ability then
-		Net.AbilityRequest:FireServer(ability)
+		Net.AbilityRequest:FireServer({ slot = ability, action = "chargeStart" })
 		return
 	end
 
@@ -39,9 +39,14 @@ UserInputService.InputBegan:Connect(function(input: InputObject, gameProcessed: 
 end)
 
 UserInputService.InputEnded:Connect(function(input: InputObject)
+	local ability = abilityKeys[input.KeyCode]
+	if ability then
+		Net.AbilityRequest:FireServer({ slot = ability, action = "release" })
+		return
+	end
 	if input.KeyCode == Enum.KeyCode.LeftShift then
 		Net.DefenseState:FireServer({ isBlocking = false })
 	end
 end)
 
-print("[Dharma] Input ready — LMB combo, Z/X/C/V abilities, Shift block, Q dodge.")
+print("[Dharma] Input ready — LMB combo, Z/X/C/V abilities (hold to draw), Shift block, Q dodge.")

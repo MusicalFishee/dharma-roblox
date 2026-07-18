@@ -898,10 +898,11 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		elseif data.outcome == "AbilityCooldown" then
 			showToast(tostring(data.abilityName) .. " — recharging", Color3.fromRGB(170, 170, 170))
 		elseif data.outcome == "AbilityCast" then
+			local prefix = if data.charged == 2 then "OVERCHARGED — " elseif data.charged == 1 then "CHARGED — " else ""
 			if data.ability == "V" then
-				showToast(string.format("INDRA'S WRATH!   %d struck", data.struck or 0), Color3.fromRGB(180, 220, 255))
+				showToast(string.format("%sINDRA'S WRATH!   %d struck", prefix, data.struck or 0), Color3.fromRGB(180, 220, 255))
 			else
-				showToast(string.upper(tostring(data.abilityName)) .. "!", SAFFRON)
+				showToast(prefix .. string.upper(tostring(data.abilityName)) .. "!", SAFFRON)
 			end
 		elseif data.outcome == "Hit" and data.executed then
 			showToast("YAMA'S LEDGER CLOSES", Color3.fromRGB(200, 60, 255))

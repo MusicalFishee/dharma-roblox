@@ -73,6 +73,40 @@ export type AbilityDef = {
 	wardKind: string?, -- "shield" (damage taken x power) | "empower" (damage dealt x power)
 }
 
+-- The drawn bow: hold a damage Astra to overcharge it. The SERVER holds the
+-- clock — the client only reports key-down and key-up, so a forged charge
+-- duration does not exist in the protocol. Dashes, heals, and wards refuse
+-- the draw: charge speaks only to damage.
+Abilities.Charge = {
+	MinHold = 0.35, -- below this, a tap: no amplification
+	MaxSeconds = 2, -- the full draw
+	MaxMult = 2, -- a full draw doubles the blow
+}
+
+function Abilities.chargeMult(heldSeconds: number): number
+	local c = Abilities.Charge
+	if heldSeconds < c.MinHold then
+		return 1
+	end
+	local frac = math.clamp(heldSeconds / c.MaxSeconds, 0, 1)
+	return 1 + (c.MaxMult - 1) * frac
+end
+
+-- 0 = tap, 1 = charged (half draw), 2 = overcharged (full draw). Display only.
+function Abilities.chargeTier(heldSeconds: number): number
+	local c = Abilities.Charge
+	if heldSeconds >= c.MaxSeconds then
+		return 2
+	elseif heldSeconds >= c.MaxSeconds / 2 then
+		return 1
+	end
+	return 0
+end
+
+function Abilities.isChargeable(kind: string): boolean
+	return kind == "projectile" or kind == "nova" or kind == "smite"
+end
+
 Abilities.Catalog = {
 	-- Projectiles (Z).
 	agni_astra = { id = "agni_astra", name = "Agni Astra", kind = "projectile", line = "A searing fire-bolt.", tejasCost = 35, cooldown = 0.8, power = 30, speed = 90, flame = true, color = { 255, 120, 30 } },
