@@ -74,7 +74,7 @@ for _, entry in PanelDirectory.Entries do
 	end
 end
 check("panels are unique and well-formed", dirOk)
-check("the directory is thirteen panels deep", #PanelDirectory.Entries == 13)
+check("the directory is fourteen panels deep", #PanelDirectory.Entries == 14)
 
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then

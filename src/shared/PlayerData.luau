@@ -5,7 +5,7 @@
 
 local PlayerData = {}
 
-PlayerData.Version = 20
+PlayerData.Version = 21
 
 -- Mirrors Relics.MaxOwned (dependency-free; a test guards against drift).
 local RELICS_MAX_OWNED = 40
@@ -98,6 +98,7 @@ export type Data = {
 	vrata: VrataSave, -- the weekly vow (stamp + progress; stale weeks reset)
 	weekly: WeeklySave, -- this week's deepest wave (stale weeks reset)
 	kirti: { [string]: number }, -- claimed tier per deed id (0..3)
+	loadouts: { [string]: LoadoutSave }, -- saved gear sets keyed "1".."3"
 }
 
 export type WeeklySave = {
@@ -171,6 +172,40 @@ local function cleanRelics(raw: any): RelicsSave
 	return out
 end
 
+export type LoadoutSave = {
+	name: string,
+	weapon: string,
+	crown: string,
+	kavacha: string,
+	charm: string,
+}
+
+local LOADOUT_KEYS = { "1", "2", "3" }
+
+local function cleanLoadouts(raw: any): { [string]: LoadoutSave }
+	local out: { [string]: LoadoutSave } = {}
+	if type(raw) ~= "table" then
+		return out
+	end
+	local function id(v: any): string
+		return if type(v) == "string" and #v <= 40 then v else ""
+	end
+	for _, key in LOADOUT_KEYS do
+		local slot = raw[key]
+		if type(slot) == "table" and type(slot.weapon) == "string" and #slot.weapon > 0 and #slot.weapon <= 40 then
+			local name = if type(slot.name) == "string" then slot.name else ""
+			out[key] = {
+				name = string.sub(name, 1, 24),
+				weapon = slot.weapon,
+				crown = id(slot.crown),
+				kavacha = id(slot.kavacha),
+				charm = id(slot.charm),
+			}
+		end
+	end
+	return out
+end
+
 function PlayerData.default(): Data
 	return {
 		version = PlayerData.Version,
@@ -195,6 +230,7 @@ function PlayerData.default(): Data
 		vrata = { stamp = 0, progress = 0, kept = false },
 		weekly = { stamp = 0, wave = 0 },
 		kirti = {},
+		loadouts = {},
 	}
 end
 
@@ -304,6 +340,9 @@ function PlayerData.validate(raw: any): Data
 			end
 		end
 	end
+	if type(raw) == "table" then
+		d.loadouts = cleanLoadouts(raw.loadouts)
+	end
 	return d
 end
 
@@ -329,7 +368,8 @@ function PlayerData.serialize(
 	vibhuti: VibhutiSave?,
 	vrata: VrataSave?,
 	weekly: WeeklySave?,
-	kirti: { [string]: number }?
+	kirti: { [string]: number }?,
+	loadouts: { [string]: LoadoutSave }?
 ): Data
 	local questsCopy: { QuestSlot } = {}
 	if quests then
@@ -419,6 +459,7 @@ function PlayerData.serialize(
 			end
 			return out
 		end)(),
+		loadouts = cleanLoadouts(loadouts),
 		story = if type(story) == "number" and story == story and story > 0 then math.min(math.floor(story), 50) else 0,
 	}
 end

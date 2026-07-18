@@ -18,6 +18,7 @@ PanelDirectory.Entries = {
 	{ label = "Paths", gui = "DharmaPathSelect", remote = "PathRequest", payloadAction = "info" },
 	{ label = "Relics", gui = "DharmaRelics", remote = "RelicRequest", payloadAction = "info" },
 	{ label = "Armory", gui = "DharmaArmory", remote = "StatsRequest", payloadAction = "info" },
+	{ label = "Loadouts", gui = "DharmaLoadouts", remote = "LoadoutRequest", payloadAction = "info" },
 	{ label = "Stats", gui = "DharmaStats", remote = "StatsRequest", payloadAction = "info" },
 	{ label = "Kirti", gui = "DharmaKirti", remote = "KirtiRequest", payloadAction = "info" },
 	{ label = "Titles", gui = "DharmaTitles", remote = "TitleRequest", payloadAction = "list" },

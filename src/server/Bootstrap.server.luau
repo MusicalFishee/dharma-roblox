@@ -18,6 +18,7 @@ require(script.Parent.VibhutiService) -- activates sacred marks + emotes
 require(script.Parent.DhyanaService) -- activates the meditation grove (AFK sangha)
 require(script.Parent.KirtiService) -- activates glory-ledger bounty claims
 require(script.Parent.AkhadaService) -- raises the practice dummy (DPS readout)
+require(script.Parent.LoadoutService) -- activates saved gear sets (L)
 require(script.Parent.StoryService) -- activates Agastya's journal remote
 
 print(string.format(

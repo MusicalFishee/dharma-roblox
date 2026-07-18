@@ -211,6 +211,22 @@ check("raidClears validated", PlayerData.validate({ stats = { raidClears = 2 } }
 local srt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", nil, 6))
 check("story round-trips through serialize", srt.story == 6)
 
+-- Loadouts (added with the gear sets, v21).
+check("default has no loadouts", next(PlayerData.default().loadouts) == nil)
+local lval = PlayerData.validate({ loadouts = {
+	["1"] = { name = string.rep("x", 99), weapon = "talwar", crown = "baka_crown", kavacha = 7, charm = "" },
+	["7"] = { name = "junk", weapon = "talwar" },
+	["2"] = "junk",
+	["3"] = { name = "no weapon", crown = "baka_crown" },
+} })
+check("a real slot survives with junk scrubbed", lval.loadouts["1"] ~= nil and lval.loadouts["1"].weapon == "talwar" and lval.loadouts["1"].kavacha == "" and lval.loadouts["1"].crown == "baka_crown")
+check("vault names are capped", #lval.loadouts["1"].name <= 24)
+check("only slots 1-3 exist", lval.loadouts["7"] == nil)
+check("junk slots are refused", lval.loadouts["2"] == nil)
+check("a loadout without a weapon is no loadout", lval.loadouts["3"] == nil)
+local lrt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", nil, 0, nil, nil, false, nil, nil, nil, nil, { ["2"] = { name = "Boss Night", weapon = "chakram", crown = "", kavacha = "", charm = "" } }))
+check("loadouts round-trip through serialize", lrt.loadouts["2"] ~= nil and lrt.loadouts["2"].weapon == "chakram" and lrt.loadouts["2"].name == "Boss Night")
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

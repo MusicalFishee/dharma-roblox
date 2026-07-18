@@ -659,6 +659,14 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		)
 		return
 	end
+	if data.loadoutSaved then
+		showToast(string.format("LOADOUT SAVED — %s", tostring(data.name)), YELLOW)
+		return
+	end
+	if data.loadoutApplied then
+		showToast(string.format("GEAR SWORN — %s", tostring(data.name)), YELLOW)
+		return
+	end
 	if data.dhyanaEnter then
 		showToast("DHYANA — the grove holds you. Jump to rise.", Color3.fromRGB(200, 220, 255))
 		return

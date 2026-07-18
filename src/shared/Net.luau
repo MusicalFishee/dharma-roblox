@@ -50,6 +50,8 @@ local Net = {
 	InputReport = ensureRemote("InputReport"),
 	-- client -> server: kirti bounty claims ({action="info"} or {action="claim", id=...})
 	KirtiRequest = ensureRemote("KirtiRequest"),
+
+	LoadoutRequest = ensureRemote("LoadoutRequest"),
 	-- client -> server: story journal requests ({action="info"})
 	StoryRequest = ensureRemote("StoryRequest"),
 	-- client -> server: current guard state (blocking / dodging)

@@ -82,6 +82,7 @@ export type PlayerState = {
 	weeklyBest: { stamp: number, wave: number },
 	-- Claimed kirti tier per deed id (0..3; claims are one-time bounties).
 	kirtiClaims: { [string]: number },
+	loadouts: { [string]: { name: string, weapon: string, crown: string, kavacha: string, charm: string } },
 }
 
 local PlayerRegistry = {}
@@ -146,6 +147,7 @@ function PlayerRegistry.get(player: Player): PlayerState
 		vrata2 = { stamp = 0, progress = 0, kept = false },
 		weeklyBest = { stamp = 0, wave = 0 },
 		kirtiClaims = {},
+		loadouts = {},
 	}
 	states[player] = state
 	return state

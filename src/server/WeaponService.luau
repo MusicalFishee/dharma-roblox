@@ -226,21 +226,18 @@ function WeaponService.refresh(player: Player, allowPrompt: boolean?)
 	})
 end
 
--- Choose or SWITCH a weapon. The first oath is a starter's choice; earned
--- weapons can be wielded any time after (the smith's tier travels with you —
--- the craft is yours, not the blade's). The server re-checks every unlock.
-Net.WeaponRequest.OnServerEvent:Connect(function(player: Player, data: any)
-	if typeof(data) ~= "table" or data.action ~= "select" then
-		return
-	end
+-- Choose or SWITCH a weapon (also the loadout swap's road). The first oath
+-- is a starter's choice; earned weapons can be wielded any time after (the
+-- smith's tier travels with you — the craft is yours, not the blade's).
+-- The server re-checks every unlock. Returns whether the blade changed hands.
+function WeaponService.trySelect(player: Player, id: string): boolean
 	local state = PlayerRegistry.get(player)
 	if not state.dataReady then
-		return -- never race the save
+		return false -- never race the save
 	end
-	local id = tostring(data.id)
 	local weapon = Weapons.get(id)
 	if not weapon or id == state.weapon.id then
-		return
+		return false
 	end
 	local snap: Weapons.UnlockSnapshot = {
 		kills = state.stats.kills,
@@ -251,7 +248,7 @@ Net.WeaponRequest.OnServerEvent:Connect(function(player: Player, data: any)
 	}
 	if not Weapons.isUnlocked(id, snap) then
 		Net.CombatFeedback:FireClient(player, { weaponLocked = true, name = weapon.displayName, label = if weapon.unlock then weapon.unlock.label else "" })
-		return
+		return false
 	end
 	local hadWeapon = Weapons.isValidId(state.weapon.id)
 	state.weapon = { id = id, tier = if hadWeapon then state.weapon.tier else Weapons.MinTier }
@@ -262,6 +259,14 @@ Net.WeaponRequest.OnServerEvent:Connect(function(player: Player, data: any)
 		name = weapon.displayName,
 		title = weapon.title,
 	})
+	return true
+end
+
+Net.WeaponRequest.OnServerEvent:Connect(function(player: Player, data: any)
+	if typeof(data) ~= "table" or data.action ~= "select" then
+		return
+	end
+	WeaponService.trySelect(player, tostring(data.id))
 end)
 
 -- Re-attach on every spawn, but wait for the save to resolve so we prompt exactly once
