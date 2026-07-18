@@ -84,6 +84,7 @@ export type PlayerState = {
 	kirtiClaims: { [string]: number },
 	loadouts: { [string]: { name: string, weapon: string, crown: string, kavacha: string, charm: string } },
 	gana: string,
+	bhava: string, -- the worn stance (session tactics, never saved)
 	yatra: number,
 }
 
@@ -151,6 +152,7 @@ function PlayerRegistry.get(player: Player): PlayerState
 		kirtiClaims = {},
 		loadouts = {},
 		gana = "",
+		bhava = "sama",
 		yatra = 0,
 	}
 	states[player] = state

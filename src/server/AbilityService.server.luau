@@ -20,6 +20,7 @@ local Net = require(ReplicatedStorage.Shared.Net)
 local Combat = require(ReplicatedStorage.Shared.Combat)
 local Abilities = require(ReplicatedStorage.Shared.Abilities)
 local Paths = require(ReplicatedStorage.Shared.Paths)
+local Bhava = require(ReplicatedStorage.Shared.Bhava)
 local Siddhis = require(ReplicatedStorage.Shared.Siddhis)
 local Vara = require(ReplicatedStorage.Shared.Vara)
 local Reactions = require(ReplicatedStorage.Shared.Reactions)
@@ -65,7 +66,7 @@ end
 -- Path passive + active empower ward, applied to all ability damage.
 local function damageMultFor(state: any): number
 	local varaFx = Vara.totalEffects(state.vara)
-	local mult = Paths.passiveOf(state.path).damageMult * varaFx.damageMult * varaFx.abilityDamageMult * RitesService.mults().damageMult
+	local mult = Paths.passiveOf(state.path).damageMult * varaFx.damageMult * varaFx.abilityDamageMult * RitesService.mults().damageMult * Bhava.effectsOf(state.bhava).damageMult
 	if os.clock() < state.empowerUntil then
 		mult *= state.empowerMult
 	end

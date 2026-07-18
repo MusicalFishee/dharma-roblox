@@ -35,6 +35,8 @@ UserInputService.InputBegan:Connect(function(input: InputObject, gameProcessed: 
 		Net.DefenseState:FireServer({ isBlocking = true })
 	elseif input.KeyCode == Enum.KeyCode.Q then
 		Net.DefenseState:FireServer({ dodge = true })
+	elseif input.KeyCode == Enum.KeyCode.Tab then
+		Net.BhavaRequest:FireServer({ action = "cycle" })
 	end
 end)
 

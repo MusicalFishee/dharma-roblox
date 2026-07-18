@@ -16,6 +16,7 @@ local Enchants = require(ReplicatedStorage.Shared.Enchants)
 local Relics = require(ReplicatedStorage.Shared.Relics)
 local Vara = require(ReplicatedStorage.Shared.Vara)
 local Weapons = require(ReplicatedStorage.Shared.Weapons)
+local Bhava = require(ReplicatedStorage.Shared.Bhava)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 
 local HazardService = {}
@@ -130,7 +131,7 @@ local function burst(def: Hazards.HazardDef, wavesDeep: number, myGen: number)
 				local vench = Enchants.effects(vstate.enchant)
 				local vward = if os.clock() < vstate.wardUntil then vstate.wardMult else 1
 				local vrelic = Relics.totalBonus(Relics.equippedList(vstate.relics.equipped))
-				hum:TakeDamage(res.damage * (vench.damageTakenMult or 1) * vward * vrelic.damageTakenMult * Vara.totalEffects(vstate.vara).damageTakenMult * Weapons.signatureOf(vstate.weapon.id).damageTakenMult)
+				hum:TakeDamage(res.damage * (vench.damageTakenMult or 1) * vward * vrelic.damageTakenMult * Vara.totalEffects(vstate.vara).damageTakenMult * Weapons.signatureOf(vstate.weapon.id).damageTakenMult * Bhava.effectsOf(vstate.bhava).damageTakenMult)
 				Net.AnimEvent:FireAllClients(char, "flinch")
 				if hrp and hrp:IsA("BasePart") then
 					local away = Vector3.new(hrp.Position.X - c.x, 0, hrp.Position.Z - c.z)

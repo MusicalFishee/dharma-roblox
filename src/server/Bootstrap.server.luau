@@ -19,6 +19,11 @@ require(script.Parent.DhyanaService) -- activates the meditation grove (AFK sang
 require(script.Parent.KirtiService) -- activates glory-ledger bounty claims
 require(script.Parent.AkhadaService) -- raises the practice dummy (DPS readout)
 require(script.Parent.LoadoutService) -- activates saved gear sets (L)
+require(script.Parent.YatraService) -- activates the free pilgrimage road (F)
+require(script.Parent.GanaService) -- activates warband banners (R)
+require(script.Parent.SevaService) -- activates the shared communal stone
+require(script.Parent.TournamentService) -- activates four-name duel kumbhas
+require(script.Parent.BhavaService) -- activates the stance wheel
 require(script.Parent.StoryService) -- activates Agastya's journal remote
 
 print(string.format(

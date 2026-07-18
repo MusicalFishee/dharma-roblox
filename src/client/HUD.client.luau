@@ -156,6 +156,25 @@ toast.TextTransparency = 1
 toast.Text = ""
 toast.Parent = screenGui
 
+-- The stance chip (bottom-right): shows the worn posture; tap to shift.
+local stanceChip = Instance.new("TextButton")
+stanceChip.AnchorPoint = Vector2.new(1, 1)
+stanceChip.Position = UDim2.new(1, -28, 1, -54)
+stanceChip.Size = UDim2.fromOffset(190, 28)
+stanceChip.BackgroundColor3 = Color3.fromRGB(20, 18, 24)
+stanceChip.BackgroundTransparency = 0.25
+stanceChip.Font = Enum.Font.GothamBold
+stanceChip.TextSize = 13
+stanceChip.TextColor3 = Color3.fromRGB(200, 200, 210)
+stanceChip.Text = "◈  SAMA — tap to shift"
+stanceChip.Parent = screenGui
+local scc = Instance.new("UICorner")
+scc.CornerRadius = UDim.new(0, 8)
+scc.Parent = stanceChip
+stanceChip.Activated:Connect(function()
+	Net.BhavaRequest:FireServer({ action = "cycle" })
+end)
+
 local function showToast(text: string, color: Color3)
 	toast.Text = text
 	toast.TextColor3 = color
@@ -640,6 +659,12 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 	end
 	if data.vrataReset then
 		showToast(string.format("A new week — the world swears the %s", tostring(data.name)), Color3.fromRGB(200, 110, 255))
+		return
+	end
+	if data.bhavaSet then
+		stanceChip.Text = string.format("%s  %s — tap to shift", tostring(data.glyph), string.upper(tostring(data.name)))
+		stanceChip.TextColor3 = Color3.fromRGB(tonumber(data.r) or 200, tonumber(data.g) or 200, tonumber(data.b) or 210)
+		showToast(string.format("%s %s — %s", tostring(data.glyph), string.upper(tostring(data.name)), tostring(data.line)), stanceChip.TextColor3)
 		return
 	end
 	if data.sevaGoal then
