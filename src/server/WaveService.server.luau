@@ -21,6 +21,7 @@ local Elites = require(ReplicatedStorage.Shared.Elites)
 local Affixes = require(ReplicatedStorage.Shared.Affixes)
 local EnemyService = require(script.Parent.EnemyService)
 local ZoneService = require(script.Parent.ZoneService)
+local HazardService = require(script.Parent.HazardService)
 local UtsavaService = require(script.Parent.UtsavaService)
 local BhootaService = require(script.Parent.BhootaService)
 local VaraService = require(script.Parent.VaraService)
@@ -134,6 +135,7 @@ local function onWaveClear(wave: number)
 		QuestService.onWaveClear(p)
 		StoryService.onEvent(p) -- a deeper wave may turn an Adhyaya's page
 	end
+	HazardService.calm()
 	announce({ waveState = "clear", wave = wave, bonusXp = bonus, intermission = Waves.Intermission })
 
 	-- A slain boss leaves boons on its corpse (the god's trial blesses instead).
@@ -284,6 +286,9 @@ function startWave(wave: number)
 		announce({ oathBegins = true, name = oathDef.name })
 	end
 
+	-- An ordinary wave: the realm itself joins the fight.
+	HazardService.rage(wave)
+
 	local ids = Waves.compose(wave, EnemyTypes.List :: any)
 	remaining = #ids
 	waveSpawnCount = remaining
@@ -327,6 +332,7 @@ function failRun()
 	for _, p in BhootaService.releaseAll() do
 		alivePlayers[p] = true
 	end
+	HazardService.calm()
 	EnemyService.clearAll()
 	TrialBoss.clear() -- a wiped trial dissolves too (no blessing, no reward)
 	RavanaRaid.clear() -- and the king keeps his heads
