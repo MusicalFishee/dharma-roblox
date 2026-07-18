@@ -14,6 +14,7 @@ local Loot = require(ReplicatedStorage.Shared.Loot)
 local Trial = require(ReplicatedStorage.Shared.Trial)
 local TrialBoss = require(script.Parent.TrialBoss)
 local Ravana = require(ReplicatedStorage.Shared.Ravana)
+local Tarakasura = require(ReplicatedStorage.Shared.Tarakasura)
 local RavanaRaid = require(script.Parent.RavanaRaid)
 local EnemyTypes = require(ReplicatedStorage.Shared.EnemyTypes)
 local Bosses = require(ReplicatedStorage.Shared.Bosses)
@@ -22,6 +23,7 @@ local Affixes = require(ReplicatedStorage.Shared.Affixes)
 local EnemyService = require(script.Parent.EnemyService)
 local ZoneService = require(script.Parent.ZoneService)
 local HazardService = require(script.Parent.HazardService)
+local WarMoonRaid = require(script.Parent.WarMoonRaid)
 local UtsavaService = require(script.Parent.UtsavaService)
 local BhootaService = require(script.Parent.BhootaService)
 local VaraService = require(script.Parent.VaraService)
@@ -262,6 +264,18 @@ function startWave(wave: number)
 		return
 	end
 
+	-- The War-Moon claims wave 150 and every 150th — it RISES OVER the king's
+	-- night (every War-Moon wave is also a Ravana wave), beneath the Trial.
+	if Tarakasura.isWarMoonWave(wave) then
+		announce({ waveState = "boss", wave = wave, bossName = "Tarakasura", bossTitle = "the War-Moon" })
+		WarMoonRaid.begin(wave, function()
+			if gen == waveGen then
+				onWaveClear(wave)
+			end
+		end)
+		return
+	end
+
 	-- The Ten-Headed King claims wave 50 and every 50th after (below the Trial, by law).
 	if Ravana.isRaidWave(wave) then
 		announce({ waveState = "boss", wave = wave, bossName = "Ravana", bossTitle = "the Ten-Headed King" })
@@ -336,6 +350,7 @@ function failRun()
 	EnemyService.clearAll()
 	TrialBoss.clear() -- a wiped trial dissolves too (no blessing, no reward)
 	RavanaRaid.clear() -- and the king keeps his heads
+	WarMoonRaid.clear() -- and the Moon keeps its captive
 	local resume = Survival.restartWave(checkpoint, Waves.BossInterval)
 	announce({
 		waveState = "wipe",

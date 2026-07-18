@@ -642,6 +642,18 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("A new week — the world swears the %s", tostring(data.name)), Color3.fromRGB(200, 110, 255))
 		return
 	end
+	if data.moonAnchor then
+		if (data.remaining or 0) > 0 then
+			showToast(string.format("A MOON-ANCHOR SHATTERS — %d remain", data.remaining), Color3.fromRGB(200, 215, 255))
+		else
+			showToast("THE LAST ANCHOR BREAKS — THE MOON SETS", Color3.fromRGB(200, 215, 255))
+		end
+		return
+	end
+	if data.velFalls then
+		showToast("THE VEL OF KARTTIKEYA FALLS", Color3.fromRGB(255, 220, 90))
+		return
+	end
 	if data.perfectParry then
 		showToast("PERFECT PARRY — RIPOSTE!", CYAN)
 		return
