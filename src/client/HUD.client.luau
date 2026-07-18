@@ -642,6 +642,45 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("A new week — the world swears the %s", tostring(data.name)), Color3.fromRGB(200, 110, 255))
 		return
 	end
+	if data.sevaGoal then
+		showToast(string.format("SEVA — %s: %s", tostring(data.name), tostring(data.line)), Color3.fromRGB(140, 220, 190))
+		return
+	end
+	if data.sevaProgress then
+		showToast(string.format("SEVA — %s: %d / %d", tostring(data.name), data.progress, data.target), Color3.fromRGB(140, 220, 190))
+		return
+	end
+	if data.sevaComplete then
+		local shardBit = if (data.shards or 0) > 0 then string.format(", +%d ◆", data.shards) else ""
+		showToast(string.format("THE STONE MOVES — %s! (+%d gold%s for all)", tostring(data.name), data.gold, shardBit), Color3.fromRGB(140, 220, 190))
+		return
+	end
+	if data.yatraClaimed then
+		local shardBit = if (data.shards or 0) > 0 then string.format("  +%d ◆", data.shards) else ""
+		showToast(string.format("THE ROAD PAYS — %d steps: +%d gold%s", data.count, data.gold, shardBit), YELLOW)
+		return
+	end
+	if data.ganaSet then
+		showToast(string.format("THE BANNER RISES — ⚔ %s", tostring(data.banner)), YELLOW)
+		return
+	end
+	if data.ganaLeft then
+		showToast("The banner is folded. You march alone.", Color3.fromRGB(170, 170, 170))
+		return
+	end
+	if data.tourney == "begins" then
+		showToast(string.format("KUMBHA! %s — four names, one crown", table.concat(data.names or {}, " · ")), Color3.fromRGB(255, 160, 80))
+		return
+	end
+	if data.tourney == "semi" or data.tourney == "final" then
+		local stage = if data.tourney == "final" then "THE FINAL" else "SEMIFINAL"
+		showToast(string.format("%s — %s vs %s", stage, tostring(data.aName), tostring(data.bName)), Color3.fromRGB(255, 160, 80))
+		return
+	end
+	if data.tourney == "champion" then
+		showToast(string.format("CHAMPION OF THE KUMBHA — %s! (+%d gold, +%d ◆)", tostring(data.name), data.gold, data.shards), YELLOW)
+		return
+	end
 	if data.moonAnchor then
 		if (data.remaining or 0) > 0 then
 			showToast(string.format("A MOON-ANCHOR SHATTERS — %d remain", data.remaining), Color3.fromRGB(200, 215, 255))

@@ -92,7 +92,7 @@ local function isFriend(a: Player, b: Player): boolean
 		return known
 	end
 	local ok, result = pcall(function()
-		return a:IsFriendsWith(b.UserId)
+		return a:IsFriendsWithAsync(b.UserId)
 	end)
 	local friends = ok and result == true
 	cache[b.UserId] = friends

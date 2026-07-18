@@ -5,7 +5,7 @@
 
 local PlayerData = {}
 
-PlayerData.Version = 22
+PlayerData.Version = 23
 
 -- Mirrors Relics.MaxOwned (dependency-free; a test guards against drift).
 local RELICS_MAX_OWNED = 40
@@ -100,6 +100,8 @@ export type Data = {
 	weekly: WeeklySave, -- this week's deepest wave (stale weeks reset)
 	kirti: { [string]: number }, -- claimed tier per deed id (0..3)
 	loadouts: { [string]: LoadoutSave }, -- saved gear sets keyed "1".."3"
+	gana: string, -- the declared warband banner ("" = marches alone)
+	yatra: number, -- pilgrimage milestones claimed (sequential count)
 }
 
 export type WeeklySave = {
@@ -232,6 +234,8 @@ function PlayerData.default(): Data
 		weekly = { stamp = 0, wave = 0 },
 		kirti = {},
 		loadouts = {},
+		gana = "",
+		yatra = 0,
 	}
 end
 
@@ -344,6 +348,10 @@ function PlayerData.validate(raw: any): Data
 	end
 	if type(raw) == "table" then
 		d.loadouts = cleanLoadouts(raw.loadouts)
+		if type(raw.gana) == "string" then
+			d.gana = string.sub(raw.gana, 1, 20)
+		end
+		d.yatra = cleanCount(raw.yatra)
 	end
 	return d
 end
@@ -371,7 +379,9 @@ function PlayerData.serialize(
 	vrata: VrataSave?,
 	weekly: WeeklySave?,
 	kirti: { [string]: number }?,
-	loadouts: { [string]: LoadoutSave }?
+	loadouts: { [string]: LoadoutSave }?,
+	gana: string?,
+	yatra: number?
 ): Data
 	local questsCopy: { QuestSlot } = {}
 	if quests then
@@ -463,6 +473,8 @@ function PlayerData.serialize(
 			return out
 		end)(),
 		loadouts = cleanLoadouts(loadouts),
+		gana = if type(gana) == "string" then string.sub(gana, 1, 20) else "",
+		yatra = cleanCount(yatra),
 		story = if type(story) == "number" and story == story and story > 0 then math.min(math.floor(story), 50) else 0,
 	}
 end

@@ -30,6 +30,7 @@ local LootService = require(script.Parent.LootService)
 local QuestService = require(script.Parent.QuestService)
 local RelicService = require(script.Parent.RelicService)
 local StoryService = require(script.Parent.StoryService)
+local SevaService = require(script.Parent.SevaService)
 
 local ENEMY_TAG = "DharmaEnemy"
 
@@ -185,6 +186,7 @@ local function resolveHitOnPlayer(
 	end
 	if resolution.outcome == "Parry" then
 		pstate.waveParries += 1
+		SevaService.onParry()
 		QuestService.onParry(player)
 		if resolution.isPerfect then
 			pstate.riposteUntil = now + 2.5
@@ -554,6 +556,7 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 				QuestService.onKill(killer, archetype.id, archetype.isBoss == true, archetype.isElite == true)
 
 				local kstate = PlayerRegistry.get(killer)
+				SevaService.onKill(archetype.isBoss == true)
 				-- Lifetime records.
 				kstate.stats.kills += 1
 				kstate.waveKills += 1
@@ -699,7 +702,15 @@ function EnemyService.clearAll()
 	alive = 0
 end
 
-RunService.Heartbeat:Connect(function()
+-- AI at 10 Hz, not every frame: sixty decisions a second per demon bought
+-- nothing but heat. Movement stays smooth (MoveTo persists between steps).
+local aiAccumulator = 0
+RunService.Heartbeat:Connect(function(dt: number)
+	aiAccumulator += dt
+	if aiAccumulator < 0.1 then
+		return
+	end
+	aiAccumulator = 0
 	for _, enemy in enemies do
 		stepEnemy(enemy)
 	end

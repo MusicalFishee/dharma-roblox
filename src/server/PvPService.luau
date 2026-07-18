@@ -13,6 +13,11 @@ local PlayerRegistry = require(script.Parent.PlayerRegistry)
 
 local PvPService = {}
 
+-- Seams for the tournament runner: it starts matches on the ordinary duel
+-- machinery and hears every ending through these hooks.
+PvPService.onDuelEnd = nil :: ((Player, Player) -> ())?
+PvPService.onDuelDraw = nil :: ((Player, Player) -> ())?
+
 type Challenge = {
 	target: Player,
 	expiresAt: number,
@@ -128,6 +133,9 @@ local function declareWinner(winner: Player, loser: Player)
 	send(winner, { pvp = "won", foeName = loser.DisplayName })
 	send(loser, { pvp = "lost", foeName = winner.DisplayName })
 	broadcastAll({ pvp = "announce", winner = winner.DisplayName, loser = loser.DisplayName })
+	if PvPService.onDuelEnd then
+		PvPService.onDuelEnd(winner, loser)
+	end
 end
 
 -- Watch a duelist's humanoid for the deciding fall.
@@ -240,6 +248,9 @@ task.spawn(function()
 				endDuel(player, foe)
 				send(player, { pvp = "draw" })
 				send(foe, { pvp = "draw" })
+				if PvPService.onDuelDraw then
+					PvPService.onDuelDraw(player, foe)
+				end
 			end
 		end
 	end
@@ -275,5 +286,7 @@ Net.InputReport.OnServerEvent:Connect(function(player: Player, data: any)
 end)
 
 print("[Dharma] PvPService ready — honor duels open.")
+
+PvPService.beginDuel = beginDuel
 
 return PvPService

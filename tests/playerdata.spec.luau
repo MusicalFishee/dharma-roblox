@@ -233,6 +233,13 @@ check("deerKills validated", PlayerData.validate({ stats = { deerKills = 7 } }).
 local hunt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", { kills = 0, bossKills = 0, deaths = 0, playtimeSeconds = 0, trialsPassed = 0, duelWins = 0, raidClears = 0, revives = 0, deerKills = 12 }))
 check("the deer ledger round-trips", hunt.stats.deerKills == 12)
 
+-- The banner and the road (v23).
+check("defaults march alone with an unwalked road", PlayerData.default().gana == "" and PlayerData.default().yatra == 0)
+check("banner and road validate", PlayerData.validate({ gana = "Vira Sena", yatra = 4 }).gana == "Vira Sena" and PlayerData.validate({ yatra = -2 }).yatra == 0)
+check("long banners are cut in the vault", #PlayerData.validate({ gana = string.rep("g", 99) }).gana == 20)
+local road = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", nil, 0, nil, nil, false, nil, nil, nil, nil, nil, "Nandi", 6))
+check("banner and road round-trip", road.gana == "Nandi" and road.yatra == 6)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

@@ -52,6 +52,10 @@ local Net = {
 	KirtiRequest = ensureRemote("KirtiRequest"),
 
 	LoadoutRequest = ensureRemote("LoadoutRequest"),
+
+	GanaRequest = ensureRemote("GanaRequest"),
+
+	YatraRequest = ensureRemote("YatraRequest"),
 	-- client -> server: story journal requests ({action="info"})
 	StoryRequest = ensureRemote("StoryRequest"),
 	-- client -> server: current guard state (blocking / dodging)

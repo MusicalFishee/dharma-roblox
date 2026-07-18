@@ -24,7 +24,7 @@ screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
 local panel = Instance.new("Frame")
-panel.Size = UDim2.fromOffset(360, 340)
+panel.Size = UDim2.fromOffset(360, 388)
 panel.AnchorPoint = Vector2.new(0.5, 0.5)
 panel.Position = UDim2.fromScale(0.5, 0.5)
 panel.BackgroundColor3 = PANEL_BG
@@ -45,13 +45,52 @@ title.Text = "HONOR DUELS"
 title.Parent = panel
 
 local scroll = Instance.new("ScrollingFrame")
-scroll.Size = UDim2.new(1, -20, 1, -140)
+scroll.Size = UDim2.new(1, -20, 1, -188)
 scroll.Position = UDim2.fromOffset(10, 42)
 scroll.BackgroundTransparency = 1
 scroll.BorderSizePixel = 0
 scroll.ScrollBarThickness = 4
 scroll.CanvasSize = UDim2.fromOffset(0, 0)
 scroll.Parent = panel
+
+-- The kumbha: queue for a four-name tournament on the same arena.
+local tourneyQueued = false
+local tourneyBtn = Instance.new("TextButton")
+tourneyBtn.Size = UDim2.fromOffset(130, 30)
+tourneyBtn.Position = UDim2.new(0, 10, 1, -140)
+tourneyBtn.Font = Enum.Font.GothamBold
+tourneyBtn.TextSize = 12
+tourneyBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 40)
+tourneyBtn.TextColor3 = Color3.fromRGB(20, 16, 24)
+tourneyBtn.Text = "JOIN KUMBHA"
+tourneyBtn.Parent = panel
+local tbc = Instance.new("UICorner")
+tbc.CornerRadius = UDim.new(0, 6)
+tbc.Parent = tourneyBtn
+
+local tourneyLabel = Instance.new("TextLabel")
+tourneyLabel.Size = UDim2.new(1, -160, 0, 30)
+tourneyLabel.Position = UDim2.new(0, 148, 1, -140)
+tourneyLabel.BackgroundTransparency = 1
+tourneyLabel.Font = Enum.Font.Gotham
+tourneyLabel.TextSize = 11
+tourneyLabel.TextColor3 = Color3.fromRGB(150, 145, 160)
+tourneyLabel.TextXAlignment = Enum.TextXAlignment.Left
+tourneyLabel.TextWrapped = true
+tourneyLabel.Text = "Four names, one crown."
+tourneyLabel.Parent = panel
+
+tourneyBtn.Activated:Connect(function()
+	if tourneyQueued then
+		Net.PvPRequest:FireServer({ action = "tourneyLeave" })
+		tourneyQueued = false
+		tourneyBtn.Text = "JOIN KUMBHA"
+	else
+		Net.PvPRequest:FireServer({ action = "tourneyJoin" })
+		tourneyQueued = true
+		tourneyBtn.Text = "LEAVE QUEUE"
+	end
+end)
 
 -- Incoming-challenge strip (hidden until someone calls you out).
 local incoming = Instance.new("Frame")
@@ -206,6 +245,18 @@ end)
 
 Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 	if typeof(data) ~= "table" then
+		return
+	end
+	if data.tourney == "queue" then
+		tourneyLabel.Text = string.format("Kumbha queue: %d of %d — %s", data.count or 0, data.needed or 4, table.concat(data.names or {}, ", "))
+		return
+	end
+	if data.tourney == "begins" or data.tourney == "champion" or data.tourney == "busy" then
+		tourneyQueued = false
+		tourneyBtn.Text = "JOIN KUMBHA"
+		if data.tourney == "busy" then
+			tourneyLabel.Text = "A kumbha is already running — wait for the crown."
+		end
 		return
 	end
 	if data.pvp == "roster" then

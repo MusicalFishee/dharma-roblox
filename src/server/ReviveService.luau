@@ -39,7 +39,7 @@ type DownedState = {
 local downed: { [Player]: DownedState } = {}
 local downGen = 0
 
-local function broadcastAll(data: { [string]: any })
+local function _broadcastAll(data: { [string]: any })
 	for _, p in Players:GetPlayers() do
 		Net.CombatFeedback:FireClient(p, data)
 	end
