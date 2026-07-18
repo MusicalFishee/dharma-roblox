@@ -48,6 +48,8 @@ local Net = {
 	VibhutiRequest = ensureRemote("VibhutiRequest"),
 	-- client -> server: the device class being played on ({method="keyboard"|"gamepad"|"touch"})
 	InputReport = ensureRemote("InputReport"),
+	-- client -> server: kirti bounty claims ({action="info"} or {action="claim", id=...})
+	KirtiRequest = ensureRemote("KirtiRequest"),
 	-- client -> server: story journal requests ({action="info"})
 	StoryRequest = ensureRemote("StoryRequest"),
 	-- client -> server: current guard state (blocking / dodging)

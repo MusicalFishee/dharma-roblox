@@ -91,6 +91,18 @@ for _, def in Deeds.List do
 end
 check("every svarna is humanly reachable", reachable)
 
+
+-- The bounties: ascending tiers, exact owed math, no double-claims.
+check("bounties ascend with the tier", Deeds.TierReward[1] < Deeds.TierReward[2] and Deeds.TierReward[2] < Deeds.TierReward[3])
+local slayerDef = Deeds.List[1]
+check("nothing earned owes nothing", Deeds.owedFor(slayerDef, 0, 0).gold == 0)
+local fresh2 = Deeds.owedFor(slayerDef, 1000, 0)
+check("two earned tiers owe both bounties", fresh2.tiers == 2 and fresh2.gold == Deeds.TierReward[1] + Deeds.TierReward[2])
+check("claimed tiers never pay twice", Deeds.owedFor(slayerDef, 1000, 2).gold == 0)
+local partial = Deeds.owedFor(slayerDef, 5000, 1)
+check("a partial claim owes only the rest", partial.tiers == 2 and partial.gold == Deeds.TierReward[2] + Deeds.TierReward[3])
+check("junk claim marks clamp", Deeds.owedFor(slayerDef, 5000, 99).gold == 0 and Deeds.owedFor(slayerDef, 100, -5).gold == Deeds.TierReward[1])
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

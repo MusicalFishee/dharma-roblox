@@ -183,6 +183,13 @@ check("weekly validates per-field", PlayerData.validate({ weekly = { stamp = 295
 local wkrt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", nil, 0, nil, nil, false, nil, nil, { stamp = 2951, wave = 61 }))
 check("weekly round-trips through serialize", wkrt.weekly.stamp == 2951 and wkrt.weekly.wave == 61)
 
+-- Kirti claims (v20).
+check("default ledger has no claims", next(PlayerData.default().kirti) == nil)
+local kcv = PlayerData.validate({ kirti = { slayer = 2, lord_breaker = 99, [42] = 1 } })
+check("claims validate and clamp per-deed", kcv.kirti.slayer == 2 and kcv.kirti.lord_breaker == 3)
+local kcrt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", nil, 0, nil, nil, false, nil, nil, nil, { slayer = 3 }))
+check("claims round-trip through serialize", kcrt.kirti.slayer == 3)
+
 -- Relics (added with the relic system, v10).
 local rdef = PlayerData.default().relics
 check("default satchel empty + bare", #rdef.owned == 0 and rdef.equipped.crown == "" and rdef.equipped.kavacha == "" and rdef.equipped.charm == "")

@@ -16,6 +16,7 @@ require(script.Parent.VaraService) -- activates the boon draft (offers + picks)
 require(script.Parent.RitesService) -- activates the yajna flame + shapatha oaths
 require(script.Parent.VibhutiService) -- activates sacred marks + emotes
 require(script.Parent.DhyanaService) -- activates the meditation grove (AFK sangha)
+require(script.Parent.KirtiService) -- activates glory-ledger bounty claims
 require(script.Parent.StoryService) -- activates Agastya's journal remote
 
 print(string.format(

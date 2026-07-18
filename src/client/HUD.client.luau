@@ -630,6 +630,10 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("AGNIHOTRA — day %d of devotion   (%s)", data.day, bits), SAFFRON)
 		return
 	end
+	if data.kirtiClaimed then
+		showToast(string.format("GLORY PAYS:  %s — +%d gold (%d tiers)", tostring(data.name), data.gold, data.tiers), YELLOW)
+		return
+	end
 	if data.vrataKept then
 		showToast(string.format("THE VOW IS KEPT — %s  (+%d gold, +%d ◆)", tostring(data.name), data.gold, data.shards), Color3.fromRGB(200, 110, 255))
 		return

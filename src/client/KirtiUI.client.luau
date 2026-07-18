@@ -57,8 +57,10 @@ headline.TextColor3 = DIM
 headline.Text = ""
 headline.Parent = panel
 
-type Row = { dots: TextLabel, value: TextLabel }
+type Row = { dots: TextLabel, value: TextLabel, claim: TextButton }
 local rows: { [string]: Row } = {}
+local claims: { [string]: number } = {}
+local lastSnap: Deeds.Snapshot? = nil
 
 for i, def in Deeds.List do
 	local row = Instance.new("Frame")
@@ -93,9 +95,26 @@ for i, def in Deeds.List do
 	value.Text = def.line
 	value.Parent = row
 
+	local claimBtn = Instance.new("TextButton")
+	claimBtn.Size = UDim2.fromOffset(84, 24)
+	claimBtn.Position = UDim2.new(1, -96, 0, 10)
+	claimBtn.Font = Enum.Font.GothamBold
+	claimBtn.TextSize = 10
+	claimBtn.Visible = false
+	claimBtn.BackgroundColor3 = GOLD
+	claimBtn.TextColor3 = Color3.fromRGB(20, 16, 24)
+	claimBtn.Text = ""
+	claimBtn.Parent = row
+	local cbc = Instance.new("UICorner")
+	cbc.CornerRadius = UDim.new(0, 6)
+	cbc.Parent = claimBtn
+	claimBtn.Activated:Connect(function()
+		Net.KirtiRequest:FireServer({ action = "claim", id = def.id })
+	end)
+
 	local dots = Instance.new("TextLabel")
 	dots.Size = UDim2.fromOffset(130, 44)
-	dots.Position = UDim2.new(1, -142, 0, 0)
+	dots.Position = UDim2.new(1, -230, 0, 0)
 	dots.BackgroundTransparency = 1
 	dots.Font = Enum.Font.GothamBold
 	dots.TextSize = 20
@@ -105,7 +124,7 @@ for i, def in Deeds.List do
 	dots.Text = "○ ○ ○"
 	dots.Parent = row
 
-	rows[def.id] = { dots = dots, value = value }
+	rows[def.id] = { dots = dots, value = value, claim = claimBtn }
 end
 
 local function hex(c: { number }): string
@@ -113,9 +132,17 @@ local function hex(c: { number }): string
 end
 
 local function refresh(snap: Deeds.Snapshot)
+	lastSnap = snap
 	for _, def in Deeds.List do
 		local row = rows[def.id]
 		local progress = Deeds.progress(def, snap)
+		local owed = Deeds.owedFor(def, progress.value, claims[def.id] or 0)
+		if owed.gold > 0 then
+			row.claim.Visible = true
+			row.claim.Text = string.format("CLAIM %d ◈", owed.gold)
+		else
+			row.claim.Visible = false
+		end
 		local marks = {}
 		for tier = 1, 3 do
 			if progress.tier >= tier then
@@ -138,7 +165,22 @@ local function refresh(snap: Deeds.Snapshot)
 end
 
 Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
-	if typeof(data) ~= "table" or not data.statsPage then
+	if typeof(data) ~= "table" then
+		return
+	end
+	if data.kirtiInfo then
+		claims = {}
+		if typeof(data.claims) == "table" then
+			for id, tier in data.claims do
+				claims[tostring(id)] = tonumber(tier) or 0
+			end
+		end
+		if lastSnap then
+			refresh(lastSnap :: Deeds.Snapshot)
+		end
+		return
+	end
+	if not data.statsPage then
 		return
 	end
 	refresh({
@@ -155,6 +197,14 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 	})
 end)
 
+-- Any opener (key, touch drawer, gamepad drawer) lands here: refresh both feeds.
+screenGui:GetPropertyChangedSignal("Enabled"):Connect(function()
+	if screenGui.Enabled then
+		Net.StatsRequest:FireServer({ action = "info" })
+		Net.KirtiRequest:FireServer({ action = "info" })
+	end
+end)
+
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then
 		return
@@ -163,6 +213,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 		screenGui.Enabled = not screenGui.Enabled
 		if screenGui.Enabled then
 			Net.StatsRequest:FireServer({ action = "info" })
+			Net.KirtiRequest:FireServer({ action = "info" })
 		end
 	end
 end)

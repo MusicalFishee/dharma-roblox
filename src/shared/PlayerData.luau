@@ -5,7 +5,7 @@
 
 local PlayerData = {}
 
-PlayerData.Version = 19
+PlayerData.Version = 20
 
 -- Mirrors Relics.MaxOwned (dependency-free; a test guards against drift).
 local RELICS_MAX_OWNED = 40
@@ -97,6 +97,7 @@ export type Data = {
 	vibhuti: VibhutiSave, -- worn sacred marks (tilak + aura ids, "" = bare)
 	vrata: VrataSave, -- the weekly vow (stamp + progress; stale weeks reset)
 	weekly: WeeklySave, -- this week's deepest wave (stale weeks reset)
+	kirti: { [string]: number }, -- claimed tier per deed id (0..3)
 }
 
 export type WeeklySave = {
@@ -193,6 +194,7 @@ function PlayerData.default(): Data
 		vibhuti = { tilak = "", aura = "" },
 		vrata = { stamp = 0, progress = 0, kept = false },
 		weekly = { stamp = 0, wave = 0 },
+		kirti = {},
 	}
 end
 
@@ -275,6 +277,15 @@ function PlayerData.validate(raw: any): Data
 			d.weekly.stamp = cleanCount(raw.weekly.stamp)
 			d.weekly.wave = cleanCount(raw.weekly.wave)
 		end
+		if type(raw.kirti) == "table" then
+			local kept = 0
+			for id, tier in raw.kirti do
+				if type(id) == "string" and #id <= 40 and kept < 20 then
+					d.kirti[id] = math.clamp(cleanCount(tier), 0, 3)
+					kept += 1
+				end
+			end
+		end
 		if type(raw.story) == "number" and raw.story == raw.story and raw.story > 0 then
 			d.story = math.min(math.floor(raw.story), 50)
 		end
@@ -317,7 +328,8 @@ function PlayerData.serialize(
 	tutorialDone: boolean?,
 	vibhuti: VibhutiSave?,
 	vrata: VrataSave?,
-	weekly: WeeklySave?
+	weekly: WeeklySave?,
+	kirti: { [string]: number }?
 ): Data
 	local questsCopy: { QuestSlot } = {}
 	if quests then
@@ -394,6 +406,19 @@ function PlayerData.serialize(
 			stamp = cleanCount(if weekly then weekly.stamp else 0),
 			wave = cleanCount(if weekly then weekly.wave else 0),
 		},
+		kirti = (function(): { [string]: number }
+			local out: { [string]: number } = {}
+			if kirti then
+				local kept = 0
+				for id, tier in kirti do
+					if type(id) == "string" and #id <= 40 and kept < 20 then
+						out[id] = math.clamp(cleanCount(tier), 0, 3)
+						kept += 1
+					end
+				end
+			end
+			return out
+		end)(),
 		story = if type(story) == "number" and story == story and story > 0 then math.min(math.floor(story), 50) else 0,
 	}
 end

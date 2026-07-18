@@ -19,7 +19,7 @@ PanelDirectory.Entries = {
 	{ label = "Relics", gui = "DharmaRelics", remote = "RelicRequest", payloadAction = "info" },
 	{ label = "Armory", gui = "DharmaArmory", remote = "StatsRequest", payloadAction = "info" },
 	{ label = "Stats", gui = "DharmaStats", remote = "StatsRequest", payloadAction = "info" },
-	{ label = "Kirti", gui = "DharmaKirti", remote = "StatsRequest", payloadAction = "info" },
+	{ label = "Kirti", gui = "DharmaKirti", remote = "KirtiRequest", payloadAction = "info" },
 	{ label = "Titles", gui = "DharmaTitles", remote = "TitleRequest", payloadAction = "list" },
 	{ label = "Duels", gui = "DharmaPvP", remote = "PvPRequest", payloadAction = "list" },
 	{ label = "Story", gui = "DharmaStory", remote = "StoryRequest", payloadAction = "info" },

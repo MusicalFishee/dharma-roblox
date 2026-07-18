@@ -80,6 +80,8 @@ export type PlayerState = {
 	vrata2: { stamp: number, progress: number, kept: boolean },
 	-- This week's deepest wave (WaveService resets stale stamps on clear).
 	weeklyBest: { stamp: number, wave: number },
+	-- Claimed kirti tier per deed id (0..3; claims are one-time bounties).
+	kirtiClaims: { [string]: number },
 }
 
 local PlayerRegistry = {}
@@ -143,6 +145,7 @@ function PlayerRegistry.get(player: Player): PlayerState
 		riposteUntil = 0,
 		vrata2 = { stamp = 0, progress = 0, kept = false },
 		weeklyBest = { stamp = 0, wave = 0 },
+		kirtiClaims = {},
 	}
 	states[player] = state
 	return state

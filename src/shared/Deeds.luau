@@ -105,6 +105,27 @@ function Deeds.progress(def: DeedDef, snap: Snapshot): Progress
 	}
 end
 
+-- Each tier's one-time bounty when CLAIMED (kansya, rajata, svarna).
+Deeds.TierReward = { 200, 500, 1200 }
+
+export type Owed = {
+	tiers: number, -- how many unclaimed earned tiers
+	gold: number, -- their combined bounty
+}
+
+-- What a deed still owes: every earned tier above the claimed mark, summed.
+function Deeds.owedFor(def: DeedDef, value: number, claimedTier: number): Owed
+	local earned = Deeds.tierFor(def, value)
+	local from = math.clamp(math.floor(claimedTier), 0, 3)
+	local gold = 0
+	local tiers = 0
+	for t = from + 1, earned do
+		gold += Deeds.TierReward[t]
+		tiers += 1
+	end
+	return { tiers = tiers, gold = gold }
+end
+
 -- Total tiers earned across the ledger (the panel's headline number).
 function Deeds.totalTiers(snap: Snapshot): number
 	local total = 0

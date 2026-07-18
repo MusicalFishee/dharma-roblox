@@ -237,6 +237,10 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play("thunderCrack")
 		return
 	end
+	if data.kirtiClaimed then
+		play("goldPickup")
+		return
+	end
 	if data.vrataReset then
 		play("waveStart")
 		return
