@@ -768,6 +768,16 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 			showToast(why, Color3.fromRGB(200, 120, 120))
 		elseif data.utsava == "merchantLeft" then
 			showToast("The vaidya rolls up his mat and walks on.", Color3.fromRGB(170, 170, 170))
+		elseif data.utsava == "rishiBlessed" then
+			showToast(string.format("The rishi touches your brow — cleansed, +%d XP", data.xp or 0), Color3.fromRGB(255, 240, 190))
+		elseif data.utsava == "rishiGone" then
+			showToast("The rishi walks on, needing nothing.", Color3.fromRGB(170, 170, 170))
+		elseif data.utsava == "peddlerSold" then
+			if data.cursed then
+				showToast(string.format("%d ◆ for %d gold… and the peddler LAUGHS. Cursed!", data.shards, data.price), Color3.fromRGB(200, 110, 255))
+			else
+				showToast(string.format("%d ◆ for %d gold — a clean deal, somehow.", data.shards, data.price), Color3.fromRGB(200, 110, 255))
+			end
 		end
 		return
 	end

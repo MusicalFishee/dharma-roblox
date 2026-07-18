@@ -265,8 +265,12 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play("waveStart")
 		return
 	end
-	if data.utsava == "deerSlain" or data.utsava == "merchantSold" then
+	if data.utsava == "deerSlain" or data.utsava == "merchantSold" or data.utsava == "peddlerSold" then
 		play("goldPickup")
+		return
+	end
+	if data.utsava == "rishiBlessed" then
+		play("levelUp")
 		return
 	end
 	if data.headFall then

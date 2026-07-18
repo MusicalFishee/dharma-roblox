@@ -16,6 +16,42 @@ local Loot = require(ReplicatedStorage.Shared.Loot)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local ProgressionService = require(script.Parent.ProgressionService)
 
+local function makeStand(position: Vector3, matColor: Color3, chestColor: Color3): (Part, Part)
+	local mat = Instance.new("Part")
+	mat.Size = Vector3.new(8, 0.4, 6)
+	mat.Position = position
+	mat.Color = matColor
+	mat.Material = Enum.Material.Fabric
+	mat.Anchored = true
+	mat.Parent = workspace
+	local chest = Instance.new("Part")
+	chest.Size = Vector3.new(2.4, 1.8, 1.6)
+	chest.Position = mat.Position + Vector3.new(0, 1.2, 0)
+	chest.Color = chestColor
+	chest.Material = Enum.Material.Wood
+	chest.Anchored = true
+	chest.Parent = workspace
+	return mat, chest
+end
+
+local function makeSign(parent: BasePart, text: string, color: Color3)
+	local billboard = Instance.new("BillboardGui")
+	billboard.Size = UDim2.fromOffset(230, 54)
+	billboard.StudsOffset = Vector3.new(0, 3.4, 0)
+	billboard.AlwaysOnTop = true
+	billboard.Parent = parent
+	local sign = Instance.new("TextLabel")
+	sign.Size = UDim2.fromScale(1, 1)
+	sign.BackgroundTransparency = 1
+	sign.Font = Enum.Font.GothamBold
+	sign.TextSize = 17
+	sign.TextColor3 = color
+	sign.TextStrokeTransparency = 0.4
+	sign.TextWrapped = true
+	sign.Text = text
+	sign.Parent = billboard
+end
+
 local ENEMY_TAG = "DharmaEnemy"
 local ARENA_RADIUS = 45 -- mirrors WaveService's arena
 
@@ -303,6 +339,106 @@ local function runMerchant(def: Utsava.EventDef)
 	end)
 end
 
+-- ---------------------------------------------------------------------------
+-- The Wandering Rishi — a blessing and a cleansing, once per seeker.
+-- ---------------------------------------------------------------------------
+local function runRishi(def: Utsava.EventDef)
+	local spot = randomFieldSpot(ARENA_RADIUS - 14)
+	local stone = Instance.new("Part")
+	stone.Size = Vector3.new(2, 3.2, 2)
+	stone.Position = spot + Vector3.new(0, 1.4, 0)
+	stone.Color = Color3.fromRGB(240, 230, 200)
+	stone.Material = Enum.Material.Marble
+	stone.Anchored = true
+	stone.Parent = workspace
+	local halo = Instance.new("PointLight")
+	halo.Color = Color3.fromRGB(255, 240, 190)
+	halo.Range = 14
+	halo.Brightness = 1.6
+	halo.Parent = stone
+	makeSign(stone, "THE RISHI\nSeek his blessing", Color3.fromRGB(255, 240, 190))
+
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.ActionText = "Seek blessing"
+	prompt.ObjectText = "Wandering Rishi"
+	prompt.HoldDuration = 1
+	prompt.MaxActivationDistance = 12
+	prompt.RequiresLineOfSight = false
+	prompt.Parent = stone
+
+	local blessed: { [Player]: boolean } = {}
+	prompt.Triggered:Connect(function(seeker: Player)
+		if blessed[seeker] then
+			return
+		end
+		local schar = seeker.Character
+		if schar and schar:GetAttribute("DharmaBhoota") == true then
+			return -- spirits carry no karma to bless
+		end
+		blessed[seeker] = true
+		local state = PlayerRegistry.get(seeker)
+		state.venomUntil = 0
+		state.curseUntil = 0
+		ProgressionService.awardXp(seeker, Utsava.Rishi.xp)
+		Net.CombatFeedback:FireClient(seeker, { utsava = "rishiBlessed", xp = Utsava.Rishi.xp })
+	end)
+
+	task.delay(def.duration, function()
+		TweenService:Create(stone, TweenInfo.new(1.2), { Transparency = 1 }):Play()
+		Debris:AddItem(stone, 1.3)
+		broadcastAll({ utsava = "rishiGone" })
+	end)
+end
+
+-- ---------------------------------------------------------------------------
+-- The Rakshasa Peddler — cheap shards, and a 30% chance you regret them.
+-- ---------------------------------------------------------------------------
+local function runCursedMerchant(def: Utsava.EventDef)
+	local mat, chest = makeStand(Vector3.new(-(ARENA_RADIUS - 9), 0.7, ARENA_RADIUS - 9), Color3.fromRGB(60, 30, 70), Color3.fromRGB(50, 30, 45))
+	makeSign(chest, string.format("THE PEDDLER\n%d ◆ for %d gold… heh", Utsava.Peddler.shards, Utsava.Peddler.price), Color3.fromRGB(200, 110, 255))
+
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.ActionText = "Deal"
+	prompt.ObjectText = "Rakshasa Peddler"
+	prompt.HoldDuration = 0.5
+	prompt.MaxActivationDistance = 12
+	prompt.RequiresLineOfSight = false
+	prompt.Parent = chest
+
+	local served: { [Player]: boolean } = {}
+	prompt.Triggered:Connect(function(buyer: Player)
+		local bchar = buyer.Character
+		if served[buyer] or (bchar and bchar:GetAttribute("DharmaBhoota") == true) then
+			return
+		end
+		local state = PlayerRegistry.get(buyer)
+		if state.gold < Utsava.Peddler.price then
+			Net.CombatFeedback:FireClient(buyer, { utsava = "merchantDenied", reason = "gold" })
+			return
+		end
+		served[buyer] = true
+		state.gold -= Utsava.Peddler.price
+		state.shards += Utsava.Peddler.shards
+		Net.CombatFeedback:FireClient(buyer, { goldUpdate = true, gained = 0, gold = state.gold })
+		Net.CombatFeedback:FireClient(buyer, { shardUpdate = true, gained = Utsava.Peddler.shards, shards = state.shards })
+		local cursed = math.random() < Utsava.Peddler.curseChance
+		if cursed then
+			state.curseUntil = os.clock() + Utsava.Peddler.curseSeconds
+			Net.CombatFeedback:FireClient(buyer, { statusEffect = "curse", seconds = Utsava.Peddler.curseSeconds })
+		end
+		Net.CombatFeedback:FireClient(buyer, { utsava = "peddlerSold", shards = Utsava.Peddler.shards, price = Utsava.Peddler.price, cursed = cursed })
+	end)
+
+	task.delay(def.duration, function()
+		broadcastAll({ utsava = "merchantLeft" })
+		for _, part in { mat, chest } do
+			TweenService:Create(part, TweenInfo.new(1.2), { Transparency = 1 }):Play()
+		end
+		Debris:AddItem(mat, 1.3)
+		Debris:AddItem(chest, 1.3)
+	end)
+end
+
 -- Called by WaveService at every wave start. Rolls, announces, runs.
 function UtsavaService.onWaveStart(wave: number, isSpecialWave: boolean)
 	if eventRunning then
@@ -325,6 +461,10 @@ function UtsavaService.onWaveStart(wave: number, isSpecialWave: boolean)
 			runShardStorm(def)
 		elseif def.id == "merchant" then
 			runMerchant(def)
+		elseif def.id == "rishi" then
+			runRishi(def)
+		elseif def.id == "cursed_merchant" then
+			runCursedMerchant(def)
 		end
 	end)
 	task.delay(def.duration + 3, function()

@@ -28,26 +28,40 @@ Utsava.Events = {
 		name = "The Golden Deer",
 		announce = "A golden deer bolts across the field — bring it down before it fades!",
 		duration = 25,
-		weight = 45,
+		weight = 30,
 	},
 	shard_storm = {
 		id = "shard_storm",
 		name = "Vajra Storm",
 		announce = "The sky cracks — Vajra Shards rain down! Claim them!",
 		duration = 30,
-		weight = 30,
+		weight = 20,
 	},
 	merchant = {
 		id = "merchant",
 		name = "The Wandering Vaidya",
 		announce = "A wandering vaidya unrolls his mat at the field's edge…",
 		duration = 40,
-		weight = 25,
+		weight = 20,
+	},
+	rishi = {
+		id = "rishi",
+		name = "The Wandering Rishi",
+		announce = "A rishi walks the field, untouched by the war. Seek his blessing.",
+		duration = 30,
+		weight = 15,
+	},
+	cursed_merchant = {
+		id = "cursed_merchant",
+		name = "The Rakshasa Peddler",
+		announce = "A peddler grins from the shadows — shards, cheap. What could go wrong?",
+		duration = 40,
+		weight = 15,
 	},
 } :: { [string]: EventDef }
 
 -- Deterministic order for weighted picks (table iteration order isn't).
-Utsava.Order = { "golden_deer", "shard_storm", "merchant" }
+Utsava.Order = { "golden_deer", "shard_storm", "merchant", "rishi", "cursed_merchant" }
 
 -- The golden deer: flees, never fights, pays a bounty to its slayer.
 Utsava.Deer = {
@@ -69,6 +83,19 @@ Utsava.Storm = {
 Utsava.Merchant = {
 	shards = 3,
 	price = 900,
+}
+
+-- The rishi's blessing: XP and a cleansing, once per player per visit.
+Utsava.Rishi = {
+	xp = 150,
+}
+
+-- The peddler's gamble: cheaper shards, but 30% of buyers walk away cursed.
+Utsava.Peddler = {
+	shards = 5,
+	price = 500,
+	curseChance = 0.3,
+	curseSeconds = 30,
 }
 
 -- Roll for an event at wave start. Special waves (boss/trial/raid) never roll;

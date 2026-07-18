@@ -45,6 +45,10 @@ end
 check("events are well-formed", defsOk)
 check("order covers every event once", defCount == #Utsava.Order)
 
+check("five festivals on the calendar", #Utsava.Order == 5)
+check("the rishi blesses with real xp", Utsava.Rishi.xp > 0)
+check("the peddler undercuts the vaidya per shard", Utsava.Peddler.price / Utsava.Peddler.shards < Utsava.Merchant.price / Utsava.Merchant.shards)
+check("the peddler's gamble is real but survivable", Utsava.Peddler.curseChance > 0 and Utsava.Peddler.curseChance < 0.5 and Utsava.Peddler.curseSeconds > 0)
 check("deer pays a real bounty", Utsava.Deer.gold > 0 and Utsava.Deer.xp > 0 and Utsava.Deer.shards > 0 and Utsava.Deer.health > 0 and Utsava.Deer.walkSpeed > 16)
 check("storm rains on a beat", Utsava.Storm.orbCount > 0 and Utsava.Storm.interval > 0 and Utsava.Storm.shardsPerOrb > 0)
 check("storm fits inside its duration", Utsava.Storm.orbCount * Utsava.Storm.interval <= Utsava.Events.shard_storm.duration)
@@ -61,8 +65,8 @@ check("losing the chance roll yields nothing", Utsava.roll(10, 0, false, seq({ 0
 local first = Utsava.roll(10, 0, false, seq({ 0, 0 }))
 check("low roll picks the first event", first ~= nil and first.id == "golden_deer")
 local last = Utsava.roll(10, 0, false, seq({ 0, 0.999 }))
-check("high roll picks the last event", last ~= nil and last.id == "merchant")
-local mid = Utsava.roll(10, 0, false, seq({ 0, 0.5 }))
+check("high roll picks the last event", last ~= nil and last.id == "cursed_merchant")
+local mid = Utsava.roll(10, 0, false, seq({ 0, 0.45 }))
 check("mid roll lands between", mid ~= nil and mid.id == "shard_storm")
 
 print(string.format("\n%d passed, %d failed", passed, failed))
