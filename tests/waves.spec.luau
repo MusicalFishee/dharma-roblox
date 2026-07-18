@@ -59,6 +59,31 @@ check("same rng -> identical wave", table.concat(a, ",") == table.concat(b, ",")
 check("wave 5 is a boss wave", Waves.isBossWave(5))
 check("wave 10 is a boss wave", Waves.isBossWave(10))
 check("wave 4 is not a boss wave", not Waves.isBossWave(4))
+
+-- The minWave gate: a bloodline absent before its hour.
+local gatedRoster = {
+	Common = { weight = 5, maxHealth = 100 },
+	Serpent = { weight = 100, maxHealth = 100, minWave = 30 },
+}
+local function midRng(): number
+	return 0.5
+end
+local before = Waves.compose(29, gatedRoster :: any, midRng)
+local seenBefore = false
+for _, id in before do
+	if id == "Serpent" then
+		seenBefore = true
+	end
+end
+check("the serpents sleep before their hour", #before > 0 and not seenBefore)
+local after = Waves.compose(30, gatedRoster :: any, midRng)
+local seenAfter = false
+for _, id in after do
+	if id == "Serpent" then
+		seenAfter = true
+	end
+end
+check("the serpents wake on the hour", seenAfter)
 check("wave 0 is not a boss wave", not Waves.isBossWave(0))
 
 print(string.format("\n%d passed, %d failed", passed, failed))

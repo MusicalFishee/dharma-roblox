@@ -42,6 +42,22 @@ check("Maricha exists and is ranged", maricha.id == "Maricha" and maricha.ranged
 check("Maricha outranges every melee reach", maricha.attackRange >= 40)
 check("Maricha retreats inside a sane band", (maricha.retreatRange or 0) > 0 and (maricha.retreatRange or 0) < maricha.attackRange)
 check("Maricha arrows actually fly", (maricha.projectileSpeed or 0) > 0)
+
+-- The Naga family: serpent-folk of the deep, one identity — venom.
+local familyOk = true
+for _, id in { "Naga", "NagaCharmer", "NagaRaja" } do
+	local def = EnemyTypes.get(id)
+	if def.id ~= id or def.inflicts ~= "venom" or (def.minWave or 0) < 30 then
+		familyOk = false
+	end
+end
+check("every naga's bite carries venom", familyOk)
+check("the serpents sleep until the deep", (EnemyTypes.get("Naga").minWave or 0) == 30)
+local charmer = EnemyTypes.get("NagaCharmer")
+check("the charmer spits from afar", charmer.ranged == true and charmer.attackRange >= 40 and (charmer.projectileSpeed or 0) > 0)
+check("the raja pools where he falls", EnemyTypes.get("NagaRaja").leavesPool == true)
+check("the raja is the family's mountain", EnemyTypes.get("NagaRaja").maxHealth > EnemyTypes.get("Naga").maxHealth and EnemyTypes.get("NagaRaja").xpReward > EnemyTypes.get("Naga").xpReward)
+check("the king wakes last", (EnemyTypes.get("NagaRaja").minWave or 0) > (EnemyTypes.get("NagaCharmer").minWave or 0) and (EnemyTypes.get("NagaCharmer").minWave or 0) > (EnemyTypes.get("Naga").minWave or 0))
 local meleeUnaffected = true
 for _, a in EnemyTypes.List do
 	if not a.ranged and (a.retreatRange or a.projectileSpeed) then

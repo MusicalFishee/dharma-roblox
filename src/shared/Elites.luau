@@ -34,6 +34,7 @@ export type Archetype = {
 	retreatRange: number?,
 	inflicts: string?,
 	leavesPool: boolean?,
+	minWave: number?,
 }
 
 -- Does this spawn roll elite? `rng` returns [0,1) (injectable for tests).

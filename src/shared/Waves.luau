@@ -8,6 +8,7 @@ local Waves = {}
 export type RosterEntry = {
 	weight: number,
 	maxHealth: number,
+	minWave: number?, -- this bloodline sleeps until this wave
 }
 
 -- Enemies in a given wave — grows steadily, capped so it never melts a phone.
@@ -46,6 +47,9 @@ function Waves.compose(
 	local weights: { number } = {}
 	local total = 0
 	for id, a in roster do
+		if a.minWave and wave < a.minWave then
+			continue -- this bloodline hasn't woken yet
+		end
 		local toughness = a.maxHealth / 100
 		local w: number
 		if toughness > 1.2 then

@@ -26,6 +26,8 @@ export type EnemyArchetype = {
 	-- creature's corpse leaves a toxic pool behind.
 	inflicts: string?, -- "venom" | "curse"
 	leavesPool: boolean?,
+	-- A bloodline can sleep: absent from wave composition before this wave.
+	minWave: number?,
 }
 
 local EnemyTypes = {}
@@ -126,6 +128,63 @@ EnemyTypes.List = {
 		scale = 1.5,
 		skin = { 120, 130, 150 },
 		weight = 1,
+	},
+	-- ── The Naga family: serpent-folk who wake with the Drowned Deep. One
+	-- identity, kept by law: every naga's bite carries venom.
+	-- Coiling soldier — quick, persistent, venomous.
+	Naga = {
+		id = "Naga",
+		displayName = "Naga",
+		maxHealth = 140,
+		walkSpeed = 14,
+		attackDamage = 11,
+		attackInterval = 1.5,
+		aggroRange = 100,
+		attackRange = 9,
+		xpReward = 45,
+		scale = 1.05,
+		skin = { 40, 110, 70 },
+		weight = 3,
+		inflicts = "venom",
+		minWave = 30,
+	},
+	-- Hooded spitter — kites away and spits dodgeable venom from afar.
+	NagaCharmer = {
+		id = "NagaCharmer",
+		displayName = "Naga Charmer",
+		maxHealth = 90,
+		walkSpeed = 12,
+		attackDamage = 10,
+		attackInterval = 2.4,
+		aggroRange = 125,
+		attackRange = 45,
+		xpReward = 50,
+		scale = 0.95,
+		skin = { 85, 145, 95 },
+		weight = 2,
+		ranged = true,
+		projectileSpeed = 65,
+		retreatRange = 18,
+		inflicts = "venom",
+		minWave = 34,
+	},
+	-- The serpent king — near-boss bulk, and his corpse pools with poison.
+	NagaRaja = {
+		id = "NagaRaja",
+		displayName = "Naga Raja",
+		maxHealth = 340,
+		walkSpeed = 9,
+		attackDamage = 22,
+		attackInterval = 2.3,
+		aggroRange = 100,
+		attackRange = 11,
+		xpReward = 110,
+		scale = 1.6,
+		skin = { 30, 90, 60 },
+		weight = 1,
+		inflicts = "venom",
+		leavesPool = true,
+		minWave = 40,
 	},
 } :: { [string]: EnemyArchetype }
 
