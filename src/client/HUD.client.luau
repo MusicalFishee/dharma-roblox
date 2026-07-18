@@ -794,6 +794,8 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 			showToast(string.format("%s felled the golden deer!  (+%d gold, +%d ◆)", tostring(data.byName), data.gold, data.shards), YELLOW)
 		elseif data.utsava == "deerFled" then
 			showToast("The golden illusion laughs — and fades.", Color3.fromRGB(170, 170, 170))
+		elseif data.utsava == "marichaFelled" then
+			showToast(string.format("%s TORE THE ILLUSION — Maricha falls!  (+%d gold)", tostring(data.byName), data.gold), Color3.fromRGB(255, 210, 80))
 		elseif data.utsava == "merchantSold" then
 			showToast(string.format("The vaidya bows — %d ◆ for %d gold.", data.shards, data.price), YELLOW)
 		elseif data.utsava == "merchantDenied" then

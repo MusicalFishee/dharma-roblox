@@ -37,6 +37,7 @@ Net.StatsRequest.OnServerEvent:Connect(function(player: Player, data: any)
 		kills = state.stats.kills,
 		bossKills = state.stats.bossKills,
 		deaths = state.stats.deaths,
+		deerKills = state.stats.deerKills,
 		trialsPassed = state.stats.trialsPassed,
 		duelWins = state.stats.duelWins,
 		raidClears = state.stats.raidClears,

@@ -227,6 +227,12 @@ check("a loadout without a weapon is no loadout", lval.loadouts["3"] == nil)
 local lrt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", nil, 0, nil, nil, false, nil, nil, nil, nil, { ["2"] = { name = "Boss Night", weapon = "chakram", crown = "", kavacha = "", charm = "" } }))
 check("loadouts round-trip through serialize", lrt.loadouts["2"] ~= nil and lrt.loadouts["2"].weapon == "chakram" and lrt.loadouts["2"].name == "Boss Night")
 
+-- The deer ledger (v22 — Maricha is counting).
+check("default deer ledger empty", PlayerData.default().stats.deerKills == 0)
+check("deerKills validated", PlayerData.validate({ stats = { deerKills = 7 } }).stats.deerKills == 7 and PlayerData.validate({ stats = { deerKills = -3 } }).stats.deerKills == 0)
+local hunt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", { kills = 0, bossKills = 0, deaths = 0, playtimeSeconds = 0, trialsPassed = 0, duelWins = 0, raidClears = 0, revives = 0, deerKills = 12 }))
+check("the deer ledger round-trips", hunt.stats.deerKills == 12)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

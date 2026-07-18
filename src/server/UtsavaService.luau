@@ -13,8 +13,10 @@ local Debris = game:GetService("Debris")
 local Net = require(ReplicatedStorage.Shared.Net)
 local Utsava = require(ReplicatedStorage.Shared.Utsava)
 local Loot = require(ReplicatedStorage.Shared.Loot)
+local MarichaBoss = require(ReplicatedStorage.Shared.MarichaBoss)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local ProgressionService = require(script.Parent.ProgressionService)
+local EnemyService = require(script.Parent.EnemyService)
 
 local function makeStand(position: Vector3, matColor: Color3, chestColor: Color3): (Part, Part)
 	local mat = Instance.new("Part")
@@ -59,6 +61,7 @@ local UtsavaService = {}
 
 local lastEventWave = -math.huge
 local eventRunning = false
+local currentWave = 1
 
 local function broadcastAll(data: { [string]: any })
 	for _, p in Players:GetPlayers() do
@@ -74,6 +77,45 @@ local function randomFieldSpot(maxRadius: number): Vector3
 	local angle = math.random() * 2 * math.pi
 	local r = math.sqrt(math.random()) * maxRadius
 	return Vector3.new(math.cos(angle) * r, 3, math.sin(angle) * r)
+end
+
+-- The trap, sprung: a tenth-felled deer tears open and the demon steps out.
+-- His death rides EnemyService's own boss road (bar, specials, boss shards);
+-- the torn illusion's spoils stack on top for the slayer.
+local function springMaricha(pos: Vector3)
+	broadcastAll({ bossLine = true, speaker = "Maricha", text = MarichaBoss.Lines.reveal })
+
+	local flare = Instance.new("Part")
+	flare.Shape = Enum.PartType.Ball
+	flare.Size = Vector3.new(2, 2, 2)
+	flare.Position = pos + Vector3.new(0, 3, 0)
+	flare.Color = Color3.fromRGB(255, 210, 80)
+	flare.Material = Enum.Material.Neon
+	flare.Anchored = true
+	flare.CanCollide = false
+	flare.CanQuery = false
+	flare.Parent = workspace
+	TweenService:Create(flare, TweenInfo.new(1.5, Enum.EasingStyle.Quad), {
+		Size = Vector3.new(16, 16, 16),
+		Transparency = 1,
+	}):Play()
+	Debris:AddItem(flare, 1.6)
+
+	task.delay(1.6, function()
+		local wave = currentWave
+		EnemyService.spawn(MarichaBoss.archetypeFor(wave) :: any, pos + Vector3.new(0, 4, 0), function(slayer: Player?)
+			broadcastAll({ bossLine = true, speaker = "Maricha", text = MarichaBoss.Lines.fall })
+			if slayer then
+				local sstate = PlayerRegistry.get(slayer)
+				local spoils = MarichaBoss.spoilsFor(wave)
+				sstate.gold = Loot.clampGold(sstate.gold + spoils.gold)
+				sstate.shards += spoils.shards
+				Net.CombatFeedback:FireClient(slayer, { goldUpdate = true, gained = spoils.gold, gold = sstate.gold })
+				Net.CombatFeedback:FireClient(slayer, { shardUpdate = true, gained = spoils.shards, shards = sstate.shards })
+				broadcastAll({ utsava = "marichaFelled", byName = slayer.Name, gold = spoils.gold })
+			end
+		end)
+	end)
 end
 
 -- ---------------------------------------------------------------------------
@@ -142,6 +184,11 @@ local function runGoldenDeer(def: Utsava.EventDef)
 			Net.CombatFeedback:FireClient(killer, { shardUpdate = true, gained = Utsava.Deer.shards, shards = state.shards })
 			ProgressionService.awardXp(killer, Utsava.Deer.xp)
 			broadcastAll({ utsava = "deerSlain", byName = killer.Name, gold = Utsava.Deer.gold, shards = Utsava.Deer.shards })
+			-- Maricha never forgets an arrow. The tenth tears the illusion.
+			state.stats.deerKills += 1
+			if MarichaBoss.isRevealing(state.stats.deerKills) then
+				springMaricha(root.Position)
+			end
 		end
 		CollectionService:RemoveTag(rig, ENEMY_TAG)
 		Debris:AddItem(rig, 1.5)
@@ -441,6 +488,7 @@ end
 
 -- Called by WaveService at every wave start. Rolls, announces, runs.
 function UtsavaService.onWaveStart(wave: number, isSpecialWave: boolean)
+	currentWave = wave
 	if eventRunning then
 		return
 	end

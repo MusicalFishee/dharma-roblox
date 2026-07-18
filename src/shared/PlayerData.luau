@@ -5,7 +5,7 @@
 
 local PlayerData = {}
 
-PlayerData.Version = 21
+PlayerData.Version = 22
 
 -- Mirrors Relics.MaxOwned (dependency-free; a test guards against drift).
 local RELICS_MAX_OWNED = 40
@@ -50,6 +50,7 @@ export type StatsSave = {
 	duelWins: number,
 	raidClears: number,
 	revives: number,
+	deerKills: number, -- golden deer felled (Maricha is counting)
 }
 
 export type DailySlot = {
@@ -217,7 +218,7 @@ function PlayerData.default(): Data
 		weapon = { id = "", tier = WEAPON_MIN_TIER },
 		shards = 0,
 		enchant = "",
-		stats = { kills = 0, bossKills = 0, deaths = 0, playtimeSeconds = 0, trialsPassed = 0, duelWins = 0, raidClears = 0, revives = 0 },
+		stats = { kills = 0, bossKills = 0, deaths = 0, playtimeSeconds = 0, trialsPassed = 0, duelWins = 0, raidClears = 0, revives = 0, deerKills = 0 },
 		dailies = { stamp = 0, slots = {} }, -- stamp 0 = stale, forces a fresh roll
 		title = "",
 		path = "",
@@ -282,6 +283,7 @@ function PlayerData.validate(raw: any): Data
 			d.stats.duelWins = cleanCount(raw.stats.duelWins)
 			d.stats.raidClears = cleanCount(raw.stats.raidClears)
 			d.stats.revives = cleanCount(raw.stats.revives)
+			d.stats.deerKills = cleanCount(raw.stats.deerKills)
 		end
 		if type(raw.title) == "string" and #raw.title <= 40 then
 			d.title = raw.title
@@ -405,6 +407,7 @@ function PlayerData.serialize(
 			duelWins = cleanCount(if stats then stats.duelWins else 0),
 			raidClears = cleanCount(if stats then stats.raidClears else 0),
 			revives = cleanCount(if stats then stats.revives else 0),
+			deerKills = cleanCount(if stats then stats.deerKills else 0),
 		},
 		dailies = {
 			stamp = cleanCount(if dailies then dailies.stamp else 0),

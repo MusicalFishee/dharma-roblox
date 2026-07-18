@@ -58,6 +58,7 @@ local ROW_ORDER = {
 	{ key = "duelWins", label = "Duels won" },
 	{ key = "raidClears", label = "Ravanas felled" },
 	{ key = "revives", label = "Allies lifted" },
+	{ key = "deerKills", label = "Golden deer felled" },
 	{ key = "deaths", label = "Times fallen" },
 	{ key = "playtime", label = "Time at war" },
 }
@@ -152,6 +153,7 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 	rows.duelWins.value.Text = tostring(data.duelWins)
 	rows.raidClears.value.Text = tostring(data.raidClears)
 	rows.revives.value.Text = tostring(data.revives)
+	rows.deerKills.value.Text = tostring(data.deerKills)
 	rows.deaths.value.Text = tostring(data.deaths)
 	rows.playtime.value.Text = fmtTime(data.playtimeSeconds)
 end)
