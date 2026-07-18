@@ -218,7 +218,7 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 		end
 
 		humanoid:TakeDamage(dealt)
-		state.tejas = Combat.clampTejas(state.tejas + (Combat.Config.TejasPerHitLanded + sig.tejasPerHitBonus) * (ench.tejasMult or 1) * passive.tejasMult * relicBonus.tejasMult * varaFx.tejasMult)
+		state.tejas = Combat.clampTejas(state.tejas + (Combat.Config.TejasPerHitLanded + sig.tejasPerHitBonus) * (ench.tejasMult or 1) * passive.tejasMult * relicBonus.tejasMult * varaFx.tejasMult, Progression.maxTejasForLevel(level))
 
 		if ench.lifesteal then
 			healed += dealt * ench.lifesteal
@@ -254,7 +254,7 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 	-- stay out of duels; this is a contest of skill, not of luck.
 	if foe and foeRoot and foeHum then
 		EnemyService.resolveHitOnPlayer(foe, foeRoot, foeHum, damage * PvP.Config.DamageMult, root.Position, nil)
-		state.tejas = Combat.clampTejas(state.tejas + Combat.Config.TejasPerHitLanded * (ench.tejasMult or 1) * passive.tejasMult * relicBonus.tejasMult)
+		state.tejas = Combat.clampTejas(state.tejas + Combat.Config.TejasPerHitLanded * (ench.tejasMult or 1) * passive.tejasMult * relicBonus.tejasMult, Progression.maxTejasForLevel(level))
 		if swing.isFinisher then
 			local dir = foeRoot.Position - root.Position
 			dir = Vector3.new(dir.X, 0, dir.Z)

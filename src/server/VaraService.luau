@@ -20,6 +20,10 @@ function VaraService.offerAll()
 		if not state or not state.dataReady then
 			continue
 		end
+		local char = player.Character
+		if char and char:GetAttribute("DharmaDhyana") == true then
+			continue -- boons belong to those who bled for the boss
+		end
 		local offer = Vara.draw(state.vara, function()
 			return math.random()
 		end)

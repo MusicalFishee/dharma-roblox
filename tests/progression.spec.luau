@@ -49,6 +49,17 @@ check("X locked at level 1", not Progression.isAbilityUnlocked("X", 1))
 check("X unlocked at level 4", Progression.isAbilityUnlocked("X", 4))
 check("V (ultimate) locked before 12", not Progression.isAbilityUnlocked("V", 11) and Progression.isAbilityUnlocked("V", 12))
 
+
+-- The tejas ladder agrees with the combat base and only ever climbs.
+check("level 1 tejas equals the combat base cap", Progression.maxTejasForLevel(1) == 100)
+local tejasClimbs = true
+for l = 2, Progression.MaxLevel do
+	if Progression.maxTejasForLevel(l) <= Progression.maxTejasForLevel(l - 1) then
+		tejasClimbs = false
+	end
+end
+check("max tejas climbs every level to the cap", tejasClimbs)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

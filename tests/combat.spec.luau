@@ -86,6 +86,13 @@ check("astra spend blocked when low", (not ok2) and afterFail == 10)
 check("tejas clamps high", Combat.clampTejas(120) == 100)
 check("tejas clamps low", Combat.clampTejas(-5) == 0)
 
+
+-- The tejas ceiling (the sawtooth fix): a custom max is honored, the default
+-- still stands, and the floor never gives.
+check("clampTejas honors a level-scaled ceiling", Combat.clampTejas(400, 595) == 400 and Combat.clampTejas(700, 595) == 595)
+check("clampTejas without a ceiling keeps the base cap", Combat.clampTejas(700) == Combat.Config.TejasMax)
+check("clampTejas floors at zero either way", Combat.clampTejas(-5, 595) == 0 and Combat.clampTejas(-5) == 0)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

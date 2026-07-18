@@ -33,7 +33,11 @@ local function applyLevelStats(player: Player, level: number, fullHeal: boolean)
 	local rankBoon = Ranks.boonFor(rankIndex)
 	local varaFx = Vara.totalEffects(state.vara)
 	humanoid.MaxHealth = Progression.maxHealthForLevel(level) + Shop.healthBonus(state.upgrades.health) + passive.healthBonus + relicBonus.healthBonus + rankBoon.healthBonus + varaFx.healthBonus
-	humanoid.WalkSpeed = BASE_WALK_SPEED * passive.speedMult * varaFx.speedMult
+	-- Never un-crawl the downed or un-root the meditating (their owners restore
+	-- speed themselves after clearing the attribute).
+	if char:GetAttribute("DharmaDowned") ~= true and char:GetAttribute("DharmaDhyana") ~= true then
+		humanoid.WalkSpeed = BASE_WALK_SPEED * passive.speedMult * varaFx.speedMult
+	end
 	if fullHeal then
 		humanoid.Health = humanoid.MaxHealth
 	end

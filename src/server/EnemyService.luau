@@ -11,6 +11,7 @@ local Debris = game:GetService("Debris")
 
 local Net = require(ReplicatedStorage.Shared.Net)
 local Combat = require(ReplicatedStorage.Shared.Combat)
+local Progression = require(ReplicatedStorage.Shared.Progression)
 local EnemyAI = require(ReplicatedStorage.Shared.EnemyAI)
 local EnemyTypes = require(ReplicatedStorage.Shared.EnemyTypes)
 local BossSpecials = require(ReplicatedStorage.Shared.BossSpecials)
@@ -178,7 +179,8 @@ local function resolveHitOnPlayer(
 		end
 	end
 	if resolution.defenderTejasGain > 0 then
-		pstate.tejas = Combat.clampTejas(pstate.tejas + resolution.defenderTejasGain * (ench.tejasMult or 1) * Paths.passiveOf(pstate.path).tejasMult * relicBonus.tejasMult * varaFx.tejasMult)
+		local pmax = Progression.maxTejasForLevel(Progression.resolve(pstate.totalXp).level)
+		pstate.tejas = Combat.clampTejas(pstate.tejas + resolution.defenderTejasGain * (ench.tejasMult or 1) * Paths.passiveOf(pstate.path).tejasMult * relicBonus.tejasMult * varaFx.tejasMult, pmax)
 	end
 	if resolution.outcome == "Parry" then
 		pstate.waveParries += 1
@@ -519,7 +521,7 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 				kstate.viraLastAt = streakNow
 				local rank = Vira.rankAt(streak.count)
 				if rank then
-					kstate.tejas = Combat.clampTejas(kstate.tejas + rank.tejas)
+					kstate.tejas = Combat.clampTejas(kstate.tejas + rank.tejas, Progression.maxTejasForLevel(Progression.resolve(kstate.totalXp).level))
 					Net.CombatFeedback:FireClient(killer, { vira = true, name = rank.name, count = rank.count, tejas = kstate.tejas })
 				end
 				if archetype.isBoss then

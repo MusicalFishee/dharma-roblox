@@ -354,6 +354,10 @@ local function victory(st: FightState, killer: Player?, onClear: () -> ())
 		if not pstate then
 			continue
 		end
+		local pchar = p.Character
+		if pchar and pchar:GetAttribute("DharmaDhyana") == true then
+			continue -- the king's spoils belong to those who took his heads
+		end
 		pstate.stats.raidClears += 1 -- unlocks « Ravana's Bane »
 		pstate.shards += spoils.shards
 		Net.CombatFeedback:FireClient(p, { shardUpdate = true, gained = spoils.shards, shards = pstate.shards })

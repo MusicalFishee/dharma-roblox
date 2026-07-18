@@ -9,6 +9,7 @@ local Net = require(ReplicatedStorage.Shared.Net)
 local Combat = require(ReplicatedStorage.Shared.Combat)
 local Bhoota = require(ReplicatedStorage.Shared.Bhoota)
 local Ranks = require(ReplicatedStorage.Shared.Ranks)
+local Progression = require(ReplicatedStorage.Shared.Progression)
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -379,13 +380,17 @@ local function updateCombo(combo: number)
 	end
 end
 
+local knownLevel = 1
+
 local function updateTejas(tejas: number)
-	local pct = math.clamp(tejas / Combat.Config.TejasMax, 0, 1)
+	local maxTejas = Progression.maxTejasForLevel(knownLevel)
+	local pct = math.clamp(tejas / maxTejas, 0, 1)
 	TweenService:Create(tejasFill, TweenInfo.new(0.2), { Size = UDim2.new(pct, 0, 1, 0) }):Play()
-	tejasLabel.Text = string.format("Tejas %d / %d", math.floor(tejas + 0.5), Combat.Config.TejasMax)
+	tejasLabel.Text = string.format("Tejas %d / %d", math.floor(tejas + 0.5), maxTejas)
 end
 
 local function updateProgress(level: number, xpInto: number, xpForNext: number, isMax: boolean)
+	knownLevel = level
 	local pct = if isMax then 1 elseif xpForNext > 0 then math.clamp(xpInto / xpForNext, 0, 1) else 0
 	TweenService:Create(xpFill, TweenInfo.new(0.25), { Size = UDim2.new(pct, 0, 1, 0) }):Play()
 	if isMax then

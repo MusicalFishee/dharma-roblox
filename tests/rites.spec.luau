@@ -105,6 +105,12 @@ check("bounties pay gold and xp", shallow.gold > 0 and shallow.xp > 0)
 check("deeper waves and crueler vows pay more", deepMaha.gold > shallow.gold and deepMaha.xp > shallow.xp)
 check("the same vow pays more on deeper waves", Shapatha.bountyFor(Shapatha.Catalog.raudra, 20).gold > shallow.gold)
 
+
+-- Dosha and oath compose: a marked wave under a vow is scaled by BOTH.
+local Doshas = require("../src/shared/Doshas")
+local doubly = Shapatha.applyToArchetype(Shapatha.Catalog.raudra, Doshas.applyToArchetype(Doshas.Defs.grahana, base))
+check("a vowed, marked wave stacks both scalings", doubly.maxHealth == math.floor(math.floor(base.maxHealth * 1.4) * 1) and doubly.attackDamage == math.floor(math.floor(base.attackDamage * 1) * 1.5))
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

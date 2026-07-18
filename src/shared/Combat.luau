@@ -159,8 +159,12 @@ end
 -- Resources
 -- ------------------------------------------------------------------
 
-function Combat.clampTejas(value: number): number
-	return math.clamp(value, 0, Combat.Config.TejasMax)
+-- Clamp a Tejas total. `max` is the holder's level-scaled ceiling
+-- (Progression.maxTejasForLevel); omitted, the base cap applies. Without
+-- this, every gain used to snap high-level bars back down to 100 — the
+-- level-up bonus was a lie the next hit erased.
+function Combat.clampTejas(value: number, max: number?): number
+	return math.clamp(value, 0, max or Combat.Config.TejasMax)
 end
 
 -- Returns the new Tejas total and whether the spend succeeded.

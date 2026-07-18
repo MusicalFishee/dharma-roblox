@@ -208,6 +208,29 @@ for _, def in Deeds.List do
 end
 check("every deed reads a real stat", deedsOk)
 
+
+-- 10. The affordability law: every ability in every kit must be castable at
+-- the level its SLOT unlocks — a cost above the tejas ceiling would be a
+-- button that can never fire.
+local ProgressionShared = require("../src/shared/Progression")
+local Paths = require("../src/shared/Paths")
+local affordable = true
+local kits = { Paths.DefaultKit }
+for _, pathId in Paths.Order do
+	table.insert(kits, Paths.Defs[pathId].kit)
+end
+for _, kit in kits do
+	for slot, abilityId in pairs(kit :: any) do
+		local unlockLevel = ProgressionShared.AbilityUnlockLevel[slot]
+		local def = Abilities.Catalog[abilityId]
+		if def and unlockLevel and def.tejasCost > ProgressionShared.maxTejasForLevel(unlockLevel) then
+			affordable = false
+			print("    !! unaffordable at unlock: " .. abilityId)
+		end
+	end
+end
+check("every kit ability is affordable the level its slot opens", affordable)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

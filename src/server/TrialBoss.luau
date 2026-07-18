@@ -418,6 +418,9 @@ local function bless(st: FightState, onClear: () -> ())
 	local boon = Trial.rewardFor(st.encounter)
 	for _, p in Players:GetPlayers() do
 		local char = p.Character
+		if char and char:GetAttribute("DharmaDhyana") == true then
+			continue -- the god blesses those who stood before him
+		end
 		local hum = char and char:FindFirstChildOfClass("Humanoid")
 		if hum and hum.Health > 0 then
 			hum.Health = hum.MaxHealth

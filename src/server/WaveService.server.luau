@@ -43,6 +43,12 @@ local activeDosha: { wave: number, def: Doshas.DoshaDef }? = nil
 local activeOath: { wave: number, def: Shapatha.OathDef }? = nil
 local alivePlayers: { [Player]: boolean } = {}
 
+-- A meditator is away from the war; the war owes them nothing.
+local function isMeditating(p: Player): boolean
+	local c = p.Character
+	return c ~= nil and c:GetAttribute("DharmaDhyana") == true
+end
+
 local function announce(data: { [string]: any })
 	for _, p in Players:GetPlayers() do
 		Net.CombatFeedback:FireClient(p, data)
@@ -81,6 +87,9 @@ local function onWaveClear(wave: number)
 		activeOath = nil
 		local bounty = Shapatha.bountyFor(oathState.def, wave)
 		for _, p in Players:GetPlayers() do
+			if isMeditating(p) then
+				continue
+			end
 			local pstate = PlayerRegistry.get(p)
 			pstate.gold = Loot.clampGold(pstate.gold + bounty.gold)
 			ProgressionService.awardXp(p, bounty.xp)
@@ -93,6 +102,9 @@ local function onWaveClear(wave: number)
 	end
 	local bonus = Waves.bonusXp(wave)
 	for _, p in Players:GetPlayers() do
+		if isMeditating(p) then
+			continue -- the grove pays the grove's wage
+		end
 		-- The wave judges your conduct; S-rank pays half again.
 		local state = PlayerRegistry.get(p)
 		local tally = { kills = state.waveKills, parries = state.waveParries, timesHit = state.waveTimesHit, downs = state.waveDowns }
@@ -122,6 +134,9 @@ local function onWaveClear(wave: number)
 		activeDosha = nil
 		local bounty = Doshas.bountyFor(dosha.def, wave)
 		for _, p in Players:GetPlayers() do
+			if isMeditating(p) then
+				continue
+			end
 			local state = PlayerRegistry.get(p)
 			state.gold = Loot.clampGold(state.gold + bounty.gold)
 			ProgressionService.awardXp(p, bounty.xp)
@@ -134,6 +149,9 @@ local function onWaveClear(wave: number)
 	local milestone = Milestones.forWave(wave)
 	if milestone then
 		for _, p in Players:GetPlayers() do
+			if isMeditating(p) then
+				continue
+			end
 			local state = PlayerRegistry.get(p)
 			state.gold = Loot.clampGold(state.gold + milestone.gold)
 			-- Silent gold-counter refresh, then the headline title banner.
@@ -191,14 +209,7 @@ function startWave(wave: number)
 	ZoneService.applyForWave(wave)
 	BhootaService.setBattleActive(true)
 	RitesService.setBattleActive(true)
-
-	-- A sworn oath binds the wave now beginning.
 	activeOath = nil
-	local oathDef = RitesService.takePendingOath()
-	if oathDef then
-		activeOath = { wave = wave, def = oathDef }
-		announce({ oathBegins = true, name = oathDef.name })
-	end
 
 	-- Fresh conduct ledgers for the new wave.
 	for _, p in Players:GetPlayers() do
@@ -251,6 +262,15 @@ function startWave(wave: number)
 		spawnBossWave(wave, gen)
 		return
 	end
+	-- A sworn oath binds only an ORDINARY wave (bespoke nights ignore the
+	-- archetype scaling, so an oath there would be a free bounty). It WAITS
+	-- through boss/trial/raid waves for the next plain one.
+	local oathDef = RitesService.takePendingOath()
+	if oathDef then
+		activeOath = { wave = wave, def = oathDef }
+		announce({ oathBegins = true, name = oathDef.name })
+	end
+
 	local ids = Waves.compose(wave, EnemyTypes.List :: any)
 	remaining = #ids
 	waveSpawnCount = remaining

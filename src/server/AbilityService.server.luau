@@ -17,6 +17,7 @@ local Debris = game:GetService("Debris")
 local TweenService = game:GetService("TweenService")
 
 local Net = require(ReplicatedStorage.Shared.Net)
+local Combat = require(ReplicatedStorage.Shared.Combat)
 local Abilities = require(ReplicatedStorage.Shared.Abilities)
 local Paths = require(ReplicatedStorage.Shared.Paths)
 local Siddhis = require(ReplicatedStorage.Shared.Siddhis)
@@ -147,7 +148,7 @@ local function applyElement(player: Player, model: Model, humanoid: Humanoid, ab
 				end
 			elseif def.flourish == "tejas" then
 				local state = PlayerRegistry.get(player)
-				state.tejas = math.min(state.tejas + def.magnitude, 999)
+				state.tejas = Combat.clampTejas(state.tejas + def.magnitude, Progression.maxTejasForLevel(Progression.resolve(state.totalXp).level))
 			elseif def.flourish == "chain" then
 				if eroot and eroot:IsA("BasePart") then
 					for _, other in CollectionService:GetTagged(ENEMY_TAG) do
