@@ -630,6 +630,14 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("AGNIHOTRA — day %d of devotion   (%s)", data.day, bits), SAFFRON)
 		return
 	end
+	if data.vrataKept then
+		showToast(string.format("THE VOW IS KEPT — %s  (+%d gold, +%d ◆)", tostring(data.name), data.gold, data.shards), Color3.fromRGB(200, 110, 255))
+		return
+	end
+	if data.vrataReset then
+		showToast(string.format("A new week — the world swears the %s", tostring(data.name)), Color3.fromRGB(200, 110, 255))
+		return
+	end
 	if data.perfectParry then
 		showToast("PERFECT PARRY — RIPOSTE!", CYAN)
 		return

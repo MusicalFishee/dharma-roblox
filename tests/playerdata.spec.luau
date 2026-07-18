@@ -170,6 +170,13 @@ check("oversized marks are bared", PlayerData.validate({ vibhuti = { tilak = str
 local vbrt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", nil, 0, nil, nil, false, { tilak = "tilak_bhasma", aura = "aura_ember" }))
 check("marks round-trip through serialize", vbrt.vibhuti.tilak == "tilak_bhasma" and vbrt.vibhuti.aura == "aura_ember")
 
+-- The weekly vow (v18).
+check("default vow is unstamped and unkept", PlayerData.default().vrata.stamp == 0 and PlayerData.default().vrata.progress == 0 and PlayerData.default().vrata.kept == false)
+local vrv = PlayerData.validate({ vrata = { stamp = 2951, progress = 120, kept = "yes" } })
+check("vow validates per-field", vrv.vrata.stamp == 2951 and vrv.vrata.progress == 120 and vrv.vrata.kept == false)
+local vrrt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", nil, 0, nil, nil, false, nil, { stamp = 2951, progress = 45, kept = true }))
+check("vow round-trips through serialize", vrrt.vrata.stamp == 2951 and vrrt.vrata.progress == 45 and vrrt.vrata.kept == true)
+
 -- Relics (added with the relic system, v10).
 local rdef = PlayerData.default().relics
 check("default satchel empty + bare", #rdef.owned == 0 and rdef.equipped.crown == "" and rdef.equipped.kavacha == "" and rdef.equipped.charm == "")

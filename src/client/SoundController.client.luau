@@ -233,6 +233,14 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play("thunderCrack")
 		return
 	end
+	if data.vrataKept then
+		play("thunderCrack")
+		return
+	end
+	if data.vrataReset then
+		play("waveStart")
+		return
+	end
 	if data.oathSworn or data.oathBegins then
 		play("bossSpawn")
 		return

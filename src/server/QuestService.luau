@@ -12,6 +12,7 @@ local Loot = require(ReplicatedStorage.Shared.Loot)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local ProgressionService = require(script.Parent.ProgressionService)
 local TutorialService = require(script.Parent.TutorialService)
+local VrataService = require(script.Parent.VrataService)
 
 local QuestService = {}
 
@@ -219,26 +220,34 @@ end
 function QuestService.onKill(player: Player, enemyId: string, isBoss: boolean, isElite: boolean?)
 	handleEvent(player, { type = "kill", enemyId = enemyId, isBoss = isBoss, isElite = isElite == true })
 	TutorialService.onEvent(player, "kill")
+	VrataService.onEvent(player, "kill")
+	if isBoss then
+		VrataService.onEvent(player, "bossKill")
+	end
 end
 
 function QuestService.onWaveClear(player: Player)
 	handleEvent(player, { type = "waveClear" })
 	TutorialService.onEvent(player, "waveClear")
+	VrataService.onEvent(player, "waveClear")
 end
 
 function QuestService.onParry(player: Player)
 	handleEvent(player, { type = "parry" })
 	TutorialService.onEvent(player, "parry")
+	VrataService.onEvent(player, "parry")
 end
 
 function QuestService.onGold(player: Player, amount: number)
 	handleEvent(player, { type = "gold", amount = amount })
 	TutorialService.onEvent(player, "gold")
+	VrataService.onEvent(player, "gold", amount)
 end
 
 function QuestService.onAbility(player: Player)
 	handleEvent(player, { type = "ability" })
 	TutorialService.onEvent(player, "ability")
+	VrataService.onEvent(player, "ability")
 end
 
 -- Midnight watcher: players mid-session at UTC midnight get fresh trials on the spot.

@@ -5,7 +5,7 @@
 
 local PlayerData = {}
 
-PlayerData.Version = 17
+PlayerData.Version = 18
 
 -- Mirrors Relics.MaxOwned (dependency-free; a test guards against drift).
 local RELICS_MAX_OWNED = 40
@@ -95,6 +95,13 @@ export type Data = {
 	streak: StreakSave, -- Agnihotra login streak (day stamp + consecutive count)
 	tutorialDone: boolean, -- Adhyaya 0 finished (the lesson never repeats)
 	vibhuti: VibhutiSave, -- worn sacred marks (tilak + aura ids, "" = bare)
+	vrata: VrataSave, -- the weekly vow (stamp + progress; stale weeks reset)
+}
+
+export type VrataSave = {
+	stamp: number,
+	progress: number,
+	kept: boolean,
 }
 
 export type VibhutiSave = {
@@ -178,6 +185,7 @@ function PlayerData.default(): Data
 		streak = { stamp = 0, count = 0 },
 		tutorialDone = false,
 		vibhuti = { tilak = "", aura = "" },
+		vrata = { stamp = 0, progress = 0, kept = false },
 	}
 end
 
@@ -251,6 +259,11 @@ function PlayerData.validate(raw: any): Data
 				d.vibhuti.aura = raw.vibhuti.aura
 			end
 		end
+		if type(raw.vrata) == "table" then
+			d.vrata.stamp = cleanCount(raw.vrata.stamp)
+			d.vrata.progress = cleanCount(raw.vrata.progress)
+			d.vrata.kept = raw.vrata.kept == true
+		end
 		if type(raw.story) == "number" and raw.story == raw.story and raw.story > 0 then
 			d.story = math.min(math.floor(raw.story), 50)
 		end
@@ -291,7 +304,8 @@ function PlayerData.serialize(
 	mastery: MasterySave?,
 	streak: StreakSave?,
 	tutorialDone: boolean?,
-	vibhuti: VibhutiSave?
+	vibhuti: VibhutiSave?,
+	vrata: VrataSave?
 ): Data
 	local questsCopy: { QuestSlot } = {}
 	if quests then
@@ -358,6 +372,11 @@ function PlayerData.serialize(
 		vibhuti = {
 			tilak = if vibhuti and type(vibhuti.tilak) == "string" and #vibhuti.tilak <= 40 then vibhuti.tilak else "",
 			aura = if vibhuti and type(vibhuti.aura) == "string" and #vibhuti.aura <= 40 then vibhuti.aura else "",
+		},
+		vrata = {
+			stamp = cleanCount(if vrata then vrata.stamp else 0),
+			progress = cleanCount(if vrata then vrata.progress else 0),
+			kept = if vrata then vrata.kept == true else false,
 		},
 		story = if type(story) == "number" and story == story and story > 0 then math.min(math.floor(story), 50) else 0,
 	}

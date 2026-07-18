@@ -26,7 +26,7 @@ local SHARD = Color3.fromRGB(150, 120, 255)
 local DAILY_FILL = Color3.fromRGB(255, 200, 40)
 
 local panel = Instance.new("Frame")
-panel.Size = UDim2.fromOffset(230, 424)
+panel.Size = UDim2.fromOffset(230, 500)
 panel.AnchorPoint = Vector2.new(1, 0.5)
 panel.Position = UDim2.new(1, -12, 0.5, 0)
 panel.BackgroundColor3 = PANEL_BG
@@ -175,6 +175,44 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 			row.progressText.Text = ""
 			row.barFill.Size = UDim2.new(0, 0, 1, 0)
 		end
+	end
+end)
+
+-- The weekly vow (one row; the world shares it).
+local vrataHeader = Instance.new("TextLabel")
+vrataHeader.Size = UDim2.new(1, -16, 0, 18)
+vrataHeader.Position = UDim2.fromOffset(8, 424)
+vrataHeader.BackgroundTransparency = 1
+vrataHeader.Font = Enum.Font.GothamBold
+vrataHeader.TextSize = 13
+vrataHeader.TextColor3 = Color3.fromRGB(200, 110, 255)
+vrataHeader.TextXAlignment = Enum.TextXAlignment.Left
+vrataHeader.Text = "VRATA — THE WEEK'S VOW"
+vrataHeader.Parent = panel
+
+local vrataRow = Instance.new("TextLabel")
+vrataRow.Size = UDim2.new(1, -16, 0, 48)
+vrataRow.Position = UDim2.fromOffset(8, 444)
+vrataRow.BackgroundTransparency = 1
+vrataRow.Font = Enum.Font.Gotham
+vrataRow.TextSize = 11
+vrataRow.TextColor3 = Color3.fromRGB(210, 205, 215)
+vrataRow.TextXAlignment = Enum.TextXAlignment.Left
+vrataRow.TextYAlignment = Enum.TextYAlignment.Top
+vrataRow.TextWrapped = true
+vrataRow.Text = ""
+vrataRow.Parent = panel
+
+Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
+	if typeof(data) ~= "table" or not data.vrataInfo then
+		return
+	end
+	if data.kept then
+		vrataRow.TextColor3 = Color3.fromRGB(130, 255, 180)
+		vrataRow.Text = string.format("%s\n✓ KEPT — the vow renews with the week", tostring(data.name))
+	else
+		vrataRow.TextColor3 = Color3.fromRGB(210, 205, 215)
+		vrataRow.Text = string.format("%s\n%s   (%d / %d)", tostring(data.name), tostring(data.line), data.progress or 0, data.target or 0)
 	end
 end)
 

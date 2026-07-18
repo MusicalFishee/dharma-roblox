@@ -76,6 +76,8 @@ export type PlayerState = {
 	inputMethod: string,
 	-- os.clock until which a perfect parry's riposte guarantees a crit.
 	riposteUntil: number,
+	-- The weekly vow (stamp + progress; VrataService resets stale weeks).
+	vrata2: { stamp: number, progress: number, kept: boolean },
 }
 
 local PlayerRegistry = {}
@@ -137,6 +139,7 @@ function PlayerRegistry.get(player: Player): PlayerState
 		vibhuti = { tilak = "", aura = "" },
 		inputMethod = "keyboard",
 		riposteUntil = 0,
+		vrata2 = { stamp = 0, progress = 0, kept = false },
 	}
 	states[player] = state
 	return state
