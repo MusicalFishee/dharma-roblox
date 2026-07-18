@@ -646,6 +646,19 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast("PERFECT PARRY — RIPOSTE!", CYAN)
 		return
 	end
+	if data.akhadaString then
+		showToast(
+			string.format(
+				"STRING — %d hits · %d dmg · best %d · %.1fs",
+				data.hits,
+				data.total,
+				data.maxHit,
+				data.seconds
+			),
+			Color3.fromRGB(235, 170, 110)
+		)
+		return
+	end
 	if data.dhyanaEnter then
 		showToast("DHYANA — the grove holds you. Jump to rise.", Color3.fromRGB(200, 220, 255))
 		return
