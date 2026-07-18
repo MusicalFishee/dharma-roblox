@@ -60,16 +60,25 @@ sub.TextColor3 = DIM
 sub.Text = "As told by Rishi Agastya, keeper of the ashram"
 sub.Parent = panel
 
+local list = Instance.new("ScrollingFrame")
+list.Position = UDim2.fromOffset(0, 74)
+list.Size = UDim2.new(1, 0, 1, -88)
+list.BackgroundTransparency = 1
+list.BorderSizePixel = 0
+list.ScrollBarThickness = 6
+list.CanvasSize = UDim2.fromOffset(0, #Story.Chapters * 60 + 6)
+list.Parent = panel
+
 type RowSet = { frame: Frame, numeral: TextLabel, name: TextLabel, detail: TextLabel }
 local rowSets: { RowSet } = {}
 
 for i, def in Story.Chapters do
 	local row = Instance.new("Frame")
-	row.Size = UDim2.new(1, -30, 0, 54)
-	row.Position = UDim2.fromOffset(15, 74 + (i - 1) * 60)
+	row.Size = UDim2.new(1, -36, 0, 54)
+	row.Position = UDim2.fromOffset(15, (i - 1) * 60)
 	row.BackgroundColor3 = ROW_BG
 	row.BorderSizePixel = 0
-	row.Parent = panel
+	row.Parent = list
 	local rc = Instance.new("UICorner")
 	rc.CornerRadius = UDim.new(0, 10)
 	rc.Parent = row

@@ -1,5 +1,5 @@
 --!strict
--- The Adhyayas: seven story chapters narrated by Rishi Agastya — the sage who
+-- The Adhyayas: twelve story chapters narrated by Rishi Agastya — the sage who
 -- armed Rama with the Astras in this very forest. Chapters complete IN ORDER,
 -- each gated on a stat the save already records, so every step is retroactive
 -- and wipe-proof. The arc is deliberate: you fell the Ten-Headed King in
@@ -126,6 +126,72 @@ Story.Chapters = {
 		},
 		closeLine = "You stood inside the dance at the end of time, and you are still here. There is nothing more I can teach you. There is nothing more anyone can.",
 		reward = { gold = 1500, xp = 3000 },
+	},
+	-- ── The Mountain Arc: the sage follows the student. ──
+	{
+		id = "roof_of_world",
+		numeral = "VIII",
+		title = "The Roof of the World",
+		requirement = "Clear wave 60",
+		trigger = { kind = "wave", value = 60 },
+		beginLines = {
+			"I told you there was nothing more I could teach you. I did not say the road was finished — only my part of it. The war climbs now, child. Himavat. The roof of the world.",
+			"I was born from a jar and I have humbled mountains, yet even I take off my sandals here. Snow remembers every footprint. Make yours worth remembering.",
+		},
+		closeLine = "The roof of the world holds your footprints now. The snow has already begun telling the story.",
+		reward = { gold = 1700, xp = 3400 },
+	},
+	{
+		id = "pilgrim_stair",
+		numeral = "IX",
+		title = "The Pilgrim's Stair",
+		requirement = "Clear wave 90",
+		trigger = { kind = "wave", value = 90 },
+		beginLines = {
+			"Sages cut these stairs before the yugas had names — one step for every vow kept. Pilgrims climb them barefoot and bleeding, and count themselves blessed.",
+			"You climb them armed. Do not think that makes you less a pilgrim. A blade kept clean is also a vow.",
+		},
+		closeLine = "Ninety waves deep, and still you climb. The stair approves. I can hear it.",
+		reward = { gold = 2000, xp = 4000 },
+	},
+	{
+		id = "above_the_clouds",
+		numeral = "X",
+		title = "Above the Clouds",
+		requirement = "Clear wave 120",
+		trigger = { kind = "wave", value = 120 },
+		beginLines = {
+			"Meghaloka. Above the clouds, below the shining world — Indra's own weather. You have felt his stray bolts already; he is not aiming at you. That is what troubles me.",
+			"The storm-king does not miss, child. When Indra's aim wanders, it is because he is watching something else climb. Keep going. Let him watch.",
+		},
+		closeLine = "The clouds are beneath your feet. Somewhere below, kings argue over lands you can no longer see.",
+		reward = { gold = 2300, xp = 4600 },
+	},
+	{
+		id = "shining_world",
+		numeral = "XI",
+		title = "The Shining World",
+		requirement = "Clear wave 160",
+		trigger = { kind = "wave", value = 160 },
+		beginLines = {
+			"Svarga. The shining world, where fallen heroes feast until their merit runs dry. Every gold surface will show you your own face — that is not decoration. It is the examination.",
+			"The devas watch you now the way misers watch a lamp: glad of the light, afraid of the fire. Give them reason for both.",
+		},
+		closeLine = "Even heaven makes room when you walk through it. Spend nothing here. The summit wants you empty-handed.",
+		reward = { gold = 2700, xp = 5400 },
+	},
+	{
+		id = "the_threshold",
+		numeral = "XII",
+		title = "The Threshold",
+		requirement = "Clear wave 200",
+		trigger = { kind = "wave", value = 200 },
+		beginLines = {
+			"Stop. Here I stop, child. Past this line the snow does not melt, and the silence is not empty — it is HELD, like a breath before a word.",
+			"This is the threshold of Kailasa. I have no teaching for what lives above it, and neither does anyone else. Whatever you have become across two hundred waves — go and lay it at the door. That is all any of us were ever climbing toward.",
+		},
+		closeLine = "You stood at the threshold, and the mountain did not send you away. Child — do you understand? It did not send you away.",
+		reward = { gold = 4000, xp = 8000 },
 	},
 } :: { ChapterDef }
 
