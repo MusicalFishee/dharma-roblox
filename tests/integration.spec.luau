@@ -78,6 +78,7 @@ local broadcastAnims = {
 	"dash", -- DefenseState dodge + ability X
 	"throw", "heal", "ult", -- abilities Z / C / V (+ boss windup reuses ult)
 	"emote_namaste", "emote_warcry", "emote_meditate", -- VibhutiService emotes
+	"emote_bow", "emote_challenge", "emote_grief", -- the emote wheel expansion
 }
 local animsOk = true
 for _, name in broadcastAnims do

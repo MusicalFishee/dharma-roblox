@@ -110,7 +110,7 @@ function Vibhuti.tryEquip(slot: string, id: string, snap: UnlockSnapshot): Equip
 end
 
 -- The emotes VibhutiService will broadcast (each has a track + a sound, by law).
-Vibhuti.Emotes = { "emote_namaste", "emote_warcry", "emote_meditate" }
+Vibhuti.Emotes = { "emote_namaste", "emote_warcry", "emote_meditate", "emote_bow", "emote_challenge", "emote_grief" }
 
 function Vibhuti.isEmote(id: string): boolean
 	for _, e in Vibhuti.Emotes do

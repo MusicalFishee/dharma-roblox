@@ -71,6 +71,9 @@ SoundDefs.AnimSounds = {
 	emote_namaste = "questDone",
 	emote_warcry = "bossSpawn",
 	emote_meditate = "guardUp",
+	emote_bow = "guardUp",
+	emote_challenge = "critHit",
+	emote_grief = "playerDown",
 } :: { [string]: string }
 
 -- HUD feedback (CombatFeedback outcome / flags) -> sfx name. 2D, local.

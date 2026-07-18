@@ -185,6 +185,10 @@ local function resolveHitOnPlayer(
 	if resolution.outcome == "Parry" then
 		pstate.waveParries += 1
 		QuestService.onParry(player)
+		if resolution.isPerfect then
+			pstate.riposteUntil = now + 2.5
+			Net.CombatFeedback:FireClient(player, { perfectParry = true })
+		end
 	elseif resolution.outcome == "Hit" then
 		pstate.waveTimesHit += 1
 	end

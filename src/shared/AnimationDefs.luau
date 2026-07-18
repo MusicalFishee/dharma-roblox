@@ -230,6 +230,49 @@ AnimationDefs.Tracks = {
 			Waist = { 8, 0, 0 },
 		} },
 	}, true),
+	emote_bow = track("emote_bow", 1.8, {
+		{ time = 0, pose = {} },
+		{ time = 0.5, pose = {
+			Waist = { 42, 0, 0 },
+			Neck = { 22, 0, 0 },
+			RightShoulder = { 15, 0, -10 },
+			LeftShoulder = { 15, 0, 10 },
+		} },
+		{ time = 1.3, pose = {
+			Waist = { 42, 0, 0 },
+			Neck = { 22, 0, 0 },
+			RightShoulder = { 15, 0, -10 },
+			LeftShoulder = { 15, 0, 10 },
+		} },
+		{ time = 1.8, pose = {} },
+	}),
+	emote_challenge = track("emote_challenge", 1.4, {
+		{ time = 0, pose = {} },
+		{ time = 0.3, pose = {
+			RightShoulder = { 88, 0, 0 },
+			RightElbow = { 8, 0, 0 },
+			Neck = { -6, 0, 0 },
+			Waist = { -4, 0, 0 },
+		} },
+		{ time = 1.0, pose = {
+			RightShoulder = { 88, 0, 0 },
+			RightElbow = { 8, 0, 0 },
+			Neck = { -6, 0, 0 },
+			Waist = { -4, 0, 0 },
+		} },
+		{ time = 1.4, pose = {} },
+	}),
+	emote_grief = track("emote_grief", 1.2, {
+		{ time = 0, pose = {} },
+		{ time = 0.7, pose = {
+			RightHip = { 70, 0, 10 },
+			LeftHip = { 70, 0, -10 },
+			Waist = { 30, 0, 0 },
+			Neck = { 45, 0, 0 },
+			RightShoulder = { 25, 0, -12 },
+			LeftShoulder = { 25, 0, 12 },
+		} },
+	}, true),
 } :: { [string]: Track }
 
 -- Interpolates the track's pose at time `t` (clamped to [0, duration]).

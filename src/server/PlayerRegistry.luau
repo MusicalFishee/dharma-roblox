@@ -74,6 +74,8 @@ export type PlayerState = {
 	vibhuti: { tilak: string, aura: string },
 	-- The device class this player last reported ("keyboard" | "gamepad" | "touch").
 	inputMethod: string,
+	-- os.clock until which a perfect parry's riposte guarantees a crit.
+	riposteUntil: number,
 }
 
 local PlayerRegistry = {}
@@ -134,6 +136,7 @@ function PlayerRegistry.get(player: Player): PlayerState
 		varaOffer = {},
 		vibhuti = { tilak = "", aura = "" },
 		inputMethod = "keyboard",
+		riposteUntil = 0,
 	}
 	states[player] = state
 	return state

@@ -174,6 +174,11 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 	local relicBonus = Relics.totalBonus(Relics.equippedList(state.relics.equipped))
 	local varaFx = Vara.totalEffects(state.vara)
 	local isCrit = Combat.rollCrit(nil, (ench.critChanceBonus or 0) + relicBonus.critChance + varaFx.critChance + sig.critChanceBonus)
+	-- A perfect parry's riposte: the next strike is a guaranteed crit, once.
+	if os.clock() < state.riposteUntil then
+		isCrit = true
+		state.riposteUntil = 0
+	end
 	-- Static Ward and kin: an active empower scales everything dealt while it lasts.
 	local empower = if os.clock() < state.empowerUntil then state.empowerMult else 1
 	local damage = Combat.critDamage(
@@ -246,6 +251,57 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 			dir = Vector3.new(dir.X, 0, dir.Z)
 			dir = if dir.Magnitude > 0.01 then dir.Unit else root.CFrame.LookVector
 			hrp.AssemblyLinearVelocity = dir * 60 * sig.finisherKnockbackMult + Vector3.new(0, 30 * sig.finisherKnockbackMult, 0)
+		end
+	end
+
+	-- The kata: every weapon's finisher signs its name in light (visual only).
+	if swing.isFinisher and #targets > 0 then
+		local style = Weapons.kataStyleOf(state.weapon.id)
+		local v = Weapons.visual(state.weapon.id, state.weapon.tier)
+		local kataColor = if v then Color3.fromRGB(v.glowColor[1], v.glowColor[2], v.glowColor[3]) else Color3.fromRGB(255, 200, 40)
+		local origin = root.Position
+		local function flash(size: Vector3, cf: CFrame, life: number)
+			local part = Instance.new("Part")
+			part.Size = size
+			part.CFrame = cf
+			part.Color = kataColor
+			part.Material = Enum.Material.Neon
+			part.Transparency = 0.25
+			part.Anchored = true
+			part.CanCollide = false
+			part.CanQuery = false
+			part.Parent = workspace
+			game:GetService("TweenService"):Create(part, TweenInfo.new(life), { Transparency = 1 }):Play()
+			Debris:AddItem(part, life + 0.05)
+		end
+		if style == "arc" then
+			local ring = Instance.new("Part")
+			ring.Shape = Enum.PartType.Cylinder
+			ring.Size = Vector3.new(0.4, 3, 3)
+			ring.CFrame = CFrame.new(origin) * CFrame.Angles(0, 0, math.rad(90))
+			ring.Color = kataColor
+			ring.Material = Enum.Material.Neon
+			ring.Transparency = 0.25
+			ring.Anchored = true
+			ring.CanCollide = false
+			ring.CanQuery = false
+			ring.Parent = workspace
+			game:GetService("TweenService"):Create(ring, TweenInfo.new(0.35), { Size = Vector3.new(0.4, 16, 16), Transparency = 1 }):Play()
+			Debris:AddItem(ring, 0.4)
+		elseif style == "fan" then
+			for k = -1, 1 do
+				local aim = (CFrame.fromAxisAngle(Vector3.yAxis, math.rad(18 * k)) * root.CFrame.LookVector)
+				flash(Vector3.new(0.3, 0.3, 8), CFrame.new(origin + aim * 5, origin + aim * 12), 0.3)
+			end
+		elseif style == "quake" then
+			flash(Vector3.new(9, 0.4, 9), CFrame.new(origin - Vector3.new(0, 2.2, 0)), 0.45)
+		elseif style == "orbit" then
+			flash(Vector3.new(0.5, 0.5, 6), CFrame.new(origin + Vector3.new(0, 2, 0)) * CFrame.Angles(0, math.rad(45), 0), 0.3)
+			flash(Vector3.new(0.5, 0.5, 6), CFrame.new(origin + Vector3.new(0, 2, 0)) * CFrame.Angles(0, math.rad(-45), 0), 0.3)
+		elseif style == "pillar" then
+			flash(Vector3.new(1.2, 14, 1.2), CFrame.new(origin + Vector3.new(0, 7, 0)), 0.4)
+		elseif style == "cleave" then
+			flash(Vector3.new(6, 5, 0.4), CFrame.new(origin + root.CFrame.LookVector * 4, origin + root.CFrame.LookVector * 10), 0.35)
 		end
 	end
 

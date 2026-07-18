@@ -229,6 +229,10 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		play("guardUp")
 		return
 	end
+	if data.perfectParry then
+		play("thunderCrack")
+		return
+	end
 	if data.oathSworn or data.oathBegins then
 		play("bossSpawn")
 		return

@@ -93,6 +93,16 @@ check("clampTejas honors a level-scaled ceiling", Combat.clampTejas(400, 595) ==
 check("clampTejas without a ceiling keeps the base cap", Combat.clampTejas(700) == Combat.Config.TejasMax)
 check("clampTejas floors at zero either way", Combat.clampTejas(-5, 595) == 0 and Combat.clampTejas(-5) == 0)
 
+
+-- Perfect parry: the sliver inside the window.
+check("the perfect sliver sits inside the parry window", Combat.Config.PerfectParryWindowSeconds > 0 and Combat.Config.PerfectParryWindowSeconds < Combat.Config.ParryWindowSeconds)
+local perfect = Combat.resolveIncomingAttack(50, { isDodging = false, isBlocking = true, blockAgeSeconds = 0.05, facingAttacker = true })
+check("a read blow parries perfectly", perfect.outcome == "Parry" and perfect.isPerfect == true)
+local late = Combat.resolveIncomingAttack(50, { isDodging = false, isBlocking = true, blockAgeSeconds = 0.2, facingAttacker = true })
+check("a late parry is still a parry, not perfect", late.outcome == "Parry" and not late.isPerfect)
+local edge = Combat.resolveIncomingAttack(50, { isDodging = false, isBlocking = true, blockAgeSeconds = Combat.Config.PerfectParryWindowSeconds, facingAttacker = true })
+check("the sliver's edge still counts", edge.isPerfect == true)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

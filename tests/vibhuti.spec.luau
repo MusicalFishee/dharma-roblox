@@ -81,7 +81,7 @@ check("unknown slots are refused", not Vibhuti.tryEquip("crown", "tilak_bhasma",
 check("unknown marks are refused", Vibhuti.tryEquip("aura", "halo_of_hax", snap({})).reason == "unknown")
 
 -- The emote contract: every emote has a track and a sound.
-check("three emotes", #Vibhuti.Emotes == 3)
+check("six emotes", #Vibhuti.Emotes == 6)
 local emotesOk = true
 for _, id in Vibhuti.Emotes do
 	if not Vibhuti.isEmote(id) then

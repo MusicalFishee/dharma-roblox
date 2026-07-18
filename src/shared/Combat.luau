@@ -31,6 +31,8 @@ Combat.Config = {
 
 	-- Defensive resolution.
 	ParryWindowSeconds = 0.30,
+	-- The first sliver of the parry window: reading the blow before it lands.
+	PerfectParryWindowSeconds = 0.12,
 	BlockDamageMultiplier = 0.25,
 
 	-- Tejas (sacred energy) economy.
@@ -71,6 +73,7 @@ export type Resolution = {
 	defenderTejasGain: number,
 	-- Whether the attacker gets staggered (a successful parry).
 	attackerStaggered: boolean,
+	isPerfect: boolean?, -- parry landed inside the perfect sliver
 }
 
 -- ------------------------------------------------------------------
@@ -129,12 +132,13 @@ function Combat.resolveIncomingAttack(incomingDamage: number, state: DefenderSta
 
 	if state.isBlocking and state.facingAttacker then
 		if state.blockAgeSeconds <= Combat.Config.ParryWindowSeconds then
-			-- Perfect parry.
+			-- A parry — and inside the first sliver, a PERFECT one: the riposte opens.
 			return {
 				outcome = "Parry",
 				damage = 0,
 				defenderTejasGain = Combat.Config.TejasPerParry,
 				attackerStaggered = true,
+				isPerfect = state.blockAgeSeconds <= Combat.Config.PerfectParryWindowSeconds,
 			}
 		end
 		-- Ordinary block soaks most of the blow.

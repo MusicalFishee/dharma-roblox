@@ -164,6 +164,19 @@ check("trishula outreaches the rest", Weapons.signatureOf("trishula").reachBonus
 check("gada hurls hardest", Weapons.signatureOf("gada").finisherKnockbackMult > 1.5)
 check("chakram spins tejas", Weapons.signatureOf("chakram").tejasPerHitBonus == 1)
 
+
+-- Katas: every weapon signs its finisher with a known style.
+local kataStyles = { arc = true, fan = true, quake = true, orbit = true, pillar = true, cleave = true }
+local katasOk = true
+for _, weapon in Weapons.List do
+	if not kataStyles[Weapons.kataStyleOf(weapon.id)] then
+		katasOk = false
+	end
+end
+check("every weapon has a known kata style", katasOk)
+check("empty hands sign a plain arc", Weapons.kataStyleOf("") == "arc")
+check("the gada quakes and the danda pillars", Weapons.kataStyleOf("gada") == "quake" and Weapons.kataStyleOf("danda") == "pillar")
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

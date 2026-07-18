@@ -346,6 +346,24 @@ local function statFor(kind: string, snap: UnlockSnapshot): number
 	return 0
 end
 
+-- The kata each weapon signs on its finisher (visual only; signatures own
+-- the mechanics). One style per silhouette family.
+local KATA_STYLES: { [string]: string } = {
+	khanda = "arc",
+	trishula = "fan",
+	gada = "quake",
+	chakram = "orbit",
+	katar = "cleave",
+	parashu = "cleave",
+	urumi = "arc",
+	danda = "pillar",
+	chandrahasa = "arc",
+}
+
+function Weapons.kataStyleOf(id: string): string
+	return KATA_STYLES[id] or "arc"
+end
+
 -- May this account wield this weapon? Starters always; the rest by deed.
 function Weapons.isUnlocked(id: string, snap: UnlockSnapshot): boolean
 	local def = Weapons.get(id)

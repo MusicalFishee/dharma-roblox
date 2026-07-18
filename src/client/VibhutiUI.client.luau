@@ -30,7 +30,7 @@ screenGui.Parent = playerGui
 local panel = Instance.new("Frame")
 panel.AnchorPoint = Vector2.new(0.5, 0.5)
 panel.Position = UDim2.fromScale(0.5, 0.5)
-panel.Size = UDim2.fromOffset(480, 604)
+panel.Size = UDim2.fromOffset(480, 656)
 panel.BackgroundColor3 = PANEL_BG
 panel.BorderSizePixel = 0
 panel.Parent = screenGui
@@ -138,11 +138,11 @@ emoteHeader.TextXAlignment = Enum.TextXAlignment.Left
 emoteHeader.Text = "EMOTES"
 emoteHeader.Parent = panel
 
-local emoteLabels = { emote_namaste = "Namaste", emote_warcry = "War Cry", emote_meditate = "Meditate" }
+local emoteLabels = { emote_namaste = "Namaste", emote_warcry = "War Cry", emote_meditate = "Meditate", emote_bow = "Bow", emote_challenge = "Challenge", emote_grief = "Grieve" }
 for i, id in Vibhuti.Emotes do
 	local b = Instance.new("TextButton")
 	b.Size = UDim2.fromOffset(140, 36)
-	b.Position = UDim2.fromOffset(15 + (i - 1) * 150, 544)
+	b.Position = UDim2.fromOffset(15 + ((i - 1) % 3) * 150, 544 + math.floor((i - 1) / 3) * 44)
 	b.BackgroundColor3 = ROW_BG
 	b.Font = Enum.Font.GothamBold
 	b.TextSize = 13

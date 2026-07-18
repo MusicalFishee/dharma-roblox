@@ -630,6 +630,10 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("AGNIHOTRA — day %d of devotion   (%s)", data.day, bits), SAFFRON)
 		return
 	end
+	if data.perfectParry then
+		showToast("PERFECT PARRY — RIPOSTE!", CYAN)
+		return
+	end
 	if data.dhyanaEnter then
 		showToast("DHYANA — the grove holds you. Jump to rise.", Color3.fromRGB(200, 220, 255))
 		return
