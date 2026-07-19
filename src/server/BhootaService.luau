@@ -13,6 +13,7 @@ local Players = game:GetService("Players")
 local Net = require(ReplicatedStorage.Shared.Net)
 local Bhoota = require(ReplicatedStorage.Shared.Bhoota)
 local ProgressionService = require(script.Parent.ProgressionService)
+local GhatService = require(script.Parent.GhatService)
 
 local BHOOTA_ATTR = "DharmaBhoota"
 
@@ -42,6 +43,12 @@ end
 -- ReviveService calls this on every true death (bleed-out, duel, all-down).
 function BhootaService.markFallen(player: Player)
 	fallenInBattle[player] = true
+	-- A ghat flame is set where the warrior fell; the session remembers.
+	local char = player.Character
+	local root = char and char:FindFirstChild("HumanoidRootPart")
+	if root and root:IsA("BasePart") then
+		GhatService.onFallen(player.DisplayName, root.Position)
+	end
 end
 
 local function makeGhost(player: Player, character: Model)
