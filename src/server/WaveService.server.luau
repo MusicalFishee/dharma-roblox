@@ -17,6 +17,7 @@ local TrialBoss = require(script.Parent.TrialBoss)
 local Ravana = require(ReplicatedStorage.Shared.Ravana)
 local Tarakasura = require(ReplicatedStorage.Shared.Tarakasura)
 local Chakravyuha = require(ReplicatedStorage.Shared.Chakravyuha)
+local BossLore = require(ReplicatedStorage.Shared.BossLore)
 local Rahu = require(ReplicatedStorage.Shared.Rahu)
 local TirthaService = require(script.Parent.TirthaService)
 local VairiService = require(script.Parent.VairiService)
@@ -206,6 +207,17 @@ local function spawnBossWave(wave: number, gen: number)
 	waveSpawnCount = remaining
 	announce({ waveState = "boss", wave = wave, bossName = boss.displayName, bossTitle = boss.title })
 
+	-- The lord arrives with a taunt on his lips (a beat after the banner).
+	local lore = BossLore.forBoss(boss.id)
+	if lore then
+		task.delay(1.4, function()
+			if gen == waveGen then
+				announce({ bossLine = true, speaker = boss.displayName, text = lore.spawn })
+			end
+		end)
+	end
+
+	local bossFell = false
 	local function onOneDead(_killer: Player?)
 		if gen ~= waveGen then
 			return -- this wave was wiped/superseded; ignore the straggler
@@ -218,7 +230,13 @@ local function spawnBossWave(wave: number, gen: number)
 	end
 
 	task.spawn(function()
-		EnemyService.spawn(boss :: any, Vector3.new(0, 8, -ARENA_RADIUS), onOneDead)
+		EnemyService.spawn(boss :: any, Vector3.new(0, 8, -ARENA_RADIUS), function(killer: Player?)
+			if gen == waveGen and lore and not bossFell then
+				bossFell = true
+				announce({ bossLine = true, speaker = boss.displayName, text = lore.fall })
+			end
+			onOneDead(killer)
+		end)
 	end)
 	for i, id in adds do
 		task.spawn(function()
