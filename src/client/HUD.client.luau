@@ -902,6 +902,10 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("CURSED — healing halved for %ds", data.seconds or 0), Color3.fromRGB(190, 110, 255))
 		return
 	end
+	if data.statusEffect == "chill" then
+		showToast(string.format("CHILLED — slowed for %.1fs", data.seconds or 0), Color3.fromRGB(170, 210, 255))
+		return
+	end
 
 	-- Wave director updates.
 	if data.waveState then

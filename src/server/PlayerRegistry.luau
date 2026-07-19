@@ -44,6 +44,7 @@ export type PlayerState = {
 	-- Status-effect expiries (os.clock): venom DoT active / healing cursed.
 	venomUntil: number,
 	curseUntil: number,
+	chillUntil: number,
 	-- Lifetime records; playtimeMark is the os.clock() of the last playtime bank.
 	stats: { kills: number, bossKills: number, deaths: number, playtimeSeconds: number, trialsPassed: number, duelWins: number, raidClears: number, revives: number, deerKills: number },
 	playtimeMark: number,
@@ -127,6 +128,7 @@ function PlayerRegistry.get(player: Player): PlayerState
 		empowerUntil = 0,
 		empowerMult = 1,
 		venomUntil = 0,
+		chillUntil = 0,
 		curseUntil = 0,
 		stats = { kills = 0, bossKills = 0, deaths = 0, playtimeSeconds = 0, trialsPassed = 0, duelWins = 0, raidClears = 0, revives = 0, deerKills = 0 },
 		playtimeMark = os.clock(),

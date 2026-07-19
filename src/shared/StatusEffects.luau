@@ -21,6 +21,17 @@ StatusEffects.Pool = {
 }
 
 -- Curse: your wounds resist mending — every heal is multiplied down while it lasts.
+-- Chill: the frost-folk's one identity. Slows the legs for a few breaths —
+-- brief, honest, never stacking.
+StatusEffects.Chill = {
+	seconds = 2.5,
+	speedMult = 0.6,
+}
+
+function StatusEffects.chilledSpeed(walkSpeed: number): number
+	return walkSpeed * StatusEffects.Chill.speedMult
+end
+
 StatusEffects.Curse = {
 	seconds = 8,
 	healMult = 0.5,

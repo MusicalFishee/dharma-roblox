@@ -141,6 +141,35 @@ local function applyVenom(player: Player, playerHum: Humanoid)
 	end)
 end
 
+-- Chill a player: frost slows the legs for a few breaths. A fresh gust while
+-- already chilled is wasted (no stacking) — the cold is cold enough. The legs
+-- come back through refreshStats, which owns WalkSpeed truth.
+local function applyChill(player: Player, playerHum: Humanoid)
+	local pstate = PlayerRegistry.get(player)
+	local now = os.clock()
+	if now < pstate.chillUntil then
+		return
+	end
+	pstate.chillUntil = now + StatusEffects.Chill.seconds
+	playerHum.WalkSpeed = StatusEffects.chilledSpeed(playerHum.WalkSpeed)
+
+	local char = player.Character
+	local root = char and getRoot(char)
+	if root then
+		local frost = Instance.new("Sparkles")
+		frost.SparkleColor = Color3.fromRGB(170, 210, 255)
+		frost.Parent = root
+		Debris:AddItem(frost, StatusEffects.Chill.seconds)
+	end
+	Net.CombatFeedback:FireClient(player, { statusEffect = "chill", seconds = StatusEffects.Chill.seconds })
+
+	task.delay(StatusEffects.Chill.seconds, function()
+		if os.clock() >= pstate.chillUntil and playerHum.Parent then
+			ProgressionService.refreshStats(player)
+		end
+	end)
+end
+
 -- Curse a player: healing halved while it lasts (heal paths read curseUntil).
 local function applyCurse(player: Player)
 	local pstate = PlayerRegistry.get(player)
@@ -203,6 +232,8 @@ local function resolveHitOnPlayer(
 			applyVenom(player, playerHum)
 		elseif inflicts == "curse" then
 			applyCurse(player)
+		elseif inflicts == "chill" then
+			applyChill(player, playerHum)
 		end
 	end
 

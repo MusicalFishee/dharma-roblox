@@ -58,6 +58,21 @@ check("the charmer spits from afar", charmer.ranged == true and charmer.attackRa
 check("the raja pools where he falls", EnemyTypes.get("NagaRaja").leavesPool == true)
 check("the raja is the family's mountain", EnemyTypes.get("NagaRaja").maxHealth > EnemyTypes.get("Naga").maxHealth and EnemyTypes.get("NagaRaja").xpReward > EnemyTypes.get("Naga").xpReward)
 check("the king wakes last", (EnemyTypes.get("NagaRaja").minWave or 0) > (EnemyTypes.get("NagaCharmer").minWave or 0) and (EnemyTypes.get("NagaCharmer").minWave or 0) > (EnemyTypes.get("Naga").minWave or 0))
+
+-- The Hima family: frost-folk of the roof of the world, one identity — chill.
+local himaOk = true
+for _, id in { "Himabhuta", "Tushara", "Himapala" } do
+	local def = EnemyTypes.get(id)
+	if def.id ~= id or def.inflicts ~= "chill" or (def.minWave or 0) < 60 then
+		himaOk = false
+	end
+end
+check("every hima touch carries the cold", himaOk)
+check("the frost wakes with the roof of the world", (EnemyTypes.get("Himabhuta").minWave or 0) == 60)
+local tushara = EnemyTypes.get("Tushara")
+check("the sleet-archer looses from afar", tushara.ranged == true and tushara.attackRange >= 40 and (tushara.projectileSpeed or 0) > 0)
+check("the warden is the family's glacier", EnemyTypes.get("Himapala").maxHealth > EnemyTypes.get("Himabhuta").maxHealth and EnemyTypes.get("Himapala").walkSpeed < EnemyTypes.get("Himabhuta").walkSpeed)
+check("the cold deepens in order", (EnemyTypes.get("Himapala").minWave or 0) > (EnemyTypes.get("Tushara").minWave or 0) and (EnemyTypes.get("Tushara").minWave or 0) > (EnemyTypes.get("Himabhuta").minWave or 0))
 local meleeUnaffected = true
 for _, a in EnemyTypes.List do
 	if not a.ranged and (a.retreatRange or a.projectileSpeed) then

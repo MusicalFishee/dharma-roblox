@@ -24,7 +24,7 @@ export type EnemyArchetype = {
 	retreatRange: number?, -- closer than this, they back off
 	-- Status effects: what landing a HIT inflicts on the player, and whether the
 	-- creature's corpse leaves a toxic pool behind.
-	inflicts: string?, -- "venom" | "curse"
+	inflicts: string?, -- "venom" | "curse" | "chill"
 	leavesPool: boolean?,
 	-- A bloodline can sleep: absent from wave composition before this wave.
 	minWave: number?,
@@ -185,6 +185,62 @@ EnemyTypes.List = {
 		inflicts = "venom",
 		leavesPool = true,
 		minWave = 40,
+	},
+	-- ── The Hima family: frost-folk who wake with the Roof of the World. One
+	-- identity, kept by law: every hima touch carries chill (the legs slow).
+	-- Pale soldier of the snows — steady, cold, everywhere.
+	Himabhuta = {
+		id = "Himabhuta",
+		displayName = "Himabhuta",
+		maxHealth = 190,
+		walkSpeed = 13,
+		attackDamage = 14,
+		attackInterval = 1.6,
+		aggroRange = 100,
+		attackRange = 9,
+		xpReward = 60,
+		scale = 1.05,
+		skin = { 200, 220, 240 },
+		weight = 3,
+		inflicts = "chill",
+		minWave = 60,
+	},
+	-- Sleet-archer — kites and looses freezing shards from afar.
+	Tushara = {
+		id = "Tushara",
+		displayName = "Tushara",
+		maxHealth = 110,
+		walkSpeed = 12,
+		attackDamage = 13,
+		attackInterval = 2.5,
+		aggroRange = 125,
+		attackRange = 48,
+		xpReward = 65,
+		scale = 0.95,
+		skin = { 160, 190, 220 },
+		weight = 2,
+		ranged = true,
+		projectileSpeed = 70,
+		retreatRange = 18,
+		inflicts = "chill",
+		minWave = 68,
+	},
+	-- The frost-warden — glacier-slow, glacier-heavy, and the cold walks with him.
+	Himapala = {
+		id = "Himapala",
+		displayName = "Himapala",
+		maxHealth = 420,
+		walkSpeed = 8,
+		attackDamage = 26,
+		attackInterval = 2.4,
+		aggroRange = 95,
+		attackRange = 11,
+		xpReward = 130,
+		scale = 1.55,
+		skin = { 120, 150, 190 },
+		weight = 1,
+		inflicts = "chill",
+		minWave = 76,
 	},
 } :: { [string]: EnemyArchetype }
 

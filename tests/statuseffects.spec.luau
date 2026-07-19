@@ -49,7 +49,7 @@ local vetala = EnemyTypes.get("Vetala")
 check("Pisacha envenoms and leaves a pool", pisacha.inflicts == "venom" and pisacha.leavesPool == true)
 check("Vetala curses", vetala.inflicts == "curse" and not vetala.leavesPool)
 check("Asura stays clean", EnemyTypes.get("Asura").inflicts == nil)
-local knownInflicts = { venom = true, curse = true }
+local knownInflicts = { venom = true, curse = true, chill = true }
 local allKnown = true
 for _, a in EnemyTypes.List do
 	if a.inflicts and not knownInflicts[a.inflicts] then
@@ -61,6 +61,11 @@ check("every inflicts value is a known status", allKnown)
 -- Elites keep their afflictions.
 local eliteGhoul = Elites.makeElite(pisacha :: any)
 check("elite ghoul still envenoms and melts", eliteGhoul.inflicts == "venom" and eliteGhoul.leavesPool == true)
+
+-- Chill (the frost-folk's identity).
+check("chill is brief", StatusEffects.Chill.seconds > 0 and StatusEffects.Chill.seconds <= 4)
+check("chill slows, never stops", StatusEffects.Chill.speedMult > 0 and StatusEffects.Chill.speedMult < 1)
+check("chilled legs do the math", StatusEffects.chilledSpeed(20) == 20 * StatusEffects.Chill.speedMult)
 
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
