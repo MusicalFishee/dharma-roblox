@@ -10,6 +10,7 @@ local Paths = require(ReplicatedStorage.Shared.Paths)
 local Relics = require(ReplicatedStorage.Shared.Relics)
 local Ranks = require(ReplicatedStorage.Shared.Ranks)
 local Vara = require(ReplicatedStorage.Shared.Vara)
+local StatusEffects = require(ReplicatedStorage.Shared.StatusEffects)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 local RitesService = require(script.Parent.RitesService)
 
@@ -36,7 +37,11 @@ local function applyLevelStats(player: Player, level: number, fullHeal: boolean)
 	-- Never un-crawl the downed or un-root the meditating (their owners restore
 	-- speed themselves after clearing the attribute).
 	if char:GetAttribute("DharmaDowned") ~= true and char:GetAttribute("DharmaDhyana") ~= true then
-		humanoid.WalkSpeed = BASE_WALK_SPEED * passive.speedMult * varaFx.speedMult
+		local speed = BASE_WALK_SPEED * passive.speedMult * varaFx.speedMult
+		if os.clock() < state.chillUntil then
+			speed = StatusEffects.chilledSpeed(speed) -- a mid-chill refresh must not thaw the legs early
+		end
+		humanoid.WalkSpeed = speed
 	end
 	if fullHeal then
 		humanoid.Health = humanoid.MaxHealth

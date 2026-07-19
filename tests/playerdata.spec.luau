@@ -248,6 +248,12 @@ check("claims clamp to the three pages", gval.granthaClaims.naga == 3 and gval.g
 local grt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", nil, 0, nil, nil, false, nil, nil, nil, nil, nil, "", 0, { lords = 7 }, { lords = 1 }))
 check("the book round-trips", grt.granthaKills.lords == 7 and grt.granthaClaims.lords == 1)
 
+-- The blade's ledger (v25).
+check("default blades unlearned", next(PlayerData.default().shastra) == nil)
+check("blade ink validates", PlayerData.validate({ shastra = { talwar = 500 } }).shastra.talwar == 500 and PlayerData.validate({ shastra = { talwar = -5 } }).shastra.talwar == 0)
+local brt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", nil, 0, nil, nil, false, nil, nil, nil, nil, nil, "", 0, nil, nil, { chakram = 321 }))
+check("the blade ledger round-trips", brt.shastra.chakram == 321)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

@@ -288,5 +288,6 @@ end)
 print("[Dharma] PvPService ready — honor duels open.")
 
 PvPService.beginDuel = beginDuel
+PvPService.isBusy = isBusy
 
 return PvPService

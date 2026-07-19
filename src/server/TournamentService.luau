@@ -83,6 +83,18 @@ local function startPair(aId: number, bId: number, isFinal: boolean)
 		nextMatch()
 		return
 	end
+	-- A duelist already mid-fight elsewhere forfeits their kumbha road:
+	-- beginDuel must never double-book a pair of blades.
+	if PvPService.isBusy(a) then
+		Tournament.walkover(br, aId)
+		nextMatch()
+		return
+	end
+	if PvPService.isBusy(b) then
+		Tournament.walkover(br, bId)
+		nextMatch()
+		return
+	end
 	awaiting = { a = aId, b = bId, isFinal = isFinal }
 	broadcastAll({
 		tourney = if isFinal then "final" else "semi",

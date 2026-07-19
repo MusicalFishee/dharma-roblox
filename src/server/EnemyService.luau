@@ -34,6 +34,8 @@ local StoryService = require(script.Parent.StoryService)
 local SevaService = require(script.Parent.SevaService)
 local GranthaService = require(script.Parent.GranthaService)
 local GanaService = require(script.Parent.GanaService)
+local ShastraService = require(script.Parent.ShastraService)
+local Shastra = require(ReplicatedStorage.Shared.Shastra)
 
 local ENEMY_TAG = "DharmaEnemy"
 
@@ -596,6 +598,7 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 				SevaService.onKill(archetype.isBoss == true)
 				GranthaService.onKill(killer, archetype.id)
 				GanaService.onKill(killer)
+				ShastraService.feed(killer, Shastra.XpPerKill)
 				-- Lifetime records.
 				kstate.stats.kills += 1
 				kstate.waveKills += 1
@@ -743,7 +746,8 @@ function EnemyService.collapseVyuha(seconds: number, furyDamageMult: number, fur
 			st.staggeredUntil = now + seconds
 			st.humanoid:MoveTo(st.root.Position)
 			local calmed = table.clone(st.archetype)
-			calmed.attackDamage = math.max(1, math.floor(st.archetype.attackDamage / furyDamageMult))
+			calmed.attackDamage = math.max(1, math.floor(st.archetype.attackDamage / furyDamageMult));
+			(calmed :: any).vyuhaBound = nil -- twins born after the collapse carry no stale mark
 			st.archetype = calmed
 			st.humanoid.WalkSpeed = st.humanoid.WalkSpeed / furySpeedMult
 		end

@@ -9,6 +9,8 @@ local Combat = require(ReplicatedStorage.Shared.Combat)
 local Progression = require(ReplicatedStorage.Shared.Progression)
 local Shop = require(ReplicatedStorage.Shared.Shop)
 local Bhava = require(ReplicatedStorage.Shared.Bhava)
+local Shastra = require(ReplicatedStorage.Shared.Shastra)
+local ShastraService = require(script.Parent.ShastraService)
 local Weapons = require(ReplicatedStorage.Shared.Weapons)
 local Paths = require(ReplicatedStorage.Shared.Paths)
 local Relics = require(ReplicatedStorage.Shared.Relics)
@@ -192,6 +194,7 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 			* varaFx.damageMult
 			* RitesService.mults().damageMult
 			* Bhava.effectsOf(state.bhava).damageMult
+			* Shastra.damageMult(Shastra.rankFor(state.shastra[state.weapon.id] or 0))
 			* empower,
 		isCrit,
 		(ench.critMultiplier or Combat.Config.CritMultiplier) + sig.critDamageBonus
@@ -229,6 +232,7 @@ Net.AttackRequest.OnServerEvent:Connect(function(player: Player)
 		end
 		humanoid:TakeDamage(dealt)
 		state.tejas = Combat.clampTejas(state.tejas + (Combat.Config.TejasPerHitLanded + sig.tejasPerHitBonus) * (ench.tejasMult or 1) * passive.tejasMult * relicBonus.tejasMult * varaFx.tejasMult * Bhava.effectsOf(state.bhava).tejasMult, Progression.maxTejasForLevel(level))
+		ShastraService.feed(player, Shastra.XpPerHit)
 
 		if ench.lifesteal then
 			healed += dealt * ench.lifesteal

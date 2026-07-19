@@ -5,7 +5,7 @@
 
 local PlayerData = {}
 
-PlayerData.Version = 24
+PlayerData.Version = 25
 
 -- Mirrors Relics.MaxOwned (dependency-free; a test guards against drift).
 local RELICS_MAX_OWNED = 40
@@ -104,6 +104,7 @@ export type Data = {
 	yatra: number, -- pilgrimage milestones claimed (sequential count)
 	granthaKills: { [string]: number }, -- foes felled per family page
 	granthaClaims: { [string]: number }, -- bounties claimed per page (0..3)
+	shastra: { [string]: number }, -- weapon mastery XP per weapon id
 }
 
 export type WeeklySave = {
@@ -240,6 +241,7 @@ function PlayerData.default(): Data
 		yatra = 0,
 		granthaKills = {},
 		granthaClaims = {},
+		shastra = {},
 	}
 end
 
@@ -374,6 +376,15 @@ function PlayerData.validate(raw: any): Data
 				end
 			end
 		end
+		if type(raw.shastra) == "table" then
+			local kept = 0
+			for id, xp in raw.shastra do
+				if type(id) == "string" and #id <= 40 and kept < 20 then
+					d.shastra[id] = cleanCount(xp)
+					kept += 1
+				end
+			end
+		end
 	end
 	return d
 end
@@ -405,7 +416,8 @@ function PlayerData.serialize(
 	gana: string?,
 	yatra: number?,
 	granthaKills: { [string]: number }?,
-	granthaClaims: { [string]: number }?
+	granthaClaims: { [string]: number }?,
+	shastra: { [string]: number }?
 ): Data
 	local questsCopy: { QuestSlot } = {}
 	if quests then
@@ -519,6 +531,19 @@ function PlayerData.serialize(
 				for id, tier in granthaClaims do
 					if type(id) == "string" and #id <= 40 and kept < 20 then
 						out[id] = math.clamp(cleanCount(tier), 0, 3)
+						kept += 1
+					end
+				end
+			end
+			return out
+		end)(),
+		shastra = (function(): { [string]: number }
+			local out: { [string]: number } = {}
+			if shastra then
+				local kept = 0
+				for id, xp in shastra do
+					if type(id) == "string" and #id <= 40 and kept < 20 then
+						out[id] = cleanCount(xp)
 						kept += 1
 					end
 				end
