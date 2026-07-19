@@ -89,6 +89,7 @@ export type PlayerState = {
 	granthaKills: { [string]: number },
 	granthaClaims: { [string]: number },
 	shastra: { [string]: number },
+	vairi: { id: string, count: number },
 	yatra: number,
 }
 
@@ -161,6 +162,7 @@ function PlayerRegistry.get(player: Player): PlayerState
 		granthaKills = {},
 		granthaClaims = {},
 		shastra = {},
+		vairi = { id = "", count = 0 },
 		yatra = 0,
 	}
 	states[player] = state

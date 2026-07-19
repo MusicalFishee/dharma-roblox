@@ -254,6 +254,13 @@ check("blade ink validates", PlayerData.validate({ shastra = { talwar = 500 } })
 local brt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", nil, 0, nil, nil, false, nil, nil, nil, nil, nil, "", 0, nil, nil, { chakram = 321 }))
 check("the blade ledger round-trips", brt.shastra.chakram == 321)
 
+-- The grudge ledger (v26).
+check("default holds no grudge", PlayerData.default().vairi.id == "" and PlayerData.default().vairi.count == 0)
+check("a grudge validates and clamps", PlayerData.validate({ vairi = { id = "Vetala", count = 99 } }).vairi.count == 20 and PlayerData.validate({ vairi = { id = "Vetala", count = 3 } }).vairi.id == "Vetala")
+check("a bodiless grudge is no grudge", PlayerData.validate({ vairi = { id = "", count = 5 } }).vairi.count == 0)
+local vrt2 = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", nil, 0, nil, nil, false, nil, nil, nil, nil, nil, "", 0, nil, nil, nil, { id = "Pisacha", count = 2 }))
+check("the grudge crosses the dark (round-trips)", vrt2.vairi.id == "Pisacha" and vrt2.vairi.count == 2)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

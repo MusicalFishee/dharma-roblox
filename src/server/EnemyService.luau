@@ -35,6 +35,7 @@ local SevaService = require(script.Parent.SevaService)
 local GranthaService = require(script.Parent.GranthaService)
 local GanaService = require(script.Parent.GanaService)
 local ShastraService = require(script.Parent.ShastraService)
+local VairiService = require(script.Parent.VairiService)
 local Shastra = require(ReplicatedStorage.Shared.Shastra)
 
 local ENEMY_TAG = "DharmaEnemy"
@@ -276,6 +277,9 @@ local function enemyStrikes(enemy: EnemyState, player: Player, playerRoot: BaseP
 
 	local resolution =
 		resolveHitOnPlayer(player, playerRoot, playerHum, enemy.archetype.attackDamage, enemy.root.Position, enemy.archetype.inflicts)
+	if playerHum.Health <= 0 then
+		VairiService.onBested(player, enemy.archetype) -- the besting blow writes the grudge
+	end
 	if resolution.attackerStaggered then
 		enemy.staggeredUntil = os.clock() + 1.0
 		enemy.humanoid:MoveTo(enemy.root.Position)
@@ -320,6 +324,9 @@ local function rangedStrikes(enemy: EnemyState, player: Player, playerRoot: Base
 			return -- they moved; the arrow misses
 		end
 		resolveHitOnPlayer(player, root, hum, a.attackDamage, origin, a.inflicts)
+		if hum.Health <= 0 then
+			VairiService.onBested(player, a) -- an arrow can write a grudge too
+		end
 	end)
 end
 

@@ -661,6 +661,26 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("A new week — the world swears the %s", tostring(data.name)), Color3.fromRGB(200, 110, 255))
 		return
 	end
+	if data.vairiMarked then
+		showToast(string.format("A VAIRI IS BORN — %s will remember this", tostring(data.name)), Color3.fromRGB(220, 90, 120))
+		return
+	end
+	if data.vairiGrown then
+		showToast(string.format("YOUR VAIRI FEEDS — %s grows crueler (grudge ×%d)", tostring(data.name), data.count or 1), Color3.fromRGB(220, 90, 120))
+		return
+	end
+	if data.vairiStalks then
+		showToast(string.format("YOUR VAIRI HAS CROSSED THE DARK — %s hunts you", tostring(data.name)), Color3.fromRGB(220, 90, 120))
+		return
+	end
+	if data.vairiFelled then
+		showToast(string.format("THE DEBT IS PAID — +%d gold, +%d ◆", data.gold or 0, data.shards or 0), YELLOW)
+		return
+	end
+	if data.vairiStolen then
+		showToast("Another hand took your debt. The grudge stands.", Color3.fromRGB(170, 170, 170))
+		return
+	end
 	if data.rahuEclipse then
 		showToast("RAHU SWALLOWS THE SUN — the horde is gilded; ALL SPOILS DOUBLED", Color3.fromRGB(255, 120, 50))
 		return

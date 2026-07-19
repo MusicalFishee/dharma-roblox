@@ -5,7 +5,7 @@
 
 local PlayerData = {}
 
-PlayerData.Version = 25
+PlayerData.Version = 26
 
 -- Mirrors Relics.MaxOwned (dependency-free; a test guards against drift).
 local RELICS_MAX_OWNED = 40
@@ -105,6 +105,12 @@ export type Data = {
 	granthaKills: { [string]: number }, -- foes felled per family page
 	granthaClaims: { [string]: number }, -- bounties claimed per page (0..3)
 	shastra: { [string]: number }, -- weapon mastery XP per weapon id
+	vairi: VairiSave, -- the grudge that walks ("" = no debt held)
+}
+
+export type VairiSave = {
+	id: string,
+	count: number,
 }
 
 export type WeeklySave = {
@@ -242,6 +248,7 @@ function PlayerData.default(): Data
 		granthaKills = {},
 		granthaClaims = {},
 		shastra = {},
+		vairi = { id = "", count = 0 },
 	}
 end
 
@@ -385,6 +392,9 @@ function PlayerData.validate(raw: any): Data
 				end
 			end
 		end
+		if type(raw.vairi) == "table" and type(raw.vairi.id) == "string" and #raw.vairi.id <= 40 and #raw.vairi.id > 0 then
+			d.vairi = { id = raw.vairi.id, count = math.clamp(cleanCount(raw.vairi.count), 1, 20) }
+		end
 	end
 	return d
 end
@@ -417,7 +427,8 @@ function PlayerData.serialize(
 	yatra: number?,
 	granthaKills: { [string]: number }?,
 	granthaClaims: { [string]: number }?,
-	shastra: { [string]: number }?
+	shastra: { [string]: number }?,
+	vairi: VairiSave?
 ): Data
 	local questsCopy: { QuestSlot } = {}
 	if quests then
@@ -537,6 +548,9 @@ function PlayerData.serialize(
 			end
 			return out
 		end)(),
+		vairi = if vairi and type(vairi.id) == "string" and #vairi.id > 0 and #vairi.id <= 40
+			then { id = vairi.id, count = math.clamp(cleanCount(vairi.count), 1, 20) }
+			else { id = "", count = 0 },
 		shastra = (function(): { [string]: number }
 			local out: { [string]: number } = {}
 			if shastra then

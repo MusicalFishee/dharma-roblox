@@ -19,6 +19,7 @@ local Tarakasura = require(ReplicatedStorage.Shared.Tarakasura)
 local Chakravyuha = require(ReplicatedStorage.Shared.Chakravyuha)
 local Rahu = require(ReplicatedStorage.Shared.Rahu)
 local TirthaService = require(script.Parent.TirthaService)
+local VairiService = require(script.Parent.VairiService)
 local RavanaRaid = require(script.Parent.RavanaRaid)
 local EnemyTypes = require(ReplicatedStorage.Shared.EnemyTypes)
 local Bosses = require(ReplicatedStorage.Shared.Bosses)
@@ -313,6 +314,7 @@ function startWave(wave: number)
 	-- An ordinary wave: the realm itself joins the fight — and keeps its ford.
 	HazardService.rage(wave)
 	TirthaService.raise(wave)
+	VairiService.stalk(wave)
 
 	local ids = Waves.compose(wave, EnemyTypes.List :: any)
 	remaining = #ids
