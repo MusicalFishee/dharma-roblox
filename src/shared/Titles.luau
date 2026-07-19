@@ -21,6 +21,7 @@ export type Snapshot = {
 	playtimeSeconds: number, -- time at war
 	deaths: number, -- deaths endured (the atman remembers)
 	bladesMastered: number, -- weapons carried to the summit rank
+	vairisFelled: number, -- nemeses hunted down and ended
 }
 
 export type TitleDef = {
@@ -60,6 +61,7 @@ Titles.List = {
 	title({ id = "devoted", name = "The Devoted", requirement = "Five hours at war", kind = "playtime", threshold = 18000, color = { 255, 170, 80 } }),
 	title({ id = "undying", name = "The Undying", requirement = "Endure 100 deaths (the atman remembers)", kind = "deaths", threshold = 100, color = { 180, 130, 200 } }),
 	title({ id = "grandmaster", name = "Grandmaster of Arms", requirement = "Master three weapons to the summit", kind = "bladesMastered", threshold = 3, color = { 235, 240, 250 } }),
+	title({ id = "grudge_ender", name = "The Grudge-Ender", requirement = "Hunt down and end 10 of your own nemeses", kind = "vairisFelled", threshold = 10, color = { 220, 90, 120 } }),
 	-- The capstone: not a stat, but the SUM of every other title. To complete
 	-- every path is to be released from the wheel entirely — liberation, union
 	-- with Brahman. It grows on its own: a title added anywhere below is one
@@ -106,6 +108,8 @@ local function statFor(kind: string, snap: Snapshot): number
 		return snap.deaths
 	elseif kind == "bladesMastered" then
 		return snap.bladesMastered
+	elseif kind == "vairisFelled" then
+		return snap.vairisFelled
 	end
 	return 0
 end

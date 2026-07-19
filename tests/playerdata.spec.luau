@@ -261,6 +261,12 @@ check("a bodiless grudge is no grudge", PlayerData.validate({ vairi = { id = "",
 local vrt2 = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", nil, 0, nil, nil, false, nil, nil, nil, nil, nil, "", 0, nil, nil, nil, { id = "Pisacha", count = 2 }))
 check("the grudge crosses the dark (round-trips)", vrt2.vairi.id == "Pisacha" and vrt2.vairi.count == 2)
 
+-- The nemesis ledger (v27).
+check("default nemesis ledger empty", PlayerData.default().stats.vairisFelled == 0)
+check("vairisFelled validated", PlayerData.validate({ stats = { vairisFelled = 7 } }).stats.vairisFelled == 7 and PlayerData.validate({ stats = { vairisFelled = -3 } }).stats.vairisFelled == 0)
+local grudged = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", { kills = 0, bossKills = 0, deaths = 0, playtimeSeconds = 0, trialsPassed = 0, duelWins = 0, raidClears = 0, revives = 0, deerKills = 0, vairisFelled = 4 }))
+check("the nemesis ledger round-trips", grudged.stats.vairisFelled == 4)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

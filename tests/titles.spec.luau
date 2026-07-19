@@ -20,7 +20,7 @@ local function check(name: string, cond: boolean)
 end
 
 local function snap(over: { [string]: number }): Titles.Snapshot
-	local s: Titles.Snapshot = { bestWave = 0, kills = 0, bossKills = 0, level = 1, trials = 0, duelWins = 0, raidClears = 0, revives = 0, deerKills = 0, bladeMastery = 1, loreTurned = 0, playtimeSeconds = 0, deaths = 0, bladesMastered = 0 }
+	local s: Titles.Snapshot = { bestWave = 0, kills = 0, bossKills = 0, level = 1, trials = 0, duelWins = 0, raidClears = 0, revives = 0, deerKills = 0, bladeMastery = 1, loreTurned = 0, playtimeSeconds = 0, deaths = 0, bladesMastered = 0, vairisFelled = 0 }
 	for k, v in over do
 		(s :: any)[k] = v
 	end
@@ -33,7 +33,7 @@ print("Titles")
 check("there are titles worth chasing", #Titles.List >= 6)
 local ids: { [string]: boolean } = {}
 local unique, wellFormed = true, true
-local knownKinds = { wave = true, kills = true, bossKills = true, level = true, trials = true, duelWins = true, raidClears = true, revives = true, deerKills = true, bladeMastery = true, loreTurned = true, playtime = true, deaths = true, bladesMastered = true, capstone = true }
+local knownKinds = { wave = true, kills = true, bossKills = true, level = true, trials = true, duelWins = true, raidClears = true, revives = true, deerKills = true, bladeMastery = true, loreTurned = true, playtime = true, deaths = true, bladesMastered = true, vairisFelled = true, capstone = true }
 for _, def in Titles.List do
 	if ids[def.id] then
 		unique = false
@@ -65,9 +65,9 @@ check("the loremaster's bar tracks the whole book", (Titles.get("loremaster") ::
 -- on its own. This proves it reacts to each title individually — so any
 -- title added anywhere is automatically one more thing the capstone demands,
 -- and this test extends to cover it with zero edits.
-local kindField = { wave = "bestWave", kills = "kills", bossKills = "bossKills", level = "level", trials = "trials", duelWins = "duelWins", raidClears = "raidClears", revives = "revives", deerKills = "deerKills", bladeMastery = "bladeMastery", loreTurned = "loreTurned", playtime = "playtimeSeconds", deaths = "deaths", bladesMastered = "bladesMastered" }
+local kindField = { wave = "bestWave", kills = "kills", bossKills = "bossKills", level = "level", trials = "trials", duelWins = "duelWins", raidClears = "raidClears", revives = "revives", deerKills = "deerKills", bladeMastery = "bladeMastery", loreTurned = "loreTurned", playtime = "playtimeSeconds", deaths = "deaths", bladesMastered = "bladesMastered", vairisFelled = "vairisFelled" }
 local function maxedSnap(): Titles.Snapshot
-	return snap({ bestWave = 9999, kills = 9999999, bossKills = 9999, level = 9999, trials = 9999, duelWins = 9999, raidClears = 9999, revives = 9999, deerKills = 9999, bladeMastery = 99, loreTurned = 9999, playtimeSeconds = 99999999, deaths = 9999999, bladesMastered = 999 })
+	return snap({ bestWave = 9999, kills = 9999999, bossKills = 9999, level = 9999, trials = 9999, duelWins = 9999, raidClears = 9999, revives = 9999, deerKills = 9999, bladeMastery = 99, loreTurned = 9999, playtimeSeconds = 99999999, deaths = 9999999, bladesMastered = 999, vairisFelled = 9999 })
 end
 local moksha = Titles.get("moksha") :: any
 check("Moksha exists and is the capstone", moksha ~= nil and moksha.kind == "capstone")

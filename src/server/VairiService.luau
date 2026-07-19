@@ -72,6 +72,7 @@ function VairiService.stalk(wave: number)
 				-- The debt is paid — by the one hand that could pay it.
 				local bounty = Vairi.bountyFor(count)
 				hstate.vairi = { id = "", count = 0 }
+				hstate.stats.vairisFelled += 1
 				hstate.gold = Loot.clampGold(hstate.gold + bounty.gold)
 				hstate.shards += bounty.shards
 				Net.CombatFeedback:FireClient(hunted, { goldUpdate = true, gained = bounty.gold, gold = hstate.gold })

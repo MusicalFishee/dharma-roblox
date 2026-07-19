@@ -65,6 +65,7 @@ local function loadPlayer(player: Player)
 		raidClears = data.stats.raidClears,
 		revives = data.stats.revives,
 		deerKills = data.stats.deerKills,
+		vairisFelled = data.stats.vairisFelled,
 	}
 	state.title = data.title
 	state.path = data.path
@@ -161,6 +162,7 @@ local function savePlayer(player: Player)
 		raidClears = state.stats.raidClears,
 		revives = state.stats.revives,
 		deerKills = state.stats.deerKills,
+		vairisFelled = state.stats.vairisFelled,
 	}
 	local dailies = state.dailies
 	local titleId = state.title

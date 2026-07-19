@@ -28,6 +28,7 @@ local function snapshotOf(player: Player): Titles.Snapshot
 		raidClears = state.stats.raidClears,
 		revives = state.stats.revives,
 		deerKills = state.stats.deerKills,
+		vairisFelled = state.stats.vairisFelled,
 		bladeMastery = (function(): number
 			local best = 1
 			for _, xp in state.shastra do

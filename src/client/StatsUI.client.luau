@@ -59,6 +59,7 @@ local ROW_ORDER = {
 	{ key = "raidClears", label = "Ravanas felled" },
 	{ key = "revives", label = "Allies lifted" },
 	{ key = "deerKills", label = "Golden deer felled" },
+	{ key = "vairisFelled", label = "Nemeses ended" },
 	{ key = "weaponRank", label = "Blade mastery" },
 	{ key = "deaths", label = "Times fallen" },
 	{ key = "playtime", label = "Time at war" },
@@ -155,6 +156,7 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 	rows.raidClears.value.Text = tostring(data.raidClears)
 	rows.revives.value.Text = tostring(data.revives)
 	rows.deerKills.value.Text = tostring(data.deerKills)
+	rows.vairisFelled.value.Text = tostring(data.vairisFelled)
 	rows.weaponRank.value.Text = tostring(data.weaponRank)
 	rows.deaths.value.Text = tostring(data.deaths)
 	rows.playtime.value.Text = fmtTime(data.playtimeSeconds)
