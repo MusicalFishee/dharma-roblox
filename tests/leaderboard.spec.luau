@@ -60,7 +60,14 @@ for _, def in Leaderboard.Boards do
 	end
 end
 check("the weekly board stands among the slabs", weeklyDef ~= nil and (weeklyDef :: any).weekly == true)
-check("three boards at the arena's edge", #Leaderboard.Boards == 3)
+check("four boards at the arena's edge", #Leaderboard.Boards == 4)
+local ganaDef: Leaderboard.BoardDef? = nil
+for _, def in Leaderboard.Boards do
+	if def.kind == "gana" then
+		ganaDef = def
+	end
+end
+check("the war-ledger is weekly, keyed by banner", ganaDef ~= nil and (ganaDef :: Leaderboard.BoardDef).weekly == true)
 check("weekly stores carry the week's stamp", Leaderboard.storeNameFor(weeklyDef :: any, 2951) == "DharmaWeeklyWave_v1_wk2951")
 check("different weeks, different stores", Leaderboard.storeNameFor(weeklyDef :: any, 2951) ~= Leaderboard.storeNameFor(weeklyDef :: any, 2952))
 check("lifetime boards ignore the week", Leaderboard.storeNameFor(Leaderboard.Boards[1], 2951) == Leaderboard.Boards[1].storeName)

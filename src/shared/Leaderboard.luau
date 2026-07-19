@@ -11,6 +11,7 @@ export type BoardDef = {
 	-- Turns a raw score into its display form ("Lv 12" / "Wave 8").
 	prefix: string,
 	weekly: boolean?, -- weekly boards live in week-stamped stores (fresh each Monday)
+	kind: string?, -- "gana": keys are warband banners, not userIds
 }
 
 Leaderboard.Boards = {
@@ -32,6 +33,14 @@ Leaderboard.Boards = {
 		title = "THIS WEEK'S DEEPEST",
 		prefix = "Wave",
 		weekly = true,
+	},
+	{
+		id = "ganaWeekly",
+		storeName = "DharmaGanaWeekly_v1",
+		title = "WARBAND WAR-LEDGER",
+		prefix = "Kills",
+		weekly = true,
+		kind = "gana",
 	},
 } :: { BoardDef }
 

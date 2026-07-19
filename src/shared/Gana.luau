@@ -18,6 +18,20 @@ function Gana.cleanName(raw: string): string
 	return name
 end
 
+-- The ledger key: one banner, one key, whatever the capitalization.
+function Gana.storeKey(name: string): string
+	return string.lower(Gana.cleanName(name))
+end
+
+-- A key back in parade dress for the stone slab.
+function Gana.displayName(key: string): string
+	local words: { string } = {}
+	for word in string.gmatch(key, "%S+") do
+		table.insert(words, string.upper(string.sub(word, 1, 1)) .. string.sub(word, 2))
+	end
+	return table.concat(words, " ")
+end
+
 -- Two players march together when their banners match (case-insensitive).
 function Gana.sameBanner(a: string, b: string): boolean
 	if #a == 0 or #b == 0 then

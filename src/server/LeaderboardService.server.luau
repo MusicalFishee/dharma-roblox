@@ -8,6 +8,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Leaderboard = require(ReplicatedStorage.Shared.Leaderboard)
+local Gana = require(ReplicatedStorage.Shared.Gana)
 local Vrata = require(ReplicatedStorage.Shared.Vrata)
 local Progression = require(ReplicatedStorage.Shared.Progression)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
@@ -32,7 +33,7 @@ local boards: { BoardUI } = {}
 
 local function buildBoard(def: Leaderboard.BoardDef, index: number): BoardUI
 	-- A stone slab facing the spawn, angled at the arena edge.
-	local angle = math.rad(if index == 1 then -35 elseif index == 2 then 35 else 0)
+	local angle = math.rad(({ -52, -18, 18, 52 })[index] or 0)
 	local pos = Vector3.new(math.sin(angle) * BOARD_DISTANCE, 14, -math.cos(angle) * BOARD_DISTANCE)
 
 	local slab = Instance.new("Part")
@@ -146,7 +147,7 @@ end
 local function pullAndDisplay()
 	for _, ui in boards do
 		local ok, page = pcall(function()
-			local store = DataStoreService:GetOrderedDataStore(ui.def.storeName)
+			local store = DataStoreService:GetOrderedDataStore(Leaderboard.storeNameFor(ui.def, Vrata.weekStamp(os.time())))
 			return store:GetSortedAsync(false, Leaderboard.TopN):GetCurrentPage()
 		end)
 		if not ok or typeof(page) ~= "table" then
@@ -155,8 +156,13 @@ local function pullAndDisplay()
 		for i = 1, Leaderboard.TopN do
 			local entry = page[i]
 			if entry then
-				local userId = tonumber(entry.key)
-				local display = if userId then nameFor(userId) else "???"
+				local display: string
+				if ui.def.kind == "gana" then
+					display = "⚔ " .. Gana.displayName(tostring(entry.key))
+				else
+					local userId = tonumber(entry.key)
+					display = if userId then nameFor(userId) else "???"
+				end
 				ui.rows[i].Text = Leaderboard.formatRow(ui.def, i, display, entry.value)
 			else
 				ui.rows[i].Text = string.format("%d.  —", i)
@@ -171,7 +177,7 @@ Players.PlayerRemoving:Connect(function(player)
 		local score = scoreFor(player, def.id)
 		if score > 0 then
 			pcall(function()
-				DataStoreService:GetOrderedDataStore(def.storeName)
+				DataStoreService:GetOrderedDataStore(Leaderboard.storeNameFor(def, Vrata.weekStamp(os.time())))
 					:SetAsync(tostring(player.UserId), Leaderboard.sanitizeScore(score))
 			end)
 		end

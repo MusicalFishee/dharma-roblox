@@ -28,6 +28,11 @@ check("matching banners march together", Gana.sameBanner("Vira Sena", "vira sena
 check("different banners do not", not Gana.sameBanner("Vira Sena", "Nandi"))
 check("the bannerless march alone", not Gana.sameBanner("", "") and not Gana.sameBanner("Vira", ""))
 
+-- The ledger key: one banner, one key, back in parade dress for the slab.
+check("keys fold case and trim", Gana.storeKey("  ViRa   SENA ") == "vira sena")
+check("no banner, no key", Gana.storeKey("   ") == "")
+check("the slab wears parade dress", Gana.displayName("vira sena") == "Vira Sena")
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

@@ -6,11 +6,68 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
+local DataStoreService = game:GetService("DataStoreService")
+
 local Net = require(ReplicatedStorage.Shared.Net)
 local Gana = require(ReplicatedStorage.Shared.Gana)
+local Leaderboard = require(ReplicatedStorage.Shared.Leaderboard)
+local Vrata = require(ReplicatedStorage.Shared.Vrata)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 
 local GanaService = {}
+
+-- The war tally: kills per banner this server hasn't flushed yet. Flushed
+-- to the week-stamped ledger in batches — never one write per kill.
+local warTally: { [string]: number } = {}
+
+local function ganaBoard(): Leaderboard.BoardDef?
+	for _, def in Leaderboard.Boards do
+		if def.kind == "gana" then
+			return def
+		end
+	end
+	return nil
+end
+
+-- A kill under a banner inks the warband's weekly ledger.
+function GanaService.onKill(killer: Player)
+	local state = PlayerRegistry.tryGet(killer)
+	if not state or #state.gana == 0 then
+		return
+	end
+	local key = Gana.storeKey(state.gana)
+	if #key == 0 then
+		return
+	end
+	warTally[key] = (warTally[key] or 0) + 1
+end
+
+task.spawn(function()
+	while true do
+		task.wait(60)
+		local def = ganaBoard()
+		if not def or next(warTally) == nil then
+			continue
+		end
+		local flushing = warTally
+		warTally = {}
+		local ok, store = pcall(function()
+			return DataStoreService:GetOrderedDataStore(Leaderboard.storeNameFor(def, Vrata.weekStamp(os.time())))
+		end)
+		if not ok then
+			-- The ledger is unreachable; the tally rides to the next flush.
+			for key, n in flushing do
+				warTally[key] = (warTally[key] or 0) + n
+			end
+			continue
+		end
+		for key, n in flushing do
+			pcall(function()
+				store:IncrementAsync(key, n)
+			end)
+		end
+	end
+end)
 
 local function wearBanner(player: Player)
 	local char = player.Character
