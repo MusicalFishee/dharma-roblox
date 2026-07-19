@@ -24,6 +24,7 @@ local SPAR_HOME = YARD_POS + Vector3.new(6, 0, 8)
 local AkhadaService = {}
 
 local windows: { [number]: { Akhada.HitEvent } } = {} -- userId → rolling 10s read
+local sessionBest: { [number]: Akhada.BestEntry } = {} -- userId → best 10s reading
 local runs: { [number]: Akhada.Run } = {} -- userId → live combo string
 local lastStrikerId = 0
 
@@ -183,7 +184,7 @@ local function raiseSparringPartner(bell: ProximityPrompt)
 end
 
 -- ── The yard itself ─────────────────────────────────────────────────────────
-local function buildYard(): (Humanoid?, TextLabel?)
+local function buildYard(): (Humanoid?, TextLabel?, TextLabel?)
 	local mat = Instance.new("Part")
 	mat.Name = "AkhadaMat"
 	mat.Size = Vector3.new(14, 0.4, 14)
@@ -225,9 +226,34 @@ local function buildYard(): (Humanoid?, TextLabel?)
 		raiseSparringPartner(bell)
 	end)
 
+	-- Today's Fiercest: a plank of session records beside the mat.
+	local recordPost = Instance.new("Part")
+	recordPost.Name = "AkhadaRecords"
+	recordPost.Size = Vector3.new(1, 5, 1)
+	recordPost.Position = YARD_POS + Vector3.new(-9, -0.5, 0)
+	recordPost.Color = Color3.fromRGB(90, 65, 40)
+	recordPost.Material = Enum.Material.Wood
+	recordPost.Anchored = true
+	recordPost.Parent = workspace
+	local recordBillboard = Instance.new("BillboardGui")
+	recordBillboard.Size = UDim2.fromOffset(220, 110)
+	recordBillboard.StudsOffset = Vector3.new(0, 4.6, 0)
+	recordBillboard.AlwaysOnTop = true
+	recordBillboard.Parent = recordPost
+	local recordLabel = Instance.new("TextLabel")
+	recordLabel.Size = UDim2.fromScale(1, 1)
+	recordLabel.BackgroundTransparency = 1
+	recordLabel.Font = Enum.Font.GothamBold
+	recordLabel.TextSize = 13
+	recordLabel.TextColor3 = Color3.fromRGB(255, 210, 130)
+	recordLabel.TextStrokeTransparency = 0.5
+	recordLabel.TextYAlignment = Enum.TextYAlignment.Top
+	recordLabel.Text = "TODAY'S FIERCEST\n— the straw remembers —"
+	recordLabel.Parent = recordBillboard
+
 	local rig, humanoid, root = buildRig(Color3.fromRGB(150, 150, 155))
 	if not rig or not humanoid or not root then
-		return nil, nil
+		return nil, nil, nil
 	end
 
 	humanoid.MaxHealth = Akhada.Config.DummyHealth
@@ -263,10 +289,10 @@ local function buildYard(): (Humanoid?, TextLabel?)
 	label.Text = "AKHADA\nStrike freely — the straw keeps score."
 	label.Parent = billboard
 
-	return humanoid, label
+	return humanoid, label, recordLabel
 end
 
-local humanoid, label = buildYard()
+local humanoid, label, fiercest = buildYard()
 if humanoid and label then
 	local hum = humanoid :: Humanoid
 	local readout = label :: TextLabel
@@ -313,6 +339,26 @@ if humanoid and label then
 				else
 					windows[userId] = kept
 				end
+			end
+
+			-- Session records: every live window may set a personal best.
+			for userId, uw in windows do
+				local _t, udps = Akhada.readOver(uw, now, Akhada.Config.WindowSeconds)
+				local who = Players:GetPlayerByUserId(userId)
+				if who and udps > 0 and (not sessionBest[userId] or udps > sessionBest[userId].dps) then
+					sessionBest[userId] = { name = who.DisplayName, dps = udps }
+				end
+			end
+			if fiercest then
+				local ranked = Akhada.rankBest(sessionBest, 5)
+				local rows = { "TODAY'S FIERCEST" }
+				for i, entry in ranked do
+					table.insert(rows, string.format("%d. %s — %.0f DPS", i, entry.name, entry.dps))
+				end
+				if #ranked == 0 then
+					table.insert(rows, "— the straw remembers —")
+				end
+				(fiercest :: TextLabel).Text = table.concat(rows, "\n")
 			end
 
 			local striker = if lastStrikerId ~= 0 then Players:GetPlayerByUserId(lastStrikerId) else nil

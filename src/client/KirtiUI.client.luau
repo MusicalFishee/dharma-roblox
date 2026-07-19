@@ -29,7 +29,7 @@ screenGui.Parent = playerGui
 local panel = Instance.new("Frame")
 panel.AnchorPoint = Vector2.new(0.5, 0.5)
 panel.Position = UDim2.fromScale(0.5, 0.5)
-panel.Size = UDim2.fromOffset(460, 560)
+panel.Size = UDim2.fromOffset(460, 620)
 panel.BackgroundColor3 = PANEL_BG
 panel.BorderSizePixel = 0
 panel.Parent = screenGui
@@ -194,6 +194,7 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		level = tonumber(data.level) or 1,
 		playtimeSeconds = tonumber(data.playtimeSeconds) or 0,
 		deaths = tonumber(data.deaths) or 0,
+		deerKills = tonumber(data.deerKills) or 0,
 	})
 end)
 

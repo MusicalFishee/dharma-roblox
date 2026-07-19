@@ -44,6 +44,7 @@ function WelcomeService.greet(player: Player)
 		level = level,
 		playtimeSeconds = state.stats.playtimeSeconds,
 		deaths = state.stats.deaths,
+		deerKills = state.stats.deerKills,
 	}
 	for _, def in Deeds.List do
 		local progress = Deeds.progress(def, snap)

@@ -71,6 +71,12 @@ check("its cadence can be read and parried", spar.AttackInterval >= 2)
 check("the yard's fight stays in the yard", spar.LeashRadius <= 60 and spar.AggroRadius < spar.LeashRadius)
 check("it bows out when nobody trains", spar.LonelySeconds >= 30)
 
+-- Today's fiercest: ranked truly, capped honestly.
+local best = { [1] = { name = "A", dps = 50 }, [2] = { name = "B", dps = 220 }, [3] = { name = "C", dps = 90 } }
+local ranked = Akhada.rankBest(best, 2)
+check("the fiercest lead the board", #ranked == 2 and ranked[1].name == "B" and ranked[2].name == "C")
+check("an empty yard ranks nobody", #Akhada.rankBest({}, 5) == 0)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

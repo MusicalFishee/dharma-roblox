@@ -18,7 +18,7 @@ local function check(name: string, cond: boolean)
 end
 
 local function snap(over: { [string]: number }): Deeds.Snapshot
-	local s: Deeds.Snapshot = { kills = 0, bossKills = 0, bestWave = 0, duelWins = 0, raidClears = 0, revives = 0, trials = 0, level = 1, playtimeSeconds = 0, deaths = 0 }
+	local s: Deeds.Snapshot = { kills = 0, bossKills = 0, bestWave = 0, duelWins = 0, raidClears = 0, revives = 0, trials = 0, level = 1, playtimeSeconds = 0, deaths = 0, deerKills = 0 }
 	for k, v in over do
 		(s :: any)[k] = v
 	end
@@ -28,7 +28,7 @@ end
 print("Deeds")
 
 -- Ledger integrity.
-check("the ledger is ten deeds deep", #Deeds.List == 10)
+check("the ledger is eleven deeds deep", #Deeds.List == 11)
 check("three tiers, three colors", #Deeds.TierNames == 3 and #Deeds.TierColor == 3)
 local defsOk = true
 local ids: { [string]: boolean } = {}
@@ -63,9 +63,9 @@ check("svarna has no next rung", maxed.nextThreshold == nil)
 
 -- The headline count.
 check("a fresh ledger is unmarked", Deeds.totalTiers(snap({})) == 0)
-local hero = snap({ kills = 5000, bossKills = 200, bestWave = 100, duelWins = 50, raidClears = 25, revives = 50, trials = 10, level = 60, playtimeSeconds = 72000, deaths = 200 })
+local hero = snap({ kills = 5000, bossKills = 200, bestWave = 100, duelWins = 50, raidClears = 25, revives = 50, trials = 10, level = 60, playtimeSeconds = 72000, deaths = 200, deerKills = 100 })
 check("a full life fills the ledger", Deeds.totalTiers(hero) == Deeds.MaxTiers)
-check("the max is ten gold deeds", Deeds.MaxTiers == 30)
+check("the max is eleven gold deeds", Deeds.MaxTiers == 33)
 check("even deaths are honored (the atman remembers)", Deeds.tierFor(Deeds.List[10], 10) == 1)
 
 

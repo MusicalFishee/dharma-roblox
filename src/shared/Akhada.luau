@@ -90,4 +90,24 @@ function Akhada.isNotable(run: Run, minHits: number): boolean
 	return run.hits >= minHits
 end
 
+-- Today's fiercest: the session's best 10-second readings, ranked.
+export type BestEntry = {
+	name: string,
+	dps: number,
+}
+
+function Akhada.rankBest(best: { [number]: BestEntry }, n: number): { BestEntry }
+	local out: { BestEntry } = {}
+	for _, entry in best do
+		table.insert(out, entry)
+	end
+	table.sort(out, function(a, b)
+		return a.dps > b.dps
+	end)
+	while #out > math.max(n, 0) do
+		table.remove(out)
+	end
+	return out
+end
+
 return Akhada

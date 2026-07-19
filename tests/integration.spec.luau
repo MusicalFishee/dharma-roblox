@@ -200,7 +200,7 @@ end
 check("the lesson listens only to relayed events", eventsOk)
 
 -- Every deed reads a stat the snapshot actually carries.
-local snapFields = { kills = true, bossKills = true, bestWave = true, duelWins = true, raidClears = true, revives = true, trials = true, level = true, playtime = true, deaths = true }
+local snapFields = { kills = true, bossKills = true, bestWave = true, duelWins = true, raidClears = true, revives = true, trials = true, level = true, playtime = true, deaths = true, deerKills = true }
 local deedsOk = true
 for _, def in Deeds.List do
 	if not snapFields[def.kind] then

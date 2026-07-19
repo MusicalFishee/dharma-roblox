@@ -33,6 +33,7 @@ export type Snapshot = {
 	level: number,
 	playtimeSeconds: number,
 	deaths: number,
+	deerKills: number,
 }
 
 local function deed(def: DeedDef): DeedDef
@@ -50,6 +51,7 @@ Deeds.List = {
 	deed({ id = "ascendant", name = "The Ascendant", line = "Level attained", kind = "level", thresholds = { 10, 30, 60 } }),
 	deed({ id = "devoted", name = "The Devoted", line = "Hours at war", kind = "playtime", thresholds = { 3600, 18000, 72000 } }),
 	deed({ id = "undying_will", name = "The Undying Will", line = "Deaths endured (the ātman remembers)", kind = "deaths", thresholds = { 10, 50, 200 } }),
+	deed({ id = "golden_hunt", name = "The Golden Hunt", line = "Golden deer felled (he is counting too)", kind = "deerKills", thresholds = { 5, 25, 100 } }),
 } :: { DeedDef }
 
 -- The stat a deed reads from the snapshot.
@@ -74,6 +76,8 @@ function Deeds.statFor(kind: string, snap: Snapshot): number
 		return snap.playtimeSeconds
 	elseif kind == "deaths" then
 		return snap.deaths
+	elseif kind == "deerKills" then
+		return snap.deerKills
 	end
 	return 0
 end

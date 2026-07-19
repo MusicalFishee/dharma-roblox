@@ -25,6 +25,7 @@ local function snapOf(state: any): Deeds.Snapshot
 		level = Progression.resolve(state.totalXp).level,
 		playtimeSeconds = state.stats.playtimeSeconds,
 		deaths = state.stats.deaths,
+		deerKills = state.stats.deerKills,
 	}
 end
 
