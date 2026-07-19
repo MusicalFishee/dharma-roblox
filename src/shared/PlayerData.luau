@@ -5,7 +5,7 @@
 
 local PlayerData = {}
 
-PlayerData.Version = 23
+PlayerData.Version = 24
 
 -- Mirrors Relics.MaxOwned (dependency-free; a test guards against drift).
 local RELICS_MAX_OWNED = 40
@@ -102,6 +102,8 @@ export type Data = {
 	loadouts: { [string]: LoadoutSave }, -- saved gear sets keyed "1".."3"
 	gana: string, -- the declared warband banner ("" = marches alone)
 	yatra: number, -- pilgrimage milestones claimed (sequential count)
+	granthaKills: { [string]: number }, -- foes felled per family page
+	granthaClaims: { [string]: number }, -- bounties claimed per page (0..3)
 }
 
 export type WeeklySave = {
@@ -236,6 +238,8 @@ function PlayerData.default(): Data
 		loadouts = {},
 		gana = "",
 		yatra = 0,
+		granthaKills = {},
+		granthaClaims = {},
 	}
 end
 
@@ -352,6 +356,24 @@ function PlayerData.validate(raw: any): Data
 			d.gana = string.sub(raw.gana, 1, 20)
 		end
 		d.yatra = cleanCount(raw.yatra)
+		if type(raw.granthaKills) == "table" then
+			local kept = 0
+			for id, n in raw.granthaKills do
+				if type(id) == "string" and #id <= 40 and kept < 20 then
+					d.granthaKills[id] = cleanCount(n)
+					kept += 1
+				end
+			end
+		end
+		if type(raw.granthaClaims) == "table" then
+			local kept = 0
+			for id, tier in raw.granthaClaims do
+				if type(id) == "string" and #id <= 40 and kept < 20 then
+					d.granthaClaims[id] = math.clamp(cleanCount(tier), 0, 3)
+					kept += 1
+				end
+			end
+		end
 	end
 	return d
 end
@@ -381,7 +403,9 @@ function PlayerData.serialize(
 	kirti: { [string]: number }?,
 	loadouts: { [string]: LoadoutSave }?,
 	gana: string?,
-	yatra: number?
+	yatra: number?,
+	granthaKills: { [string]: number }?,
+	granthaClaims: { [string]: number }?
 ): Data
 	local questsCopy: { QuestSlot } = {}
 	if quests then
@@ -475,6 +499,32 @@ function PlayerData.serialize(
 		loadouts = cleanLoadouts(loadouts),
 		gana = if type(gana) == "string" then string.sub(gana, 1, 20) else "",
 		yatra = cleanCount(yatra),
+		granthaKills = (function(): { [string]: number }
+			local out: { [string]: number } = {}
+			if granthaKills then
+				local kept = 0
+				for id, n in granthaKills do
+					if type(id) == "string" and #id <= 40 and kept < 20 then
+						out[id] = cleanCount(n)
+						kept += 1
+					end
+				end
+			end
+			return out
+		end)(),
+		granthaClaims = (function(): { [string]: number }
+			local out: { [string]: number } = {}
+			if granthaClaims then
+				local kept = 0
+				for id, tier in granthaClaims do
+					if type(id) == "string" and #id <= 40 and kept < 20 then
+						out[id] = math.clamp(cleanCount(tier), 0, 3)
+						kept += 1
+					end
+				end
+			end
+			return out
+		end)(),
 		story = if type(story) == "number" and story == story and story > 0 then math.min(math.floor(story), 50) else 0,
 	}
 end

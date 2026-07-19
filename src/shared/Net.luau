@@ -58,6 +58,8 @@ local Net = {
 	YatraRequest = ensureRemote("YatraRequest"),
 
 	BhavaRequest = ensureRemote("BhavaRequest"),
+
+	GranthaRequest = ensureRemote("GranthaRequest"),
 	-- client -> server: story journal requests ({action="info"})
 	StoryRequest = ensureRemote("StoryRequest"),
 	-- client -> server: current guard state (blocking / dodging)

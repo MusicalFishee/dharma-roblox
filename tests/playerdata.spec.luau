@@ -240,6 +240,14 @@ check("long banners are cut in the vault", #PlayerData.validate({ gana = string.
 local road = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", nil, 0, nil, nil, false, nil, nil, nil, nil, nil, "Nandi", 6))
 check("banner and road round-trip", road.gana == "Nandi" and road.yatra == 6)
 
+-- The book of foes (v24).
+check("default book unread", next(PlayerData.default().granthaKills) == nil and next(PlayerData.default().granthaClaims) == nil)
+local gval = PlayerData.validate({ granthaKills = { naga = 42 }, granthaClaims = { naga = 99, hima = -2 } })
+check("kill ink validates", gval.granthaKills.naga == 42)
+check("claims clamp to the three pages", gval.granthaClaims.naga == 3 and gval.granthaClaims.hima == 0)
+local grt = PlayerData.validate(PlayerData.serialize(0, 0, nil, 0, nil, nil, 0, "", nil, nil, "", "", nil, 0, nil, nil, false, nil, nil, nil, nil, nil, "", 0, { lords = 7 }, { lords = 1 }))
+check("the book round-trips", grt.granthaKills.lords == 7 and grt.granthaClaims.lords == 1)
+
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then
 	print("FAILURES: " .. table.concat(failures, ", "))

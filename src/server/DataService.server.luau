@@ -79,6 +79,8 @@ local function loadPlayer(player: Player)
 	state.loadouts = data.loadouts
 	state.gana = data.gana
 	state.yatra = data.yatra
+	state.granthaKills = data.granthaKills
+	state.granthaClaims = data.granthaClaims
 	state.playtimeMark = os.clock() -- playtime accrues from the moment the save lands
 	state.bestWave = data.bestWave
 	state.quests = data.quests
@@ -169,10 +171,12 @@ local function savePlayer(player: Player)
 	local loadoutSave = state.loadouts
 	local ganaSave = state.gana
 	local yatraSave = state.yatra
+	local granthaKillsSave = state.granthaKills
+	local granthaClaimsSave = state.granthaClaims
 
 	retry(function()
 		return store:UpdateAsync(keyFor(player), function(old: any)
-			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave, quests, weapon, shards, enchant, stats, dailies, titleId, pathId, relics, story, mastery, streak, tutorialDone, vibhuti, vrataSave, weeklySave, kirtiSave, loadoutSave, ganaSave, yatraSave)
+			local payload = PlayerData.serialize(xp, gold, upgrades, bestWave, quests, weapon, shards, enchant, stats, dailies, titleId, pathId, relics, story, mastery, streak, tutorialDone, vibhuti, vrataSave, weeklySave, kirtiSave, loadoutSave, ganaSave, yatraSave, granthaKillsSave, granthaClaimsSave)
 			-- Never roll back XP or bestWave: keep whichever is higher.
 			-- (Gold is NOT anti-rollbacked — the shop legitimately spends it.)
 			if type(old) == "table" then

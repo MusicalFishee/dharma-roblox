@@ -32,6 +32,7 @@ local QuestService = require(script.Parent.QuestService)
 local RelicService = require(script.Parent.RelicService)
 local StoryService = require(script.Parent.StoryService)
 local SevaService = require(script.Parent.SevaService)
+local GranthaService = require(script.Parent.GranthaService)
 
 local ENEMY_TAG = "DharmaEnemy"
 
@@ -592,6 +593,7 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 
 				local kstate = PlayerRegistry.get(killer)
 				SevaService.onKill(archetype.isBoss == true)
+				GranthaService.onKill(killer, archetype.id)
 				-- Lifetime records.
 				kstate.stats.kills += 1
 				kstate.waveKills += 1

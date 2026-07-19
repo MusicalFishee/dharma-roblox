@@ -21,6 +21,7 @@ PanelDirectory.Entries = {
 	{ label = "Loadouts", gui = "DharmaLoadouts", remote = "LoadoutRequest", payloadAction = "info" },
 	{ label = "Yatra", gui = "DharmaYatra", remote = "YatraRequest", payloadAction = "info" },
 	{ label = "Gana", gui = "DharmaGana", remote = "GanaRequest", payloadAction = "info" },
+	{ label = "Grantha", gui = "DharmaGrantha", remote = "GranthaRequest", payloadAction = "info" },
 	{ label = "Stats", gui = "DharmaStats", remote = "StatsRequest", payloadAction = "info" },
 	{ label = "Kirti", gui = "DharmaKirti", remote = "KirtiRequest", payloadAction = "info" },
 	{ label = "Titles", gui = "DharmaTitles", remote = "TitleRequest", payloadAction = "list" },

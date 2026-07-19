@@ -661,6 +661,10 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("A new week — the world swears the %s", tostring(data.name)), Color3.fromRGB(200, 110, 255))
 		return
 	end
+	if data.granthaClaimed then
+		showToast(string.format("THE PAGE TURNS — %s: +%d gold", tostring(data.name), data.gold), YELLOW)
+		return
+	end
 	if data.vyuhaForms then
 		showToast("THE CHAKRAVYUHA FORMS — break the axis!", Color3.fromRGB(255, 140, 90))
 		return
