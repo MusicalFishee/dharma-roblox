@@ -15,13 +15,16 @@ export type Snapshot = {
 	duelWins: number,
 	raidClears: number, -- Ravanas felled
 	revives: number, -- brothers lifted from the dust
+	deerKills: number, -- golden deer felled (Maricha's ledger)
+	bladeMastery: number, -- highest Shastra-Vidya rank across all weapons (1..5)
+	loreTurned: number, -- Ripu-Grantha pages turned (0..27)
 }
 
 export type TitleDef = {
 	id: string,
 	name: string,
 	requirement: string, -- human-readable, shown while locked
-	kind: string, -- "wave" | "kills" | "bossKills" | "level" | "trials"
+	kind: string, -- wave|kills|bossKills|level|trials|duelWins|raidClears|revives|deerKills|bladeMastery|loreTurned
 	threshold: number,
 	color: { number }, -- {r,g,b} worn above the head and in chat
 }
@@ -45,6 +48,12 @@ Titles.List = {
 	title({ id = "world_cleaver", name = "World-Cleaver", requirement = "Slay 1000 demons", kind = "kills", threshold = 1000, color = { 240, 90, 220 } }),
 	title({ id = "thrice_blessed", name = "Thrice-Blessed", requirement = "Pass the Kirata Trial 3 times", kind = "trials", threshold = 3, color = { 255, 235, 160 } }),
 	title({ id = "avatar_of_age", name = "Avatar of the Age", requirement = "Clear wave 100", kind = "wave", threshold = 100, color = { 150, 120, 255 } }),
+	-- The newer roads leave their marks too.
+	title({ id = "golden_hunter", name = "The Golden Hunter", requirement = "Fell 25 golden deer", kind = "deerKills", threshold = 25, color = { 255, 210, 90 } }),
+	title({ id = "one_with_the_blade", name = "One With the Blade", requirement = "Master a weapon to Shastra-Ātma", kind = "bladeMastery", threshold = 5, color = { 220, 235, 250 } }),
+	title({ id = "grantha_keeper", name = "Keeper of the Grantha", requirement = "Turn 14 pages of the book of foes", kind = "loreTurned", threshold = 14, color = { 210, 180, 130 } }),
+	title({ id = "loremaster", name = "Loremaster of the Ripu-Grantha", requirement = "Turn every page of the book of foes", kind = "loreTurned", threshold = 27, color = { 255, 235, 160 } }),
+	title({ id = "threshold_walker", name = "Walker of the Threshold", requirement = "Stand at the door of Kailasa (wave 200)", kind = "wave", threshold = 200, color = { 190, 210, 255 } }),
 } :: { TitleDef }
 
 local byId: { [string]: TitleDef } = {}
@@ -74,6 +83,12 @@ local function statFor(kind: string, snap: Snapshot): number
 		return snap.raidClears
 	elseif kind == "revives" then
 		return snap.revives
+	elseif kind == "deerKills" then
+		return snap.deerKills
+	elseif kind == "bladeMastery" then
+		return snap.bladeMastery
+	elseif kind == "loreTurned" then
+		return snap.loreTurned
 	end
 	return 0
 end

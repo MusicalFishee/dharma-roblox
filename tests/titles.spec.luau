@@ -4,6 +4,7 @@
 
 local process = require("@lune/process")
 local Titles = require("../src/shared/Titles")
+local Grantha = require("../src/shared/Grantha")
 
 local passed, failed = 0, 0
 local failures: { string } = {}
@@ -19,7 +20,7 @@ local function check(name: string, cond: boolean)
 end
 
 local function snap(over: { [string]: number }): Titles.Snapshot
-	local s: Titles.Snapshot = { bestWave = 0, kills = 0, bossKills = 0, level = 1, trials = 0, duelWins = 0, raidClears = 0, revives = 0 }
+	local s: Titles.Snapshot = { bestWave = 0, kills = 0, bossKills = 0, level = 1, trials = 0, duelWins = 0, raidClears = 0, revives = 0, deerKills = 0, bladeMastery = 1, loreTurned = 0 }
 	for k, v in over do
 		(s :: any)[k] = v
 	end
@@ -32,7 +33,7 @@ print("Titles")
 check("there are titles worth chasing", #Titles.List >= 6)
 local ids: { [string]: boolean } = {}
 local unique, wellFormed = true, true
-local knownKinds = { wave = true, kills = true, bossKills = true, level = true, trials = true, duelWins = true, raidClears = true, revives = true }
+local knownKinds = { wave = true, kills = true, bossKills = true, level = true, trials = true, duelWins = true, raidClears = true, revives = true, deerKills = true, bladeMastery = true, loreTurned = true }
 for _, def in Titles.List do
 	if ids[def.id] then
 		unique = false
@@ -51,6 +52,14 @@ for _, def in Titles.List do
 	kindsSeen[def.kind] = true
 end
 check("every requirement kind is used", kindsSeen.wave == true and kindsSeen.kills == true and kindsSeen.bossKills == true and kindsSeen.level == true and kindsSeen.trials == true and kindsSeen.duelWins == true and kindsSeen.raidClears == true and kindsSeen.revives == true)
+check("the new roads award titles too", kindsSeen.deerKills == true and kindsSeen.bladeMastery == true and kindsSeen.loreTurned == true)
+
+-- The new titles unlock off their derived stats.
+check("the golden hunter counts deer", Titles.isUnlocked(Titles.get("golden_hunter") :: any, snap({ deerKills = 25 })) and not Titles.isUnlocked(Titles.get("golden_hunter") :: any, snap({ deerKills = 24 })))
+check("blade-soul needs the summit rank", Titles.isUnlocked(Titles.get("one_with_the_blade") :: any, snap({ bladeMastery = 5 })) and not Titles.isUnlocked(Titles.get("one_with_the_blade") :: any, snap({ bladeMastery = 4 })))
+check("the loremaster turns every page", Titles.isUnlocked(Titles.get("loremaster") :: any, snap({ loreTurned = Grantha.MaxTurned })) and not Titles.isUnlocked(Titles.get("loremaster") :: any, snap({ loreTurned = Grantha.MaxTurned - 1 })))
+-- If a family is ever added, this fails until the loremaster's bar is raised.
+check("the loremaster's bar tracks the whole book", (Titles.get("loremaster") :: any).threshold == Grantha.MaxTurned)
 
 -- Unlock math, one per kind.
 local dharmapala = Titles.get("dharmapala") :: Titles.TitleDef

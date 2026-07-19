@@ -9,6 +9,8 @@ local Players = game:GetService("Players")
 local Net = require(ReplicatedStorage.Shared.Net)
 local Titles = require(ReplicatedStorage.Shared.Titles)
 local Progression = require(ReplicatedStorage.Shared.Progression)
+local Shastra = require(ReplicatedStorage.Shared.Shastra)
+local Grantha = require(ReplicatedStorage.Shared.Grantha)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 
 local TAG_NAME = "DharmaTitleTag"
@@ -24,6 +26,15 @@ local function snapshotOf(player: Player): Titles.Snapshot
 		duelWins = state.stats.duelWins,
 		raidClears = state.stats.raidClears,
 		revives = state.stats.revives,
+		deerKills = state.stats.deerKills,
+		bladeMastery = (function(): number
+			local best = 1
+			for _, xp in state.shastra do
+				best = math.max(best, Shastra.rankFor(xp))
+			end
+			return best
+		end)(),
+		loreTurned = Grantha.totalTurned(state.granthaKills),
 	}
 end
 

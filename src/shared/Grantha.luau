@@ -134,6 +134,18 @@ for _, def in Grantha.Families do
 	end
 end
 
+-- Total pages turned across every family, from a per-family kill map.
+function Grantha.totalTurned(killsByFamily: { [string]: number }): number
+	local total = 0
+	for _, def in Grantha.Families do
+		total += Grantha.tierFor(def, killsByFamily[def.id] or 0)
+	end
+	return total
+end
+
+-- The most pages the book can hold (families x three tiers).
+Grantha.MaxTurned = #Grantha.Families * 3
+
 function Grantha.familyOf(archetypeId: string): string?
 	return familyByMember[archetypeId]
 end
