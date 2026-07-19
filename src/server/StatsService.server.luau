@@ -34,6 +34,7 @@ Net.StatsRequest.OnServerEvent:Connect(function(player: Player, data: any)
 		weaponMax = Weapons.MaxTier,
 		hasWeapon = Weapons.isValidId(state.weapon.id),
 		weaponRank = Shastra.Ranks[Shastra.rankFor(state.shastra[state.weapon.id] or 0)].name,
+		shastra = state.shastra,
 		mantraName = if mantra then mantra.name else nil,
 		mantraRarity = if mantra then mantra.rarity else nil,
 		kills = state.stats.kills,

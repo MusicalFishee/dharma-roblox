@@ -661,6 +661,10 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("A new week — the world swears the %s", tostring(data.name)), Color3.fromRGB(200, 110, 255))
 		return
 	end
+	if data.welcomeLine then
+		showToast(tostring(data.welcomeLine), Color3.fromRGB(230, 225, 210))
+		return
+	end
 	if data.ghatTribute then
 		showToast(string.format("TRIBUTE PAID — %s's fire warms your own", tostring(data.name)), Color3.fromRGB(255, 190, 110))
 		return

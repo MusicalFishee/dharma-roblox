@@ -77,6 +77,30 @@ SoundDefs.AnimSounds = {
 } :: { [string]: string }
 
 -- HUD feedback (CombatFeedback outcome / flags) -> sfx name. 2D, local.
+-- Every epic moment has a voice: CombatFeedback KEY -> Sfx name. The
+-- controller plays these generically — new cues are one line HERE, never a
+-- new branch there. The soundcues.spec holds the "every epic speaks" law.
+SoundDefs.EventCues = {
+	vairiStalks = "bossSpawn",
+	vairiFelled = "bossDefeated",
+	rahuEclipse = "bossSpawn",
+	velFalls = "finisherLand",
+	vyuhaForms = "waveStart",
+	vyuhaCollapse = "thunderCrack",
+	moonAnchor = "thunderCrack",
+	ghatTribute = "healSurge",
+	tirthaBlessed = "amritPickup",
+	shastraRank = "levelUp",
+	astraCrowned = "questDone",
+	bhavaSet = "guardUp",
+	sevaComplete = "waveClear",
+	yatraClaimed = "goldPickup",
+	granthaClaimed = "goldPickup",
+	kirtiClaimed = "goldPickup",
+	loadoutApplied = "shopBuy",
+	perfectParry = "parry",
+} :: { [string]: string }
+
 SoundDefs.FeedbackSounds = {
 	Parry = "parry",
 	Block = "blocked",

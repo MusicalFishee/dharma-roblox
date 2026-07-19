@@ -10,6 +10,7 @@ local UserInputService = game:GetService("UserInputService")
 
 local Net = require(ReplicatedStorage.Shared.Net)
 local Weapons = require(ReplicatedStorage.Shared.Weapons)
+local Shastra = require(ReplicatedStorage.Shared.Shastra)
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -116,12 +117,20 @@ for i, def in Weapons.List do
 		end
 	end)
 
-	rows[def.id] = { button = button, name = name, sig = sigLine }
+	rows[def.id] = { button = button, name = name, sig = sigLine, sigBase = sigLine.Text }
 end
+
+local shastraXp: { [string]: number } = {}
 
 local function refresh()
 	for _, def in Weapons.List do
 		local row = rows[def.id]
+		local xp = shastraXp[def.id] or 0
+		local standing = Shastra.resolve(xp)
+		local rankBit = if standing.nextAt
+			then string.format("%s (%d / %d)", standing.def.name, xp, standing.nextAt)
+			else standing.def.name .. " ✦"
+		row.sig.Text = string.format("%s   ·   %s", (row :: any).sigBase, rankBit)
 		if def.id == currentWeaponId then
 			row.button.Text = "WIELDING"
 			row.button.BackgroundColor3 = Color3.fromRGB(80, 70, 95)
@@ -147,6 +156,9 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 	end
 	if data.statsPage then
 		currentWeaponId = tostring(data.weaponId or currentWeaponId)
+		if typeof(data.shastra) == "table" then
+			shastraXp = data.shastra
+		end
 		snap = {
 			kills = tonumber(data.kills) or 0,
 			bossKills = tonumber(data.bossKills) or 0,

@@ -109,6 +109,14 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		return
 	end
 
+	-- Event cues: any keyed epic moment speaks through the data-driven map.
+	for key, sfxName in SoundDefs.EventCues do
+		if data[key] ~= nil then
+			play(sfxName)
+			break
+		end
+	end
+
 	-- Incoming-defense outcomes.
 	if data.incoming and data.outcome then
 		local sfxName = SoundDefs.FeedbackSounds[tostring(data.outcome)]

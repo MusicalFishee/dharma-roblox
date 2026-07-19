@@ -13,6 +13,7 @@ local Streak = require(ReplicatedStorage.Shared.Streak)
 local Loot = require(ReplicatedStorage.Shared.Loot)
 local Net = require(ReplicatedStorage.Shared.Net)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
+local WelcomeService = require(script.Parent.WelcomeService)
 local ProgressionService = require(script.Parent.ProgressionService)
 local QuestService = require(script.Parent.QuestService)
 local StoryService = require(script.Parent.StoryService)
@@ -89,6 +90,9 @@ local function loadPlayer(player: Player)
 	state.dailies = data.dailies
 	state.dataLoaded = ok
 	state.dataReady = true -- load resolved (success or fail); the weapon hook may proceed
+	task.delay(6, function()
+		WelcomeService.greet(player) -- the Dvarapala speaks once the HUD has settled
+	end)
 
 	if not ok then
 		warn("[Dharma] Load failed for " .. player.Name .. " — will NOT save (protecting progress).")
