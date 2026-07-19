@@ -25,6 +25,7 @@ require(script.Parent.SevaService) -- activates the shared communal stone
 require(script.Parent.TournamentService) -- activates four-name duel kumbhas
 require(script.Parent.BhavaService) -- activates the stance wheel
 require(script.Parent.GranthaService) -- inks the book of foes (;)
+require(script.Parent.HeraldService) -- the Charana cries legendary deeds
 require(script.Parent.StoryService) -- activates Agastya's journal remote
 
 print(string.format(

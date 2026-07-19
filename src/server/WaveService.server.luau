@@ -18,6 +18,7 @@ local Ravana = require(ReplicatedStorage.Shared.Ravana)
 local Tarakasura = require(ReplicatedStorage.Shared.Tarakasura)
 local Chakravyuha = require(ReplicatedStorage.Shared.Chakravyuha)
 local BossLore = require(ReplicatedStorage.Shared.BossLore)
+local HeraldService = require(script.Parent.HeraldService)
 local Rahu = require(ReplicatedStorage.Shared.Rahu)
 local TirthaService = require(script.Parent.TirthaService)
 local VairiService = require(script.Parent.VairiService)
@@ -139,7 +140,11 @@ local function onWaveClear(wave: number)
 			parries = state.waveParries,
 		})
 		-- Everyone standing when the wave falls records the depth (and the week's).
+		local wasShallower = state.bestWave < wave
 		state.bestWave = math.max(state.bestWave, wave)
+		if wave >= 200 and wasShallower then
+			HeraldService.proclaim(p, "kailasa")
+		end
 		local nowWeek = Vrata.weekStamp(os.time())
 		if state.weeklyBest.stamp ~= nowWeek then
 			state.weeklyBest = { stamp = nowWeek, wave = 0 }

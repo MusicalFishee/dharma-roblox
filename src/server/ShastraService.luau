@@ -8,6 +8,7 @@ local Net = require(ReplicatedStorage.Shared.Net)
 local Shastra = require(ReplicatedStorage.Shared.Shastra)
 local Weapons = require(ReplicatedStorage.Shared.Weapons)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
+local HeraldService = require(script.Parent.HeraldService)
 
 local ShastraService = {}
 
@@ -20,6 +21,18 @@ function ShastraService.feed(player: Player, amount: number)
 	local xp = (state.shastra[state.weapon.id] or 0) + amount
 	state.shastra[state.weapon.id] = xp
 	local after = Shastra.rankFor(xp)
+	if after >= #Shastra.Ranks and before < #Shastra.Ranks then
+		-- This blade just reached the summit; herald the third that does.
+		local mastered = 0
+		for _, wx in state.shastra do
+			if Shastra.rankFor(wx) >= #Shastra.Ranks then
+				mastered += 1
+			end
+		end
+		if mastered >= 3 then
+			HeraldService.proclaim(player, "grandmaster")
+		end
+	end
 	if after > before then
 		local def = Shastra.Ranks[after]
 		local weapon = Weapons.get(state.weapon.id)

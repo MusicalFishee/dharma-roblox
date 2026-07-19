@@ -11,6 +11,7 @@ local Titles = require(ReplicatedStorage.Shared.Titles)
 local Progression = require(ReplicatedStorage.Shared.Progression)
 local Shastra = require(ReplicatedStorage.Shared.Shastra)
 local Grantha = require(ReplicatedStorage.Shared.Grantha)
+local HeraldService = require(script.Parent.HeraldService)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
 
 local TAG_NAME = "DharmaTitleTag"
@@ -96,6 +97,11 @@ end
 local function fullList(player: Player): { [string]: any }
 	local snap = snapshotOf(player)
 	local state = PlayerRegistry.get(player)
+	-- The instant a warrior first qualifies for Moksha, the whole server hears.
+	local mokshaDef = Titles.get("moksha")
+	if mokshaDef and Titles.isUnlocked(mokshaDef, snap) then
+		HeraldService.proclaim(player, "moksha")
+	end
 	local earned, total = Titles.earnedCount(snap)
 	local view = {}
 	for _, def in Titles.List do

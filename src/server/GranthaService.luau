@@ -9,6 +9,7 @@ local Net = require(ReplicatedStorage.Shared.Net)
 local Grantha = require(ReplicatedStorage.Shared.Grantha)
 local Loot = require(ReplicatedStorage.Shared.Loot)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
+local HeraldService = require(script.Parent.HeraldService)
 
 local GranthaService = {}
 
@@ -62,6 +63,9 @@ Net.GranthaRequest.OnServerEvent:Connect(function(player: Player, data: any)
 		state.gold = Loot.clampGold(state.gold + owed.gold)
 		Net.CombatFeedback:FireClient(player, { goldUpdate = true, gained = owed.gold, gold = state.gold })
 		Net.CombatFeedback:FireClient(player, { granthaClaimed = true, name = def.name, gold = owed.gold, tiers = owed.tiers })
+		if Grantha.totalTurned(state.granthaKills) >= Grantha.MaxTurned then
+			HeraldService.proclaim(player, "loremaster")
+		end
 		snapshot(player)
 	end
 end)

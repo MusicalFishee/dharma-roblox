@@ -11,6 +11,7 @@ local Vairi = require(ReplicatedStorage.Shared.Vairi)
 local EnemyTypes = require(ReplicatedStorage.Shared.EnemyTypes)
 local Loot = require(ReplicatedStorage.Shared.Loot)
 local PlayerRegistry = require(script.Parent.PlayerRegistry)
+local HeraldService = require(script.Parent.HeraldService)
 
 local VairiService = {}
 
@@ -76,6 +77,9 @@ function VairiService.stalk(wave: number)
 				Net.CombatFeedback:FireClient(hunted, { goldUpdate = true, gained = bounty.gold, gold = hstate.gold })
 				Net.CombatFeedback:FireClient(hunted, { shardUpdate = true, gained = bounty.shards, shards = hstate.shards })
 				Net.CombatFeedback:FireClient(hunted, { vairiFelled = true, gold = bounty.gold, shards = bounty.shards })
+				if count >= Vairi.Config.MaxCount then
+					HeraldService.proclaim(hunted, "grudge") -- a grudge fed to its monstrous ceiling, felled
+				end
 			elseif hunted.Parent then
 				Net.CombatFeedback:FireClient(hunted, { vairiStolen = true })
 			end

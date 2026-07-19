@@ -182,6 +182,41 @@ local function showToast(text: string, color: Color3)
 	TweenService:Create(toast, TweenInfo.new(0.9, Enum.EasingStyle.Quad), { TextTransparency = 1 }):Play()
 end
 
+-- The Charana's herald: a grand server-wide banner near the top, held long
+-- enough that everyone looks up. Grander and slower than an ordinary toast.
+local heraldBar = Instance.new("TextLabel")
+heraldBar.Size = UDim2.fromOffset(880, 40)
+heraldBar.AnchorPoint = Vector2.new(0.5, 0)
+heraldBar.Position = UDim2.new(0.5, 0, 0, 96)
+heraldBar.BackgroundColor3 = Color3.fromRGB(14, 12, 18)
+heraldBar.BackgroundTransparency = 1
+heraldBar.Font = Enum.Font.GothamBlack
+heraldBar.TextSize = 22
+heraldBar.TextStrokeTransparency = 1
+heraldBar.TextTransparency = 1
+heraldBar.Text = ""
+heraldBar.ZIndex = 40
+heraldBar.Parent = screenGui
+local heraldCorner = Instance.new("UICorner")
+heraldCorner.CornerRadius = UDim.new(0, 10)
+heraldCorner.Parent = heraldBar
+
+local heraldToken = 0
+local function showHerald(text: string, color: Color3)
+	heraldToken += 1
+	local token = heraldToken
+	heraldBar.Text = "⟡  " .. text .. "  ⟡"
+	heraldBar.TextColor3 = color
+	heraldBar.TextTransparency = 0
+	heraldBar.TextStrokeTransparency = 0.3
+	heraldBar.BackgroundTransparency = 0.35
+	task.delay(5, function()
+		if token == heraldToken then
+			TweenService:Create(heraldBar, TweenInfo.new(1.2), { TextTransparency = 1, BackgroundTransparency = 1, TextStrokeTransparency = 1 }):Play()
+		end
+	end)
+end
+
 -- Boss speech: scripted lines delivered cold, held long enough to read.
 local speechSpeaker = Instance.new("TextLabel")
 speechSpeaker.Size = UDim2.fromOffset(700, 22)
@@ -659,6 +694,10 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 	end
 	if data.vrataReset then
 		showToast(string.format("A new week — the world swears the %s", tostring(data.name)), Color3.fromRGB(200, 110, 255))
+		return
+	end
+	if data.herald then
+		showHerald(tostring(data.text), Color3.fromRGB(tonumber(data.r) or 255, tonumber(data.g) or 255, tonumber(data.b) or 255))
 		return
 	end
 	if data.welcomeLine then

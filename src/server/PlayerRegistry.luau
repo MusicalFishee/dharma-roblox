@@ -63,6 +63,7 @@ export type PlayerState = {
 	viraLastAt: number,
 	-- This wave's conduct ledger (reset every wave start; graded on clear).
 	waveKills: number,
+	heralded: { [string]: boolean }, -- deeds the Charana has already cried this session
 	waveParries: number,
 	waveTimesHit: number,
 	waveDowns: number,
@@ -144,6 +145,7 @@ function PlayerRegistry.get(player: Player): PlayerState
 		viraCount = 0,
 		viraLastAt = 0,
 		waveKills = 0,
+		heralded = {},
 		waveParries = 0,
 		waveTimesHit = 0,
 		waveDowns = 0,
