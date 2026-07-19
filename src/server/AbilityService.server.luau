@@ -614,6 +614,9 @@ Net.AbilityRequest.OnServerEvent:Connect(function(player: Player, slotArg: any)
 					Net.CombatFeedback:FireClient(player, { siddhiUnlocked = true, name = unlock.name, line = unlock.line })
 				end
 			end
+			if before < Abilities.Crown.MasteryLevel and after >= Abilities.Crown.MasteryLevel then
+				Net.CombatFeedback:FireClient(player, { astraCrowned = true, pathName = Paths.Defs[state.path].name })
+			end
 		end
 	end
 
@@ -626,6 +629,15 @@ Net.AbilityRequest.OnServerEvent:Connect(function(player: Player, slotArg: any)
 	local mult = damageMultFor(state) * eff.damageMult * chargeMult
 	if def.kind == "projectile" then
 		castProjectile(player, character, root, def, mult, eff.pierce[abilityId] or 0, eff.fork[abilityId] or 0)
+		-- The Astra Crown: a mastered path's bolt leaves an echo.
+		if masteryLevel >= Abilities.Crown.MasteryLevel then
+			task.delay(Abilities.Crown.EchoDelaySeconds, function()
+				local c2, r2, h2 = getCharacterParts(player)
+				if c2 and r2 and h2 and h2.Health > 0 then
+					castProjectile(player, c2, r2, def, mult * Abilities.Crown.EchoDamageFraction, 0, 0)
+				end
+			end)
+		end
 	elseif def.kind == "dash" then
 		castDash(player, root, hum, def)
 	elseif def.kind == "heal" then

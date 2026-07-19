@@ -433,6 +433,16 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 	model.Parent = workspace
 	CollectionService:AddTag(model, ENEMY_TAG)
 
+	-- Rahu's gilded burn dark crimson-gold: terror and payday in one glow.
+	if (archetype :: any).rahuGilded then
+		local shadow = Instance.new("Highlight")
+		shadow.FillColor = Color3.fromRGB(180, 60, 30)
+		shadow.FillTransparency = 0.7
+		shadow.OutlineColor = Color3.fromRGB(255, 160, 60)
+		shadow.OutlineTransparency = 0.15
+		shadow.Parent = model
+	end
+
 	-- Elites burn gold so you can spot the threat (and the payday) at a glance.
 	if archetype.isElite then
 		local glow = Instance.new("Highlight")

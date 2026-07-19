@@ -3,6 +3,7 @@
 
 local process = require("@lune/process")
 local Abilities = require("../src/shared/Abilities")
+local Siddhis = require("../src/shared/Siddhis")
 
 local passed, failed = 0, 0
 local failures: { string } = {}
@@ -55,6 +56,11 @@ check("holding past full changes nothing", Abilities.chargeMult(99) == C.MaxMult
 check("tiers: tap, charged, overcharged", Abilities.chargeTier(0.1) == 0 and Abilities.chargeTier(C.MaxSeconds / 2) == 1 and Abilities.chargeTier(C.MaxSeconds) == 2)
 check("charge speaks only to damage", Abilities.isChargeable("projectile") and Abilities.isChargeable("nova") and Abilities.isChargeable("smite"))
 check("dashes, heals, wards refuse the draw", not Abilities.isChargeable("dash") and not Abilities.isChargeable("heal") and not Abilities.isChargeable("ward"))
+
+-- The Astra Crown: earned at the summit, echoing faintly, never free.
+check("the crown sits at Siddhis' own ceiling", Abilities.Crown.MasteryLevel == Siddhis.MaxLevel)
+check("the echo is a whisper, not a second cast", Abilities.Crown.EchoDamageFraction > 0 and Abilities.Crown.EchoDamageFraction <= 0.5)
+check("the echo trails by a breath", Abilities.Crown.EchoDelaySeconds > 0 and Abilities.Crown.EchoDelaySeconds <= 1)
 
 print(string.format("\n%d passed, %d failed", passed, failed))
 if failed > 0 then

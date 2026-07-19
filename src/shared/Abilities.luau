@@ -107,6 +107,14 @@ function Abilities.isChargeable(kind: string): boolean
 	return kind == "projectile" or kind == "nova" or kind == "smite"
 end
 
+-- The Astra Crown: a path mastered to the summit crowns its bolt — every
+-- cast leaves a fainter ECHO a breath later. Earned at Siddhis' own ceiling.
+Abilities.Crown = {
+	MasteryLevel = 10,
+	EchoDamageFraction = 0.25,
+	EchoDelaySeconds = 0.25,
+}
+
 Abilities.Catalog = {
 	-- Projectiles (Z).
 	agni_astra = { id = "agni_astra", name = "Agni Astra", kind = "projectile", line = "A searing fire-bolt.", tejasCost = 35, cooldown = 0.8, power = 30, speed = 90, flame = true, color = { 255, 120, 30 } },

@@ -3,6 +3,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
 
 local Net = require(ReplicatedStorage.Shared.Net)
 local Waves = require(ReplicatedStorage.Shared.Waves)
@@ -16,6 +17,8 @@ local TrialBoss = require(script.Parent.TrialBoss)
 local Ravana = require(ReplicatedStorage.Shared.Ravana)
 local Tarakasura = require(ReplicatedStorage.Shared.Tarakasura)
 local Chakravyuha = require(ReplicatedStorage.Shared.Chakravyuha)
+local Rahu = require(ReplicatedStorage.Shared.Rahu)
+local TirthaService = require(script.Parent.TirthaService)
 local RavanaRaid = require(script.Parent.RavanaRaid)
 local EnemyTypes = require(ReplicatedStorage.Shared.EnemyTypes)
 local Bosses = require(ReplicatedStorage.Shared.Bosses)
@@ -39,6 +42,7 @@ local StoryService = require(script.Parent.StoryService)
 local ARENA_RADIUS = 45
 
 local currentWave = 0
+local eclipseWave = -1 -- the wave Rahu currently shadows (-1 = the sun stands)
 local remaining = 0
 local started = false
 local checkpoint = 0 -- deepest boss wave banked; a wiped run reforms just past it
@@ -113,6 +117,10 @@ local function onWaveClear(wave: number)
 		alivePlayers[p] = true
 	end
 	local bonus = Waves.bonusXp(wave)
+	if wave == eclipseWave then
+		bonus *= Rahu.Config.RewardMult -- the shadow pays for the terror
+		eclipseWave = -1
+	end
 	for _, p in Players:GetPlayers() do
 		if isMeditating(p) then
 			continue -- the grove pays the grove's wage
@@ -139,6 +147,7 @@ local function onWaveClear(wave: number)
 		StoryService.onEvent(p) -- a deeper wave may turn an Adhyaya's page
 	end
 	HazardService.calm()
+	TirthaService.sink()
 	announce({ waveState = "clear", wave = wave, bonusXp = bonus, intermission = Waves.Intermission })
 
 	-- A slain boss leaves boons on its corpse (the god's trial blesses instead).
@@ -301,8 +310,9 @@ function startWave(wave: number)
 		announce({ oathBegins = true, name = oathDef.name })
 	end
 
-	-- An ordinary wave: the realm itself joins the fight.
+	-- An ordinary wave: the realm itself joins the fight — and keeps its ford.
 	HazardService.rage(wave)
+	TirthaService.raise(wave)
 
 	local ids = Waves.compose(wave, EnemyTypes.List :: any)
 	remaining = #ids
@@ -313,6 +323,16 @@ function startWave(wave: number)
 	-- The Chakravyuha: on the wheel's nights the horde arrives COILED around
 	-- a Vyuha-Pati. Ranks fight with borrowed fury until the axis breaks.
 	local isVyuha = Chakravyuha.isVyuhaWave(wave) and total >= 4
+	-- Rahu's shadow: rare, never on the wheel's nights. The zone's next
+	-- breath (applyForWave at the following wave) restores the sky.
+	local isEclipse = not isVyuha and Rahu.rolls(wave, math.random())
+	if isEclipse then
+		eclipseWave = wave
+		announce({ rahuEclipse = true })
+		Lighting.ClockTime = 0
+		Lighting.Ambient = Color3.fromRGB(40, 20, 30)
+		Lighting.FogColor = Color3.fromRGB(25, 8, 16)
+	end
 	local spots = if isVyuha then Chakravyuha.spiralPositions(total, Chakravyuha.Config.SpiralTurns, ARENA_RADIUS - 5) else nil
 	if isVyuha then
 		announce({ vyuhaForms = true, wave = wave })
@@ -333,6 +353,9 @@ function startWave(wave: number)
 					pos = Vector3.new(s.x, 6, s.z)
 				end
 			else
+				if isEclipse then
+					archetype = Rahu.gild(archetype)
+				end
 				local angle = (2 * math.pi * i) / total + math.random() * 0.4
 				pos = Vector3.new(math.cos(angle) * ARENA_RADIUS, 6, math.sin(angle) * ARENA_RADIUS)
 			end
@@ -384,6 +407,8 @@ function failRun()
 		alivePlayers[p] = true
 	end
 	HazardService.calm()
+	TirthaService.sink()
+	eclipseWave = -1 -- a wipe returns the sun; the re-fought wave is not shadowed
 	EnemyService.clearAll()
 	TrialBoss.clear() -- a wiped trial dissolves too (no blessing, no reward)
 	RavanaRaid.clear() -- and the king keeps his heads

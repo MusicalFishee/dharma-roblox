@@ -661,6 +661,18 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("A new week — the world swears the %s", tostring(data.name)), Color3.fromRGB(200, 110, 255))
 		return
 	end
+	if data.rahuEclipse then
+		showToast("RAHU SWALLOWS THE SUN — the horde is gilded; ALL SPOILS DOUBLED", Color3.fromRGB(255, 120, 50))
+		return
+	end
+	if data.tirthaBlessed then
+		showToast(string.format("TIRTHA — %s: %s", tostring(data.name), tostring(data.line)), Color3.fromRGB(255, 245, 210))
+		return
+	end
+	if data.astraCrowned then
+		showToast(string.format("THE ASTRA WEARS ITS CROWN — %s: every bolt leaves an echo", tostring(data.pathName)), Color3.fromRGB(255, 220, 120))
+		return
+	end
 	if data.shastraRank then
 		showToast(string.format("SHASTRA-VIDYA — the %s knows your hands: %s. %s", tostring(data.weaponName), tostring(data.rankName), tostring(data.line)), SAFFRON)
 		return
