@@ -20,7 +20,7 @@ local function check(name: string, cond: boolean)
 end
 
 local function snap(over: { [string]: number }): Titles.Snapshot
-	local s: Titles.Snapshot = { bestWave = 0, kills = 0, bossKills = 0, level = 1, trials = 0, duelWins = 0, raidClears = 0, revives = 0, deerKills = 0, bladeMastery = 1, loreTurned = 0 }
+	local s: Titles.Snapshot = { bestWave = 0, kills = 0, bossKills = 0, level = 1, trials = 0, duelWins = 0, raidClears = 0, revives = 0, deerKills = 0, bladeMastery = 1, loreTurned = 0, playtimeSeconds = 0, deaths = 0, bladesMastered = 0 }
 	for k, v in over do
 		(s :: any)[k] = v
 	end
@@ -33,7 +33,7 @@ print("Titles")
 check("there are titles worth chasing", #Titles.List >= 6)
 local ids: { [string]: boolean } = {}
 local unique, wellFormed = true, true
-local knownKinds = { wave = true, kills = true, bossKills = true, level = true, trials = true, duelWins = true, raidClears = true, revives = true, deerKills = true, bladeMastery = true, loreTurned = true }
+local knownKinds = { wave = true, kills = true, bossKills = true, level = true, trials = true, duelWins = true, raidClears = true, revives = true, deerKills = true, bladeMastery = true, loreTurned = true, playtime = true, deaths = true, bladesMastered = true, capstone = true }
 for _, def in Titles.List do
 	if ids[def.id] then
 		unique = false
@@ -60,6 +60,44 @@ check("blade-soul needs the summit rank", Titles.isUnlocked(Titles.get("one_with
 check("the loremaster turns every page", Titles.isUnlocked(Titles.get("loremaster") :: any, snap({ loreTurned = Grantha.MaxTurned })) and not Titles.isUnlocked(Titles.get("loremaster") :: any, snap({ loreTurned = Grantha.MaxTurned - 1 })))
 -- If a family is ever added, this fails until the loremaster's bar is raised.
 check("the loremaster's bar tracks the whole book", (Titles.get("loremaster") :: any).threshold == Grantha.MaxTurned)
+
+-- THE CAPSTONE LAW: Purna is the sum of every other title, and it must grow
+-- on its own. This proves it reacts to each title individually — so any
+-- title added anywhere is automatically one more thing the capstone demands,
+-- and this test extends to cover it with zero edits.
+local kindField = { wave = "bestWave", kills = "kills", bossKills = "bossKills", level = "level", trials = "trials", duelWins = "duelWins", raidClears = "raidClears", revives = "revives", deerKills = "deerKills", bladeMastery = "bladeMastery", loreTurned = "loreTurned", playtime = "playtimeSeconds", deaths = "deaths", bladesMastered = "bladesMastered" }
+local function maxedSnap(): Titles.Snapshot
+	return snap({ bestWave = 9999, kills = 9999999, bossKills = 9999, level = 9999, trials = 9999, duelWins = 9999, raidClears = 9999, revives = 9999, deerKills = 9999, bladeMastery = 99, loreTurned = 9999, playtimeSeconds = 99999999, deaths = 9999999, bladesMastered = 999 })
+end
+local purna = Titles.get("purna") :: any
+check("Purna exists and is the capstone", purna ~= nil and purna.kind == "capstone")
+check("the whole is earned when every part is", Titles.isUnlocked(purna, maxedSnap()))
+check("a fresh warrior has not earned the whole", not Titles.isUnlocked(purna, snap({})))
+
+local reactsToAll = true
+local coveredKinds = true
+for _, def in Titles.List do
+	if def.kind == "capstone" then
+		continue
+	end
+	local field = kindField[def.kind]
+	if not field then
+		coveredKinds = false
+		continue
+	end
+	local s = maxedSnap();
+	(s :: any)[field] = def.threshold - 1
+	if Titles.isUnlocked(purna, s) then
+		reactsToAll = false
+		print("    !! the capstone ignores: " .. def.id)
+	end
+end
+check("the capstone knows every field its titles read", coveredKinds)
+check("the capstone reacts to every single title (self-updating)", reactsToAll)
+
+local earned, total = Titles.earnedCount(maxedSnap())
+check("earnedCount sees all parts", earned == total and total == #Titles.List - 1)
+check("earnedCount starts near zero", (select(1, Titles.earnedCount(snap({})))) == 0)
 
 -- Unlock math, one per kind.
 local dharmapala = Titles.get("dharmapala") :: Titles.TitleDef

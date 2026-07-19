@@ -35,6 +35,17 @@ local function snapshotOf(player: Player): Titles.Snapshot
 			return best
 		end)(),
 		loreTurned = Grantha.totalTurned(state.granthaKills),
+		playtimeSeconds = state.stats.playtimeSeconds + math.max(0, math.floor(os.clock() - state.playtimeMark)),
+		deaths = state.stats.deaths,
+		bladesMastered = (function(): number
+			local n = 0
+			for _, xp in state.shastra do
+				if Shastra.rankFor(xp) >= #Shastra.Ranks then
+					n += 1
+				end
+			end
+			return n
+		end)(),
 	}
 end
 
@@ -85,12 +96,18 @@ end
 local function fullList(player: Player): { [string]: any }
 	local snap = snapshotOf(player)
 	local state = PlayerRegistry.get(player)
+	local earned, total = Titles.earnedCount(snap)
 	local view = {}
 	for _, def in Titles.List do
+		-- The capstone wears its progress: "Earn every other title (18 / 21)".
+		local requirement = def.requirement
+		if def.kind == "capstone" then
+			requirement = string.format("%s  (%d / %d)", def.requirement, earned, total)
+		end
 		table.insert(view, {
 			id = def.id,
 			name = def.name,
-			requirement = def.requirement,
+			requirement = requirement,
 			color = def.color,
 			unlocked = Titles.isUnlocked(def, snap),
 			equipped = state.title == def.id,

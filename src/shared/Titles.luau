@@ -18,6 +18,9 @@ export type Snapshot = {
 	deerKills: number, -- golden deer felled (Maricha's ledger)
 	bladeMastery: number, -- highest Shastra-Vidya rank across all weapons (1..5)
 	loreTurned: number, -- Ripu-Grantha pages turned (0..27)
+	playtimeSeconds: number, -- time at war
+	deaths: number, -- deaths endured (the atman remembers)
+	bladesMastered: number, -- weapons carried to the summit rank
 }
 
 export type TitleDef = {
@@ -54,6 +57,12 @@ Titles.List = {
 	title({ id = "grantha_keeper", name = "Keeper of the Grantha", requirement = "Turn 14 pages of the book of foes", kind = "loreTurned", threshold = 14, color = { 210, 180, 130 } }),
 	title({ id = "loremaster", name = "Loremaster of the Ripu-Grantha", requirement = "Turn every page of the book of foes", kind = "loreTurned", threshold = 27, color = { 255, 235, 160 } }),
 	title({ id = "threshold_walker", name = "Walker of the Threshold", requirement = "Stand at the door of Kailasa (wave 200)", kind = "wave", threshold = 200, color = { 190, 210, 255 } }),
+	title({ id = "devoted", name = "The Devoted", requirement = "Five hours at war", kind = "playtime", threshold = 18000, color = { 255, 170, 80 } }),
+	title({ id = "undying", name = "The Undying", requirement = "Endure 100 deaths (the atman remembers)", kind = "deaths", threshold = 100, color = { 180, 130, 200 } }),
+	title({ id = "grandmaster", name = "Grandmaster of Arms", requirement = "Master three weapons to the summit", kind = "bladesMastered", threshold = 3, color = { 235, 240, 250 } }),
+	-- The capstone: not a stat, but the SUM of every other title. It grows on
+	-- its own — a new title added anywhere below is one more thing it demands.
+	title({ id = "purna", name = "Pūrṇa, the Whole", requirement = "Earn every other title Dharma can grant", kind = "capstone", threshold = 1, color = { 255, 245, 200 } }),
 } :: { TitleDef }
 
 local byId: { [string]: TitleDef } = {}
@@ -89,12 +98,44 @@ local function statFor(kind: string, snap: Snapshot): number
 		return snap.bladeMastery
 	elseif kind == "loreTurned" then
 		return snap.loreTurned
+	elseif kind == "playtime" then
+		return snap.playtimeSeconds
+	elseif kind == "deaths" then
+		return snap.deaths
+	elseif kind == "bladesMastered" then
+		return snap.bladesMastered
 	end
 	return 0
 end
 
 function Titles.isUnlocked(def: TitleDef, snap: Snapshot): boolean
+	-- The capstone is earned only when every other title is. Iterating the
+	-- live list is what makes it self-updating: a new title below is
+	-- automatically one more requirement here.
+	if def.kind == "capstone" then
+		for _, other in Titles.List do
+			if other.kind ~= "capstone" and not Titles.isUnlocked(other, snap) then
+				return false
+			end
+		end
+		return true
+	end
 	return statFor(def.kind, snap) >= def.threshold
+end
+
+-- How many of the (non-capstone) titles this snapshot has earned, and the
+-- total available — for the capstone's live "n / total" progress line.
+function Titles.earnedCount(snap: Snapshot): (number, number)
+	local earned, total = 0, 0
+	for _, def in Titles.List do
+		if def.kind ~= "capstone" then
+			total += 1
+			if statFor(def.kind, snap) >= def.threshold then
+				earned += 1
+			end
+		end
+	end
+	return earned, total
 end
 
 -- Equip validation: "" (bare head) is always allowed; otherwise the title must
