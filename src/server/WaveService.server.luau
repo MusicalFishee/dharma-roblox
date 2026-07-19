@@ -15,6 +15,7 @@ local Trial = require(ReplicatedStorage.Shared.Trial)
 local TrialBoss = require(script.Parent.TrialBoss)
 local Ravana = require(ReplicatedStorage.Shared.Ravana)
 local Tarakasura = require(ReplicatedStorage.Shared.Tarakasura)
+local Chakravyuha = require(ReplicatedStorage.Shared.Chakravyuha)
 local RavanaRaid = require(script.Parent.RavanaRaid)
 local EnemyTypes = require(ReplicatedStorage.Shared.EnemyTypes)
 local Bosses = require(ReplicatedStorage.Shared.Bosses)
@@ -309,14 +310,50 @@ function startWave(wave: number)
 	announce({ waveState = "start", wave = wave, enemiesLeft = remaining })
 
 	local total = #ids
+	-- The Chakravyuha: on the wheel's nights the horde arrives COILED around
+	-- a Vyuha-Pati. Ranks fight with borrowed fury until the axis breaks.
+	local isVyuha = Chakravyuha.isVyuhaWave(wave) and total >= 4
+	local spots = if isVyuha then Chakravyuha.spiralPositions(total, Chakravyuha.Config.SpiralTurns, ARENA_RADIUS - 5) else nil
+	if isVyuha then
+		announce({ vyuhaForms = true, wave = wave })
+	end
 	for i, id in ids do
 		task.spawn(function()
 			local archetype = resolveArchetype(id)
-			local angle = (2 * math.pi * i) / total + math.random() * 0.4
-			local pos = Vector3.new(math.cos(angle) * ARENA_RADIUS, 6, math.sin(angle) * ARENA_RADIUS)
+			local pos: Vector3
+			local isAxis = false
+			if isVyuha and spots then
+				if i == 1 then
+					isAxis = true
+					archetype = Chakravyuha.axisOf(archetype)
+					pos = Vector3.new(0, 6, 0)
+				else
+					archetype = Chakravyuha.bindToVyuha(archetype)
+					local s = spots[i]
+					pos = Vector3.new(s.x, 6, s.z)
+				end
+			else
+				local angle = (2 * math.pi * i) / total + math.random() * 0.4
+				pos = Vector3.new(math.cos(angle) * ARENA_RADIUS, 6, math.sin(angle) * ARENA_RADIUS)
+			end
 			EnemyService.spawn(archetype, pos, function(_killer: Player?)
 				if gen ~= waveGen then
 					return -- this wave was wiped/superseded; ignore the straggler
+				end
+				if isAxis then
+					-- The axis falls: the wheel shatters, and every standing
+					-- fighter shares the breaker's bounty.
+					EnemyService.collapseVyuha(Chakravyuha.Config.StaggerSeconds, Chakravyuha.Config.FuryDamageMult, Chakravyuha.Config.FurySpeedMult)
+					local bounty = Chakravyuha.collapseBounty(wave)
+					for _, p in Players:GetPlayers() do
+						if isMeditating(p) then
+							continue
+						end
+						local pstate = PlayerRegistry.get(p)
+						pstate.gold = Loot.clampGold(pstate.gold + bounty)
+						Net.CombatFeedback:FireClient(p, { goldUpdate = true, gained = bounty, gold = pstate.gold })
+					end
+					announce({ vyuhaCollapse = true, gold = bounty })
 				end
 				remaining -= 1
 				announce({ waveState = "progress", wave = currentWave, enemiesLeft = math.max(0, remaining) })

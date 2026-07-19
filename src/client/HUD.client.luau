@@ -661,6 +661,14 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 		showToast(string.format("A new week — the world swears the %s", tostring(data.name)), Color3.fromRGB(200, 110, 255))
 		return
 	end
+	if data.vyuhaForms then
+		showToast("THE CHAKRAVYUHA FORMS — break the axis!", Color3.fromRGB(255, 140, 90))
+		return
+	end
+	if data.vyuhaCollapse then
+		showToast(string.format("THE WHEEL SHATTERS!  +%d gold to every blade", data.gold or 0), Color3.fromRGB(255, 200, 40))
+		return
+	end
 	if data.bhavaSet then
 		stanceChip.Text = string.format("%s  %s — tap to shift", tostring(data.glyph), string.upper(tostring(data.name)))
 		stanceChip.TextColor3 = Color3.fromRGB(tonumber(data.r) or 200, tonumber(data.g) or 200, tonumber(data.b) or 210)

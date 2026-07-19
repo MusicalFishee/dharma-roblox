@@ -423,6 +423,9 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 	if (archetype :: any).isTwinChild then
 		model:SetAttribute("TwinChild", true)
 	end
+	if (archetype :: any).vyuhaBound then
+		model:SetAttribute("VyuhaBound", true)
+	end
 	model.Parent = workspace
 	CollectionService:AddTag(model, ENEMY_TAG)
 
@@ -724,6 +727,23 @@ function EnemyService.spawn(archetype: EnemyTypes.EnemyArchetype, position: Vect
 			model:Destroy()
 		end)
 	end)
+end
+
+-- The Chakravyuha shatters: every still-bound rank staggers and loses the
+-- axis-given fury — damage and legs return to their true numbers.
+function EnemyService.collapseVyuha(seconds: number, furyDamageMult: number, furySpeedMult: number)
+	local now = os.clock()
+	for model, st in enemies do
+		if model:GetAttribute("VyuhaBound") == true then
+			model:SetAttribute("VyuhaBound", false)
+			st.staggeredUntil = now + seconds
+			st.humanoid:MoveTo(st.root.Position)
+			local calmed = table.clone(st.archetype)
+			calmed.attackDamage = math.max(1, math.floor(st.archetype.attackDamage / furyDamageMult))
+			st.archetype = calmed
+			st.humanoid.WalkSpeed = st.humanoid.WalkSpeed / furySpeedMult
+		end
+	end
 end
 
 function EnemyService.clearAll()
