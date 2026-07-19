@@ -61,7 +61,7 @@ check("the loremaster turns every page", Titles.isUnlocked(Titles.get("loremaste
 -- If a family is ever added, this fails until the loremaster's bar is raised.
 check("the loremaster's bar tracks the whole book", (Titles.get("loremaster") :: any).threshold == Grantha.MaxTurned)
 
--- THE CAPSTONE LAW: Purna is the sum of every other title, and it must grow
+-- THE CAPSTONE LAW: Moksha is the sum of every other title, and it must grow
 -- on its own. This proves it reacts to each title individually — so any
 -- title added anywhere is automatically one more thing the capstone demands,
 -- and this test extends to cover it with zero edits.
@@ -69,10 +69,10 @@ local kindField = { wave = "bestWave", kills = "kills", bossKills = "bossKills",
 local function maxedSnap(): Titles.Snapshot
 	return snap({ bestWave = 9999, kills = 9999999, bossKills = 9999, level = 9999, trials = 9999, duelWins = 9999, raidClears = 9999, revives = 9999, deerKills = 9999, bladeMastery = 99, loreTurned = 9999, playtimeSeconds = 99999999, deaths = 9999999, bladesMastered = 999 })
 end
-local purna = Titles.get("purna") :: any
-check("Purna exists and is the capstone", purna ~= nil and purna.kind == "capstone")
-check("the whole is earned when every part is", Titles.isUnlocked(purna, maxedSnap()))
-check("a fresh warrior has not earned the whole", not Titles.isUnlocked(purna, snap({})))
+local moksha = Titles.get("moksha") :: any
+check("Moksha exists and is the capstone", moksha ~= nil and moksha.kind == "capstone")
+check("liberation comes only when every path is complete", Titles.isUnlocked(moksha, maxedSnap()))
+check("a fresh soul is still bound to the wheel", not Titles.isUnlocked(moksha, snap({})))
 
 local reactsToAll = true
 local coveredKinds = true
@@ -87,7 +87,7 @@ for _, def in Titles.List do
 	end
 	local s = maxedSnap();
 	(s :: any)[field] = def.threshold - 1
-	if Titles.isUnlocked(purna, s) then
+	if Titles.isUnlocked(moksha, s) then
 		reactsToAll = false
 		print("    !! the capstone ignores: " .. def.id)
 	end

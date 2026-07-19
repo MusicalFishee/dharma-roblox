@@ -60,9 +60,11 @@ Titles.List = {
 	title({ id = "devoted", name = "The Devoted", requirement = "Five hours at war", kind = "playtime", threshold = 18000, color = { 255, 170, 80 } }),
 	title({ id = "undying", name = "The Undying", requirement = "Endure 100 deaths (the atman remembers)", kind = "deaths", threshold = 100, color = { 180, 130, 200 } }),
 	title({ id = "grandmaster", name = "Grandmaster of Arms", requirement = "Master three weapons to the summit", kind = "bladesMastered", threshold = 3, color = { 235, 240, 250 } }),
-	-- The capstone: not a stat, but the SUM of every other title. It grows on
-	-- its own — a new title added anywhere below is one more thing it demands.
-	title({ id = "purna", name = "Pūrṇa, the Whole", requirement = "Earn every other title Dharma can grant", kind = "capstone", threshold = 1, color = { 255, 245, 200 } }),
+	-- The capstone: not a stat, but the SUM of every other title. To complete
+	-- every path is to be released from the wheel entirely — liberation, union
+	-- with Brahman. It grows on its own: a title added anywhere below is one
+	-- more thing that must be finished before the self dissolves.
+	title({ id = "moksha", name = "Attained Moksha", requirement = "Complete every path, and be one with Brahman", kind = "capstone", threshold = 1, color = { 255, 252, 245 } }),
 } :: { TitleDef }
 
 local byId: { [string]: TitleDef } = {}
