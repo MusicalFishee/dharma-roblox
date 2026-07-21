@@ -201,6 +201,36 @@ local heraldCorner = Instance.new("UICorner")
 heraldCorner.CornerRadius = UDim.new(0, 10)
 heraldCorner.Parent = heraldBar
 
+-- The sangha's Bala meter: a thin bar low-center, seen only while it fills.
+local balaBg = Instance.new("Frame")
+balaBg.AnchorPoint = Vector2.new(0.5, 1)
+balaBg.Position = UDim2.new(0.5, 0, 1, -18)
+balaBg.Size = UDim2.fromOffset(300, 12)
+balaBg.BackgroundColor3 = Color3.fromRGB(20, 18, 24)
+balaBg.BackgroundTransparency = 0.25
+balaBg.BorderSizePixel = 0
+balaBg.Visible = false
+balaBg.Parent = screenGui
+local balaCorner = Instance.new("UICorner")
+balaCorner.CornerRadius = UDim.new(0, 6)
+balaCorner.Parent = balaBg
+local balaFill = Instance.new("Frame")
+balaFill.Size = UDim2.fromScale(0, 1)
+balaFill.BackgroundColor3 = Color3.fromRGB(120, 220, 160)
+balaFill.BorderSizePixel = 0
+balaFill.Parent = balaBg
+local balaFillCorner = Instance.new("UICorner")
+balaFillCorner.CornerRadius = UDim.new(0, 6)
+balaFillCorner.Parent = balaFill
+local balaLabel = Instance.new("TextLabel")
+balaLabel.Size = UDim2.fromScale(1, 1)
+balaLabel.BackgroundTransparency = 1
+balaLabel.Font = Enum.Font.GothamBold
+balaLabel.TextSize = 9
+balaLabel.TextColor3 = Color3.fromRGB(230, 245, 235)
+balaLabel.Text = "SANGHA BALA"
+balaLabel.Parent = balaBg
+
 local heraldToken = 0
 local function showHerald(text: string, color: Color3)
 	heraldToken += 1
@@ -694,6 +724,17 @@ Net.CombatFeedback.OnClientEvent:Connect(function(data: any)
 	end
 	if data.vrataReset then
 		showToast(string.format("A new week — the world swears the %s", tostring(data.name)), Color3.fromRGB(200, 110, 255))
+		return
+	end
+	if data.balaMeter ~= nil then
+		local frac = math.clamp((data.balaMeter or 0) / (data.balaMax or 100), 0, 1)
+		balaBg.Visible = frac > 0
+		TweenService:Create(balaFill, TweenInfo.new(0.4), { Size = UDim2.fromScale(frac, 1) }):Play()
+		return
+	end
+	if data.sanghaRally then
+		showToast("SANGHA RALLY — the bond restores you all!", Color3.fromRGB(120, 220, 160))
+		balaBg.Visible = false
 		return
 	end
 	if data.herald then
